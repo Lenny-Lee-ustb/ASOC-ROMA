@@ -1,0 +1,8 @@
+prefix=/home/roma/asoc-roma/devel
+
+Name: cantest
+Description: Description of cantest
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

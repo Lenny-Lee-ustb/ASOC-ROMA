@@ -1,0 +1,8 @@
+prefix=/home/roma/asoc/m3508-main/src/canTest/build/devel
+
+Name: cantest
+Description: Description of cantest
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,2 @@
+canTest:path_load
+-DCATKIN_DEVEL_PREFIX=/home/roma/asoc-roma/devel -DCMAKE_INSTALL_PREFIX=/home/roma/asoc-roma/install -G Unix Makefiles
