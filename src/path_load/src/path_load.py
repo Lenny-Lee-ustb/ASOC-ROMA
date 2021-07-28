@@ -12,9 +12,12 @@ CSV_HEADER = ['xr', 'yr', 'thetar', 'kappar'] # data format
 class Path_loader(object):
 	def __init__(self):
 		rospy.init_node('path_publisher', log_level=rospy.DEBUG)
-		self.rate = rospy.Rate(3) # 3hz
+		self.hz = rospy.get_param('~pub_hz')
+		self.load_file = rospy.get_param('~file_path')
+		print(self.load_file)
+		self.rate = rospy.Rate(self.hz) 
 		self.pub = rospy.Publisher('/fix_path', Path, queue_size=1, latch=True)
-		self.new_path_loader('src/path_load/src/data.csv')
+		self.new_path_loader(self.load_file)
 		
 		rospy.spin()
 
@@ -25,6 +28,7 @@ class Path_loader(object):
 
 			while not rospy.is_shutdown():
 				self.publish(paths)
+				rospy.loginfo('Path pub~')
 				self.rate.sleep()
 			
 		else:
@@ -35,7 +39,7 @@ class Path_loader(object):
 
 	def load_paths(self, fname):
 		paths = Path()
-		index =0
+		index =1
 		with open(fname) as wfile:
 			reader = csv.DictReader(wfile, CSV_HEADER)
 			for wp in reader:

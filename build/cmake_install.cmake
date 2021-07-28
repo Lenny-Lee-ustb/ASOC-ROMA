@@ -131,8 +131,10 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/roma/asoc-roma/build/gtest/cmake_install.cmake")
+  include("/home/roma/asoc-roma/build/RT500/cmake_install.cmake")
   include("/home/roma/asoc-roma/build/canTest/cmake_install.cmake")
   include("/home/roma/asoc-roma/build/path_load/cmake_install.cmake")
+  include("/home/roma/asoc-roma/build/wt906/cmake_install.cmake")
 
 endif()
 

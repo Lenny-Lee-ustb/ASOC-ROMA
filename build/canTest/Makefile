@@ -68,17 +68,27 @@ install/strip/fast: preinstall/fast
 	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
-# Special rule for the target install/local
-install/local: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
 
-# Special rule for the target install/local
-install/local/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local/fast
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
 
 # Special rule for the target rebuild_cache
 rebuild_cache:
@@ -91,6 +101,18 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
@@ -102,16 +124,6 @@ test/fast: test
 
 .PHONY : test/fast
 
-# Special rule for the target list_install_components
-list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
-.PHONY : list_install_components
-
-# Special rule for the target list_install_components
-list_install_components/fast: list_install_components
-
-.PHONY : list_install_components/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -122,18 +134,6 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
-
-# Special rule for the target install
-install: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
-	/usr/bin/cmake -P cmake_install.cmake
-.PHONY : install
-
-# Special rule for the target install
-install/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
-	/usr/bin/cmake -P cmake_install.cmake
-.PHONY : install/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -168,81 +168,6 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-canTest/CMakeFiles/canTest4.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/canTest4.dir/rule
-.PHONY : canTest/CMakeFiles/canTest4.dir/rule
-
-# Convenience name for target.
-canTest4: canTest/CMakeFiles/canTest4.dir/rule
-
-.PHONY : canTest4
-
-# fast build rule for target.
-canTest4/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/canTest4.dir/build.make canTest/CMakeFiles/canTest4.dir/build
-.PHONY : canTest4/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/canTest3.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/canTest3.dir/rule
-.PHONY : canTest/CMakeFiles/canTest3.dir/rule
-
-# Convenience name for target.
-canTest3: canTest/CMakeFiles/canTest3.dir/rule
-
-.PHONY : canTest3
-
-# fast build rule for target.
-canTest3/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/canTest3.dir/build.make canTest/CMakeFiles/canTest3.dir/build
-.PHONY : canTest3/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/roscpp_generate_messages_py.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/roscpp_generate_messages_py.dir/rule
-.PHONY : canTest/CMakeFiles/roscpp_generate_messages_py.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_py: canTest/CMakeFiles/roscpp_generate_messages_py.dir/rule
-
-.PHONY : roscpp_generate_messages_py
-
-# fast build rule for target.
-roscpp_generate_messages_py/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/roscpp_generate_messages_py.dir/build.make canTest/CMakeFiles/roscpp_generate_messages_py.dir/build
-.PHONY : roscpp_generate_messages_py/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/roscpp_generate_messages_eus.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-.PHONY : canTest/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_eus: canTest/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-
-.PHONY : roscpp_generate_messages_eus
-
-# fast build rule for target.
-roscpp_generate_messages_eus/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/roscpp_generate_messages_eus.dir/build.make canTest/CMakeFiles/roscpp_generate_messages_eus.dir/build
-.PHONY : roscpp_generate_messages_eus/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/roscpp_generate_messages_lisp.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-.PHONY : canTest/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_lisp: canTest/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-
-.PHONY : roscpp_generate_messages_lisp
-
-# fast build rule for target.
-roscpp_generate_messages_lisp/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make canTest/CMakeFiles/roscpp_generate_messages_lisp.dir/build
-.PHONY : roscpp_generate_messages_lisp/fast
-
-# Convenience name for target.
 canTest/CMakeFiles/canTest2.dir/rule:
 	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/canTest2.dir/rule
 .PHONY : canTest/CMakeFiles/canTest2.dir/rule
@@ -258,94 +183,19 @@ canTest2/fast:
 .PHONY : canTest2/fast
 
 # Convenience name for target.
-canTest/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
-.PHONY : canTest/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
+canTest/CMakeFiles/canTest4.dir/rule:
+	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/canTest4.dir/rule
+.PHONY : canTest/CMakeFiles/canTest4.dir/rule
 
 # Convenience name for target.
-rosgraph_msgs_generate_messages_cpp: canTest/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
+canTest4: canTest/CMakeFiles/canTest4.dir/rule
 
-.PHONY : rosgraph_msgs_generate_messages_cpp
+.PHONY : canTest4
 
 # fast build rule for target.
-rosgraph_msgs_generate_messages_cpp/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make canTest/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build
-.PHONY : rosgraph_msgs_generate_messages_cpp/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule
-.PHONY : canTest/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_lisp: canTest/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule
-
-.PHONY : std_msgs_generate_messages_lisp
-
-# fast build rule for target.
-std_msgs_generate_messages_lisp/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/std_msgs_generate_messages_lisp.dir/build.make canTest/CMakeFiles/std_msgs_generate_messages_lisp.dir/build
-.PHONY : std_msgs_generate_messages_lisp/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/roscpp_generate_messages_cpp.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
-.PHONY : canTest/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_cpp: canTest/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
-
-.PHONY : roscpp_generate_messages_cpp
-
-# fast build rule for target.
-roscpp_generate_messages_cpp/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make canTest/CMakeFiles/roscpp_generate_messages_cpp.dir/build
-.PHONY : roscpp_generate_messages_cpp/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-.PHONY : canTest/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_eus: canTest/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_eus
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_eus/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make canTest/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build
-.PHONY : rosgraph_msgs_generate_messages_eus/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-.PHONY : canTest/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_lisp: canTest/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_lisp
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_lisp/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make canTest/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build
-.PHONY : rosgraph_msgs_generate_messages_lisp/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
-.PHONY : canTest/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_cpp: canTest/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : std_msgs_generate_messages_cpp
-
-# fast build rule for target.
-std_msgs_generate_messages_cpp/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/std_msgs_generate_messages_cpp.dir/build.make canTest/CMakeFiles/std_msgs_generate_messages_cpp.dir/build
-.PHONY : std_msgs_generate_messages_cpp/fast
+canTest4/fast:
+	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/canTest4.dir/build.make canTest/CMakeFiles/canTest4.dir/build
+.PHONY : canTest4/fast
 
 # Convenience name for target.
 canTest/CMakeFiles/canTest1.dir/rule:
@@ -363,94 +213,19 @@ canTest1/fast:
 .PHONY : canTest1/fast
 
 # Convenience name for target.
-canTest/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
-.PHONY : canTest/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
+canTest/CMakeFiles/canTest3.dir/rule:
+	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/canTest3.dir/rule
+.PHONY : canTest/CMakeFiles/canTest3.dir/rule
 
 # Convenience name for target.
-rosgraph_msgs_generate_messages_nodejs: canTest/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
+canTest3: canTest/CMakeFiles/canTest3.dir/rule
 
-.PHONY : rosgraph_msgs_generate_messages_nodejs
+.PHONY : canTest3
 
 # fast build rule for target.
-rosgraph_msgs_generate_messages_nodejs/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make canTest/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
-.PHONY : rosgraph_msgs_generate_messages_nodejs/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-.PHONY : canTest/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_py: canTest/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_py
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_py/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make canTest/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build
-.PHONY : rosgraph_msgs_generate_messages_py/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/std_msgs_generate_messages_eus.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/std_msgs_generate_messages_eus.dir/rule
-.PHONY : canTest/CMakeFiles/std_msgs_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_eus: canTest/CMakeFiles/std_msgs_generate_messages_eus.dir/rule
-
-.PHONY : std_msgs_generate_messages_eus
-
-# fast build rule for target.
-std_msgs_generate_messages_eus/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/std_msgs_generate_messages_eus.dir/build.make canTest/CMakeFiles/std_msgs_generate_messages_eus.dir/build
-.PHONY : std_msgs_generate_messages_eus/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule
-.PHONY : canTest/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_nodejs: canTest/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule
-
-.PHONY : std_msgs_generate_messages_nodejs
-
-# fast build rule for target.
-std_msgs_generate_messages_nodejs/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/std_msgs_generate_messages_nodejs.dir/build.make canTest/CMakeFiles/std_msgs_generate_messages_nodejs.dir/build
-.PHONY : std_msgs_generate_messages_nodejs/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-.PHONY : canTest/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_nodejs: canTest/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-
-.PHONY : roscpp_generate_messages_nodejs
-
-# fast build rule for target.
-roscpp_generate_messages_nodejs/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make canTest/CMakeFiles/roscpp_generate_messages_nodejs.dir/build
-.PHONY : roscpp_generate_messages_nodejs/fast
-
-# Convenience name for target.
-canTest/CMakeFiles/std_msgs_generate_messages_py.dir/rule:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f CMakeFiles/Makefile2 canTest/CMakeFiles/std_msgs_generate_messages_py.dir/rule
-.PHONY : canTest/CMakeFiles/std_msgs_generate_messages_py.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_py: canTest/CMakeFiles/std_msgs_generate_messages_py.dir/rule
-
-.PHONY : std_msgs_generate_messages_py
-
-# fast build rule for target.
-std_msgs_generate_messages_py/fast:
-	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/std_msgs_generate_messages_py.dir/build.make canTest/CMakeFiles/std_msgs_generate_messages_py.dir/build
-.PHONY : std_msgs_generate_messages_py/fast
+canTest3/fast:
+	cd /home/roma/asoc-roma/build && $(MAKE) -f canTest/CMakeFiles/canTest3.dir/build.make canTest/CMakeFiles/canTest3.dir/build
+.PHONY : canTest3/fast
 
 src/canTest1.o: src/canTest1.cpp.o
 
@@ -567,31 +342,16 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... install/strip"
-	@echo "... install/local"
-	@echo "... rebuild_cache"
-	@echo "... test"
-	@echo "... canTest4"
-	@echo "... canTest3"
-	@echo "... list_install_components"
-	@echo "... roscpp_generate_messages_py"
-	@echo "... roscpp_generate_messages_eus"
-	@echo "... edit_cache"
-	@echo "... roscpp_generate_messages_lisp"
-	@echo "... canTest2"
-	@echo "... rosgraph_msgs_generate_messages_cpp"
-	@echo "... std_msgs_generate_messages_lisp"
-	@echo "... roscpp_generate_messages_cpp"
 	@echo "... install"
-	@echo "... rosgraph_msgs_generate_messages_eus"
-	@echo "... rosgraph_msgs_generate_messages_lisp"
-	@echo "... std_msgs_generate_messages_cpp"
+	@echo "... list_install_components"
+	@echo "... rebuild_cache"
+	@echo "... canTest2"
+	@echo "... canTest4"
 	@echo "... canTest1"
-	@echo "... rosgraph_msgs_generate_messages_nodejs"
-	@echo "... rosgraph_msgs_generate_messages_py"
-	@echo "... std_msgs_generate_messages_eus"
-	@echo "... std_msgs_generate_messages_nodejs"
-	@echo "... roscpp_generate_messages_nodejs"
-	@echo "... std_msgs_generate_messages_py"
+	@echo "... install/local"
+	@echo "... canTest3"
+	@echo "... test"
+	@echo "... edit_cache"
 	@echo "... src/canTest1.o"
 	@echo "... src/canTest1.i"
 	@echo "... src/canTest1.s"

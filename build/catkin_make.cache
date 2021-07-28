@@ -1,2 +1,2 @@
-canTest:path_load
+RT500:canTest:path_load:wt906
 -DCATKIN_DEVEL_PREFIX=/home/roma/asoc-roma/devel -DCMAKE_INSTALL_PREFIX=/home/roma/asoc-roma/install -G Unix Makefiles
