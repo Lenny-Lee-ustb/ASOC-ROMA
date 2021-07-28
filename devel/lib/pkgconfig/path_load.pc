@@ -1,8 +1,0 @@
-prefix=/home/roma/asoc-roma/devel
-
-Name: path_load
-Description: Description of path_load
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
