@@ -1,9 +1,9 @@
 #unsolved!!!
-frequency: 40
-sensor_timeout: 0.025
-two_d_mode: false
+frequency: 20
+sensor_timeout: 2
+two_d_mode: true
 transform_time_offset: 0.0001
-transform_timeout: 0.025
+transform_timeout: 1
 print_diagnostics: true
 debug: false
 
@@ -63,7 +63,7 @@ odom0_nodelay: true
 # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
 # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
 # for twist measurements has no effect.
-odom0_differential: true
+odom0_differential: false
 
 # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
 # for all future measurements. While you can achieve the same effect with the differential paremeter, the key

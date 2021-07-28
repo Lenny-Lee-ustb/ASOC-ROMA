@@ -2,12 +2,12 @@
 <launch>
     <!-- Spawn RTK module !! -->
     <node pkg="nmea_navsat_driver" type="nmea_serial_driver" name="RTK_GPS" clear_params="true" output="screen">
-       <param name = "port" type="string" value = "/dev/RTK_1"/> 
+       <param name = "port" type="string" value = "/dev/ttyUSB0"/> 
        <param name = "baud" type="int" value = "230400"/>
        <param name = "frame_id" type="string" value = "RTK"/>
     </node>
 
-    <!-- <node pkg="RT500" type="rtk_test" name="rtk_test"  output="screen" /> -->
+    <node pkg="RT500" type="rtk_test" name="rtk_test"  output="screen" />
 
    <node name="gps_conv" pkg="gps_common" type="utm_odometry_node">
       <param name="rot_covariance" value="99999" />
