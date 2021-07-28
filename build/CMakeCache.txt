@@ -381,6 +381,12 @@ gtest_main_LIB_DEPENDS:STATIC=general;-lpthread;general;gtest;
 //Path to a library.
 lib:FILEPATH=/opt/ros/melodic/lib/libserial.so
 
+//Value Computed by CMake
+localization_BINARY_DIR:STATIC=/home/roma/asoc-roma/build/localization
+
+//Value Computed by CMake
+localization_SOURCE_DIR:STATIC=/home/roma/asoc-roma/src/localization
+
 //The directory containing a CMake configuration file for message_filters.
 message_filters_DIR:PATH=/opt/ros/melodic/share/message_filters/cmake
 
@@ -451,10 +457,10 @@ tf2_ros_DIR:PATH=/opt/ros/melodic/share/tf2_ros/cmake
 tf_DIR:PATH=/opt/ros/melodic/share/tf/cmake
 
 //Value Computed by CMake
-wt906_BINARY_DIR:STATIC=/home/roma/asoc-roma/build/wt906
+wt931_BINARY_DIR:STATIC=/home/roma/asoc-roma/build/wt931
 
 //Value Computed by CMake
-wt906_SOURCE_DIR:STATIC=/home/roma/asoc-roma/src/wt906
+wt931_SOURCE_DIR:STATIC=/home/roma/asoc-roma/src/wt931
 
 //The directory containing a CMake configuration file for xmlrpcpp.
 xmlrpcpp_DIR:PATH=/opt/ros/melodic/share/xmlrpcpp/cmake
@@ -569,7 +575,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=9
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

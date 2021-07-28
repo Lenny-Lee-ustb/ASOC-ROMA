@@ -47,7 +47,7 @@ class Path_loader(object):
 				p.header.seq = index
 				index =index +1
 				p.header.stamp = rospy.Time.now()
-				p.header.frame_id = '/world'
+				p.header.frame_id = '/map'
 				p.pose.position.x = float(wp['xr'])
 				p.pose.position.y = float(wp['yr'])
 				p.pose.position.z = float(wp['kappar'])
@@ -59,7 +59,7 @@ class Path_loader(object):
 
 	def publish(self,paths):
 		pub_path = Path()
-		pub_path.header.frame_id = '/world'
+		pub_path.header.frame_id = '/map'
 		pub_path.header.stamp = rospy.Time.now()
 		# pub_path.poses.header.frame_id='/world'
 		# pub_path.poses.header.stamp=rospy.Time.now()

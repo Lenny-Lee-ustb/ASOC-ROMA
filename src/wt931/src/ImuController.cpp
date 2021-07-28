@@ -4,7 +4,7 @@ ImuController::ImuController()
 {
     //私有参数 获取
     ros::NodeHandle nh_private("~");
-    nh_private.param<string>("serialport_name", serialport_name, "/dev/wt931");
+    nh_private.param<string>("serialport_name", serialport_name, "/dev/ttyUSB0");
     nh_private.param<int>("baudrate", baudrate, 921600);
     nh_private.param<string>("pub_topic_name" ,pub_topic_name);
     

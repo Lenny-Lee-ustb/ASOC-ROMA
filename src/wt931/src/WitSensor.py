@@ -74,8 +74,8 @@ def DueData(inputdata):   #新增的核心程序，对读取的数据进行划�
                 if data == (CheckSum&0xff):
                     Angle = get_angle(AngleData)
                     d = a+w+Angle
-                    print(d)
-                    # print("a(g):%10.3f %10.3f %10.3f w(deg/s):%10.3f %10.3f %10.3f Angle(deg):%10.3f %10.3f %10.3f"%d)
+                    # print(d)
+                    print("a(g):%10.3f %10.3f %10.3f w(deg/s):%10.3f %10.3f %10.3f Angle(deg):%10.3f %10.3f %10.3f"%d)
                 CheckSum=0
                 Bytenum=0
                 FrameState=0
@@ -100,11 +100,7 @@ def get_acc(datahex):
         acc_y -= 2 * k_acc
     if acc_z >= k_acc:
         acc_z-= 2 * k_acc
-    acc = [0.0]*3
-    acc[0] = acc_x
-    acc[1] = acc_y
-    acc[2] = acc_z
-    return acc
+    return acc_x,acc_y,acc_z
  
  
 def get_gyro(datahex):                                      
@@ -125,11 +121,7 @@ def get_gyro(datahex):
         gyro_y -= 2 * k_gyro
     if gyro_z >=k_gyro:
         gyro_z-= 2 * k_gyro
-    gyro = [0.0]*3
-    gyro[0] = gyro_x
-    gyro[1] = gyro_y
-    gyro[2] = gyro_z
-    return gyro
+    return gyro_x,gyro_y,gyro_z
  
  
 def get_angle(datahex):                                 
@@ -151,10 +143,7 @@ def get_angle(datahex):
     if angle_z >=k_angle:
         angle_z-= 2 * k_angle
     angle = [0.0]*3
-    angle[0] = angle_x
-    angle[1] = angle_y
-    angle[2] = angle_z
-    return angle
+    return angle_x,angle_y,angle_z
  
  
 if __name__=='__main__': 

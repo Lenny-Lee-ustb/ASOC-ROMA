@@ -134,7 +134,8 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/roma/asoc-roma/build/RT500/cmake_install.cmake")
   include("/home/roma/asoc-roma/build/canTest/cmake_install.cmake")
   include("/home/roma/asoc-roma/build/path_load/cmake_install.cmake")
-  include("/home/roma/asoc-roma/build/wt906/cmake_install.cmake")
+  include("/home/roma/asoc-roma/build/localization/cmake_install.cmake")
+  include("/home/roma/asoc-roma/build/wt931/cmake_install.cmake")
 
 endif()
 

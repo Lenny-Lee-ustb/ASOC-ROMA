@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Spawn core IMU !! -->
+    <node pkg="wt931" type="main_cpp" name="imu_wt906" clear_params="true">
+        <rosparam command="load" file="$(find localization)/params/ekf_params_encoder.yaml" />
+    </node>
+
+    <!-- Broadcast imu tf -->
+    <node pkg="tf2_ros" type="static_transform_publisher" 
+            name="imu_static_transform_publisher" args="0 0 0 0 0 0 base_footprint imu_link " />
+</launch>
+

@@ -1074,7 +1074,7 @@ main_cpp: cmake_check_build_system
 
 # fast build rule for target.
 main_cpp/fast:
-	$(MAKE) -f wt906/CMakeFiles/main_cpp.dir/build.make wt906/CMakeFiles/main_cpp.dir/build
+	$(MAKE) -f wt931/CMakeFiles/main_cpp.dir/build.make wt931/CMakeFiles/main_cpp.dir/build
 .PHONY : main_cpp/fast
 
 # Help Target
