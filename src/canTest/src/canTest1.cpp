@@ -29,7 +29,7 @@ struct Motor{
 
 };
 
-Motor motor[4];
+Motor motor[2];
 
 void printfSingleMotor(Motor motor){
 	printf("angle is %d,realAngle is %d,position is %d,velocity is %d,I is %d\r\n",
@@ -38,19 +38,19 @@ void printfSingleMotor(Motor motor){
 }
 
 void printfMultiMotorAngle(void){
-	printf("angle is %d,%d,%d,%d;\r\n",motor[0].angle,motor[1].angle,motor[2].angle,motor[3].angle);
+	printf("angle is %d,%d,%d,%d;\r\n",motor[0].angle,motor[1].angle);
 }
 
 void printfMultiMotorPosition(void){
-	printf("position is %d,%d,%d,%d;\r\n",motor[0].position,motor[1].position,motor[2].position,motor[3].position);
+	printf("position is %d,%d,%d,%d;\r\n",motor[0].position,motor[1].position);
 }
 
 void printfMultiMotorVelocity(void){
-	printf("velocity is %d,%d,%d,%d;\r\n",motor[0].velocity,motor[1].velocity,motor[2].velocity,motor[3].velocity);
+	printf("velocity is %d,%d,%d,%d;\r\n",motor[0].velocity,motor[1].velocity);
 }
 
 void printfMultiMotorI(void){
-	printf("I is %d,%d,%d,%d;\r\n",motor[0].I,motor[1].I,motor[2].I,motor[3].I);
+	printf("I is %d,%d,%d,%d;\r\n",motor[0].I,motor[1].I);
 }
 
 
@@ -64,7 +64,7 @@ void rxThread(int s)
     {
 		
 		nbytes = read(s, &frame, sizeof(struct can_frame));
-		if (nbytes < 0) 
+		if (nbytes < 0)  
 		{
 			perror("Read");
 			break;
@@ -76,7 +76,7 @@ void rxThread(int s)
 		motor[ID].I = (frame.data[4] <<8) + frame.data[5];
 		motor[ID].temperature = frame.data[6];
 		rxCounter++;
-		if(i%4==0)
+		if(i%2==0)
 		{
 			printfMultiMotorAngle();
 			printfMultiMotorVelocity();
