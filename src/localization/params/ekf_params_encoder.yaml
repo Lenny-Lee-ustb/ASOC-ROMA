@@ -1,7 +1,7 @@
 #unsolved!!!
 frequency: 40
 sensor_timeout: 0.025
-two_d_mode: true
+two_d_mode: false
 transform_time_offset: 0.0001
 transform_timeout: 0.025
 print_diagnostics: true
@@ -14,7 +14,7 @@ debug_out_file: /path/to/debug/file.txt
 publish_tf: true
 
 # Whether to publish the acceleration state. Defaults to false if unspecified.
-publish_acceleration: true
+publish_acceleration:  false
 
 map_frame: /map              # Defaults to "map" if unspecified
 odom_frame: /odom           # Defaults to "odom" if unspecified
@@ -26,7 +26,7 @@ world_frame: /odom           # Defaults to the value of odom_frame if unspecifie
 # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
 # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
 # default values, and must be specified.
-odom0: /rf2o_laser_odometry/odom
+odom0: /odom
 
 # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
 # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
@@ -40,7 +40,7 @@ odom0: /rf2o_laser_odometry/odom
 #                false, false, false,
 #                false, false, true,
 #                false, false, false]
-odom0_config: [false, false, false,
+odom0_config: [true, true, false,
                false, false, false,
                false, false, false,
                false, false, true,
@@ -79,28 +79,9 @@ odom0_differential: true
 odom0_pose_rejection_threshold: 8
 odom0_twist_rejection_threshold: 4
 
-odom1: /encoder_imu_odom
-# odom1_config: [true, true, true,
-#                false, false, false,
-#                true, true, false,
-#                false, false, false,
-#                false, false, false]
-odom1_config: [true, true, false,
-               false, false, false,
-               false, false, false,
-               false, false, false,
-               false, false, false]
-odom1_queue_size: 5
-odom1_nodelay: true
-odom1_differential: true
-odom1_relative: false
-# odom0_pose_rejection_threshold: 8
-# odom0_twist_rejection_threshold: 0.75
-
-
 imu0: /imu_data
 imu0_config: [false, false, false,
-              false, false, true,
+              true, true, true,
               false, false, false,
               false,  false,  false,
               false,  false,  false]
@@ -125,9 +106,9 @@ imu0_remove_gravitational_acceleration: true
 # to be larger, which will cause the filter to trust the incoming measurement more during correction. The values are
 # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
 # unspecified.
-process_noise_covariance: [0.5, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0.5, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    1, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+process_noise_covariance: [0.05, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                           0,    0.05, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                           0,    0,    0.05, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0,    0.2,  0,     0,     0,    0,    0,    0,    0,    0,    0,

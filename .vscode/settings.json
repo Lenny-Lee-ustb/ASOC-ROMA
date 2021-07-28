@@ -7,5 +7,8 @@
         "/opt/ros/melodic/lib/python2.7/dist-packages",
         "/home/roma/.local/lib/python2.7/site-packages"
 
-    ]
+    ],
+    "files.associations": {
+        "string": "cpp"
+    }
 }
