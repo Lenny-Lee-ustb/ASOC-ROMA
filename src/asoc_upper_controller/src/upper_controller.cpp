@@ -32,12 +32,12 @@ private:
   geometry_msgs::Twist cmd_vel;
   geometry_msgs::Point odom_goal_pos;
   nav_msgs::Odometry odom;
-  nav_msgs::Path map_path, odom_path;
+  nav_msgs::Path map_path;
 
   double controller_freq, baseSpeed;
-  double  baseAngle, goalRadius;
+  double  goalRadius, goal_pose;
 
-  bool foundForwardPt, goal_received, goal_reached;
+  bool goal_received, goal_reached;
 
   void odomCB(const nav_msgs::Odometry::ConstPtr &odomMsg);
   void pathCB(const nav_msgs::Path::ConstPtr &pathMsg);
@@ -194,22 +194,21 @@ void UpperController::goalReachingCB(const ros::TimerEvent &) {
   }
 }
 
+
+
+
 void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
   geometry_msgs::Pose carPose = odom.pose.pose;
   geometry_msgs::Twist carVel = odom.twist.twist;
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
-  cmd_vel.angular.z = baseAngle;
+  cmd_vel.angular.z = 0;
 
   if (goal_received) {
-      ROS_INFO("in loop");
-    if (foundForwardPt) {
-      /*Estimate Gas Input*/
         if (!goal_reached) {
 
         }
-    }
   }
   pub_.publish(cmd_vel);
 }
@@ -220,7 +219,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
 /*****************/
 int main(int argc, char **argv) {
   // Initiate ROS
-  ros::init(argc, argv, "L1Controller_v2");
+  ros::init(argc, argv, "UpperController");
   UpperController controller;
   ros::spin();
   return 0;
