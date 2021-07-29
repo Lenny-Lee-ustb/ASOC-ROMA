@@ -7,7 +7,7 @@
        <param name = "frame_id" type="string" value = "RTK"/>
     </node>
 
-    <node pkg="RT500" type="rtk_test" name="rtk_test"  output="screen" />
+    <node pkg="rt500" type="rtk_test" name="rtk_test"  output="screen" />
 
    <node name="gps_conv" pkg="gps_common" type="utm_odometry_node">
       <param name="rot_covariance" value="99999" />

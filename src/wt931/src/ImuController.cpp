@@ -96,10 +96,10 @@ ImuController::ImuController()
         {
             canRead = false;
             publishImu();
-            cout << 
-            "roll " << msg.orientation.x << "  pitch " << msg.orientation.y <<
-            "  a_x " << msg.linear_acceleration.x << "  a_y " << msg.linear_acceleration.y << "  a_z " << msg.linear_acceleration.z 
-            << endl;
+            // cout << 
+            // "roll " << msg.orientation.x << "  pitch " << msg.orientation.y <<
+            // "  a_x " << msg.linear_acceleration.x << "  a_y " << msg.linear_acceleration.y << "  a_z " << msg.linear_acceleration.z 
+            // << endl;
         }
         ros::spinOnce();
         

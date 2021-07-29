@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- spawn Upper controller  !! -->
+    <node pkg="asoc_upper_controller" type="upper_controller" name="upper_controller" clear_params="true" output="screen">
+        <param name = "baseSpeed" type="double" value = "0.5"/> 
+        <param name = "controller_freq" type="double" value = "20.0"/>
+        <param name = "goalRadius" type="double" value = "1.0"/>
+    </node>
+</launch>
+
