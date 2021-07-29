@@ -21,6 +21,10 @@
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
+
+
+#define PI 3.14159265
 
 using namespace std;
 using namespace Eigen;
@@ -41,6 +45,7 @@ int judge_angle1 = 0;
 int judge_angle2 = 0;
 float stick_forward = 0.0;
 float stick_right = 0.0;
+float stick_yaw = 0.0;
 int L = 2;   //  ratio of offset/split
 float r = 0.09; //radii of the wheel
 float D = 0.32; //length of the virtual rod linking the pivot rod and the center of ASOC
@@ -282,6 +287,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	judge_right = joy->buttons[1];
     stick_forward = joy->axes[1];
     stick_right = joy->axes[0];
+	stick_yaw = joy->axes[3];
+	
 
 
 
@@ -348,6 +355,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 			// }
             frame_vt = 1.5*stick_forward;
             frame_vn = 1.5*stick_right;
+			frame_w = 5*stick_yaw;
 		}
 	}
 }
@@ -713,43 +721,43 @@ void control_encoder_speed_leg_high(int ID){
 
 void body_to_wheel(float vt, float vn, float w){
     for(int i=0; i<4; i++){
-        motor_low[i].vct = vt;
-        motor_high[i].vcn = vn;
+        motor_low[i].vcn = vn;
+        motor_high[i].vct = vt;
         
     }
 
-    vc_low0(0,0) = motor_low[0].vcn = motor_low[1].vcn = vn - w * D;
-    vc_low0(1,0) = motor_low[0].vct;
-    vc_low2(0,0) = motor_low[2].vcn = motor_low[3].vcn = vn + w * D;
-    vc_low2(1,0) = motor_low[2].vct;
-    vc_high0(0,0) = motor_high[0].vcn;
-    vc_high0(1,0) = motor_high[0].vct = motor_high[1].vct = vt - w * D;
-    vc_high2(0,0) = motor_high[2].vcn;
-    vc_high2(1,0) = motor_high[2].vct = motor_high[3].vct = vt + w * D;
+    vc_low0(0,0) = motor_low[0].vct = motor_low[1].vct = vt + w * D;
+    vc_low0(1,0) = motor_low[0].vcn;
+    vc_low2(0,0) = motor_low[2].vct = motor_low[3].vct = vt - w * D;
+    vc_low2(1,0) = motor_low[2].vcn;
+    vc_high0(0,0) = motor_high[0].vct;
+    vc_high0(1,0) = motor_high[0].vcn = motor_high[1].vcn = vn + w * D;
+    vc_high2(0,0) = motor_high[2].vct;
+    vc_high2(1,0) = motor_high[2].vcn = motor_high[3].vcn = vn - w * D;
 
     
 
 
 
-    motor_low[0].C(0,0) = motor_low[1].C(0,0) = (cos(-motor_low[0].leg_angle) + 2*L*sin(-motor_low[0].leg_angle))/2;
-    motor_low[0].C(0,1) = motor_low[1].C(0,1) = (cos(-motor_low[0].leg_angle) - 2*L*sin(-motor_low[0].leg_angle))/2;
-    motor_low[0].C(1,0) = motor_low[1].C(1,0) = (sin(-motor_low[0].leg_angle) - 2*L*cos(-motor_low[0].leg_angle))/2;
-    motor_low[0].C(1,1) = motor_low[1].C(1,1) = (sin(-motor_low[0].leg_angle) + 2*L*cos(-motor_low[0].leg_angle))/2;
+    motor_low[0].C(0,0) = motor_low[1].C(0,0) = (cos(motor_low[0].leg_angle*PI/180) + 2*L*sin(motor_low[0].leg_angle*PI/180))/2;
+    motor_low[0].C(0,1) = motor_low[1].C(0,1) = (cos(motor_low[0].leg_angle*PI/180) - 2*L*sin(motor_low[0].leg_angle*PI/180))/2;
+    motor_low[0].C(1,0) = motor_low[1].C(1,0) = (sin(motor_low[0].leg_angle*PI/180) - 2*L*cos(motor_low[0].leg_angle*PI/180))/2;
+    motor_low[0].C(1,1) = motor_low[1].C(1,1) = (sin(motor_low[0].leg_angle*PI/180) + 2*L*cos(motor_low[0].leg_angle*PI/180))/2;
     
-    motor_low[2].C(0,0) = motor_low[3].C(0,0) = (cos(-motor_low[2].leg_angle) + 2*L*sin(-motor_low[2].leg_angle))/2;
-    motor_low[2].C(0,1) = motor_low[3].C(0,1) = (cos(-motor_low[2].leg_angle) - 2*L*sin(-motor_low[2].leg_angle))/2;
-    motor_low[2].C(1,0) = motor_low[3].C(1,0) = (sin(-motor_low[2].leg_angle) - 2*L*cos(-motor_low[2].leg_angle))/2;
-    motor_low[2].C(1,1) = motor_low[3].C(1,1) = (sin(-motor_low[2].leg_angle) + 2*L*cos(-motor_low[2].leg_angle))/2;
+    motor_low[2].C(0,0) = motor_low[3].C(0,0) = (cos(motor_low[2].leg_angle*PI/180) + 2*L*sin(motor_low[2].leg_angle*PI/180))/2;
+    motor_low[2].C(0,1) = motor_low[3].C(0,1) = (cos(motor_low[2].leg_angle*PI/180) - 2*L*sin(motor_low[2].leg_angle*PI/180))/2;
+    motor_low[2].C(1,0) = motor_low[3].C(1,0) = (sin(motor_low[2].leg_angle*PI/180) - 2*L*cos(motor_low[2].leg_angle*PI/180))/2;
+    motor_low[2].C(1,1) = motor_low[3].C(1,1) = (sin(motor_low[2].leg_angle*PI/180) + 2*L*cos(motor_low[2].leg_angle*PI/180))/2;
 
-    motor_high[0].C(0,0) = motor_high[1].C(0,0) = (cos(-motor_high[0].leg_angle) + 2*L*sin(-motor_high[0].leg_angle))/2;
-    motor_high[0].C(0,1) = motor_high[1].C(0,1) = (cos(-motor_high[0].leg_angle) - 2*L*sin(-motor_high[0].leg_angle))/2;
-    motor_high[0].C(1,0) = motor_high[1].C(1,0) = (sin(-motor_high[0].leg_angle) - 2*L*cos(-motor_high[0].leg_angle))/2;
-    motor_high[0].C(1,1) = motor_high[1].C(1,1) = (sin(-motor_high[0].leg_angle) + 2*L*cos(-motor_high[0].leg_angle))/2;
+    motor_high[0].C(0,0) = motor_high[1].C(0,0) = (cos(motor_high[0].leg_angle*PI/180) + 2*L*sin(motor_high[0].leg_angle*PI/180))/2;
+    motor_high[0].C(0,1) = motor_high[1].C(0,1) = (cos(motor_high[0].leg_angle*PI/180) - 2*L*sin(motor_high[0].leg_angle*PI/180))/2;
+    motor_high[0].C(1,0) = motor_high[1].C(1,0) = (sin(motor_high[0].leg_angle*PI/180) - 2*L*cos(motor_high[0].leg_angle*PI/180))/2;
+    motor_high[0].C(1,1) = motor_high[1].C(1,1) = (sin(motor_high[0].leg_angle*PI/180) + 2*L*cos(motor_high[0].leg_angle*PI/180))/2;
 
-    motor_high[2].C(0,0) = motor_high[3].C(0,0) = (cos(-motor_high[2].leg_angle) + 2*L*sin(-motor_high[2].leg_angle))/2;
-    motor_high[2].C(0,1) = motor_high[3].C(0,1) = (cos(-motor_high[2].leg_angle) - 2*L*sin(-motor_high[2].leg_angle))/2;
-    motor_high[2].C(1,0) = motor_high[3].C(1,0) = (sin(-motor_high[2].leg_angle) - 2*L*cos(-motor_high[2].leg_angle))/2;
-    motor_high[2].C(1,1) = motor_high[3].C(1,1) = (sin(-motor_high[2].leg_angle) + 2*L*cos(-motor_high[2].leg_angle))/2;
+    motor_high[2].C(0,0) = motor_high[3].C(0,0) = (cos(motor_high[2].leg_angle*PI/180) + 2*L*sin(motor_high[2].leg_angle*PI/180))/2;
+    motor_high[2].C(0,1) = motor_high[3].C(0,1) = (cos(motor_high[2].leg_angle*PI/180) - 2*L*sin(motor_high[2].leg_angle*PI/180))/2;
+    motor_high[2].C(1,0) = motor_high[3].C(1,0) = (sin(motor_high[2].leg_angle*PI/180) - 2*L*cos(motor_high[2].leg_angle*PI/180))/2;
+    motor_high[2].C(1,1) = motor_high[3].C(1,1) = (sin(motor_high[2].leg_angle*PI/180) + 2*L*cos(motor_high[2].leg_angle*PI/180))/2;
 
     wheel_low0 = motor_low[0].C.inverse()*vc_low0/r;
     wheel_low2 = motor_low[2].C.inverse()*vc_low2/r;
@@ -854,7 +862,7 @@ void txThread_low(int s)
         //     	motor_high[i].targetVelocity = -700;
 		// 	}
 		// }
-        body_to_wheel(frame_vt,frame_vn,frame_w);
+        //body_to_wheel(frame_vt,frame_vn,frame_w);
 
 		if (flag ==1)
 		{
@@ -875,7 +883,7 @@ void txThread_low(int s)
 		
 		for (j = 0;j<4;j++)
 		{
-			if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 ){
+			if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 ){
                 if (motor_low[j].sendI >15000) {
 				    motor_low[j].sendI = 15000;
 			    }
@@ -1026,7 +1034,7 @@ void txThread_high(int s)
 		
 		for (j = 0;j<4;j++)
 		{
-			if(judge_forward==1 || judge_backward || judge_left==1 || judge_right==1 || stick_forward != 0){
+			if(judge_forward==1 || judge_backward || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 ){
                 if (motor_high[j].sendI >15000) {
 				    motor_high[j].sendI = 15000;
 			    }
@@ -1130,12 +1138,13 @@ int main(int argc, char** argv) {
 
 	}
 
-    motor_low[0].ori_encoder = 45;
-	motor_low[1].ori_encoder = 45;
-	motor_low[2].ori_encoder = 199;
-	motor_low[3].ori_encoder = 199;
-	motor_high[0].ori_encoder = 59;
-	motor_high[1].ori_encoder = 59;
+
+    motor_low[0].ori_encoder = 14;
+	motor_low[1].ori_encoder = 14;
+	motor_low[2].ori_encoder = 219;
+	motor_low[3].ori_encoder = 219;
+	motor_high[0].ori_encoder = 60;
+	motor_high[1].ori_encoder = 60;
 	motor_high[2].ori_encoder = 23;
 	motor_high[3].ori_encoder = 23;
 
