@@ -444,7 +444,7 @@ void rxThread_low(int s)
 			velocityPub_low.publish(velocityMessage_low);
 			IPub_low.publish(IMessage_low);
 
-            ofstream fout;
+            std::ofstream fout;
 			fout.open("speed.txt",ios::app);
 			for(int i=0; i<4; i++){
 				fout<<motor_low[i].leg_angle<<"\t";
@@ -1081,7 +1081,7 @@ void txThread_high(int s)
 int main(int argc, char** argv) {
 	flag = 0;
 
-	ros::init(argc,argv,"canTest5");
+	ros::init(argc,argv,"asoc_lower_controller");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(100);
 
@@ -1137,16 +1137,23 @@ int main(int argc, char** argv) {
 
 
 	}
+	ros::param::get("~motor_low[0].ori_encoder",motor_low[0].ori_encoder);
+	ros::param::get("~motor_low[1].ori_encoder",motor_low[1].ori_encoder);
+	ros::param::get("~motor_low[2].ori_encoder",motor_low[2].ori_encoder);
+	ros::param::get("~motor_low[3].ori_encoder",motor_low[3].ori_encoder);
+	ros::param::get("~motor_high[0].ori_encoder",motor_high[0].ori_encoder);
+	ros::param::get("~motor_high[1].ori_encoder",motor_high[1].ori_encoder);
+	ros::param::get("~motor_high[2].ori_encoder",motor_high[2].ori_encoder);
+	ros::param::get("~motor_high[3].ori_encoder",motor_high[3].ori_encoder);
 
-
-    motor_low[0].ori_encoder = 14;
-	motor_low[1].ori_encoder = 14;
-	motor_low[2].ori_encoder = 219;
-	motor_low[3].ori_encoder = 219;
-	motor_high[0].ori_encoder = 60;
-	motor_high[1].ori_encoder = 60;
-	motor_high[2].ori_encoder = 23;
-	motor_high[3].ori_encoder = 23;
+    // motor_low[0].ori_encoder = 14;
+	// motor_low[1].ori_encoder = 14;
+	// motor_low[2].ori_encoder = 219;
+	// motor_low[3].ori_encoder = 219;
+	// motor_high[0].ori_encoder = 60;
+	// motor_high[1].ori_encoder = 60;
+	// motor_high[2].ori_encoder = 23;
+	// motor_high[3].ori_encoder = 23;
 
     positionPub_low = n.advertise<std_msgs::Int32MultiArray>("position_low",100);
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
