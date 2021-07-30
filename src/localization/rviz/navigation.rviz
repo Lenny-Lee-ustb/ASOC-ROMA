@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Path1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -60,7 +61,7 @@ Visualization Manager:
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
-      Line Style: Lines
+      Line Style: Billboards
       Line Width: 0.029999999329447746
       Name: Path
       Offset:
@@ -80,6 +81,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        RTK:
+          Value: true
         base_footprint:
           Value: true
         imu_link:
@@ -97,6 +100,8 @@ Visualization Manager:
         map:
           odom:
             base_footprint:
+              RTK:
+                {}
               imu_link:
                 {}
       Update Interval: 0
@@ -129,25 +134,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.5233746767044067
+      Distance: 21.0345401763916
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.20055896043777466
-        Y: -0.05724171921610832
-        Z: 0.08269559592008591
+        X: -0.22113226354122162
+        Y: 3.347101926803589
+        Z: 1.9613378047943115
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7297971248626709
+      Pitch: 0.8697969913482666
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.513580322265625
+      Yaw: 3.8635478019714355
     Saved: ~
 Window Geometry:
   Displays:

@@ -2,20 +2,20 @@
 <launch>
     <!-- Spawn core IMU !! -->
     <node pkg="wt931" type="main_cpp" name="imu_wt906" clear_params="true" output="screen" >
-       <param name = "serialport_name" type="string" value = "/dev/FT232_A"/> 
+       <param name = "serialport_name" type="string" value = "/dev/ttyUSB0"/> 
        <param name = "baudrate" type="int" value = "921600"/>
     </node>
 
     <!-- Spawn RTK module !! -->
     <node pkg="nmea_navsat_driver" type="nmea_serial_driver" name="RTK_GPS" clear_params="true" output="screen">
-       <param name = "port" type="string" value = "/dev/RTK_1"/> 
+       <param name = "port" type="string" value = "/dev/ttyUSB1"/> 
        <param name = "baud" type="int" value = "230400"/>
        <param name = "frame_id" type="string" value = "RTK"/>
     </node>
 
     <!--Load fixed path !!  -->
     <node pkg="path_load" type="path_load.py" name="path_loader" >
-        <param name="file_path" value="$(find path_load)/src/data.csv" />
+        <param name="file_path" value="$(find path_load)/src/data_small.csv" />
         <param name="pub_hz" value="3" />
     </node>
     

@@ -22,7 +22,7 @@ def DueData(inputdata):   #新增的核心程序，对读取的数据进行划�
     global  w
     global  Angle
     for data in inputdata:  #在输入的数据进行遍历
-        data = ord(data)
+        # data = ord(data)
         if FrameState==0:   #当未确定状态的时候，进入以下判断
             if data==0x55 and Bytenum==0: #0x55位于第一位时候，开始读取数据，增大bytenum
                 CheckSum=data

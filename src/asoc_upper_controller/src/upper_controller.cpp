@@ -9,7 +9,7 @@
 #include <visualization_msgs/Marker.h>
 
 #define PI 3.14159265358979
-double last_eta = 0;
+double last_d_theta = 0;
 
 /********************/
 /* CLASS DEFINITION */
@@ -18,9 +18,12 @@ class UpperController {
 public:
     UpperController();
     void initMarker();
+    bool isForwardWayPt(const geometry_msgs::Point &wayPt,
+                                                  const geometry_msgs::Pose &carPose);
     double getYawFromPose(const geometry_msgs::Pose &carPose);
     double getCar2GoalDist();
-
+    geometry_msgs::Pose  getTrackPose(const geometry_msgs::Pose &carPose);
+    double getEta(const geometry_msgs::Pose &carPose);
 
 private:
   ros::NodeHandle n_;
@@ -37,13 +40,15 @@ private:
   double controller_freq, baseSpeed;
   double  goalRadius, goal_pose;
 
-  bool goal_received, goal_reached;
+  bool foundForwardPt,goal_received, goal_reached;
 
   void odomCB(const nav_msgs::Odometry::ConstPtr &odomMsg);
   void pathCB(const nav_msgs::Path::ConstPtr &pathMsg);
   void goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg);
   void goalReachingCB(const ros::TimerEvent &);
+
   void controlLoopCB(const ros::TimerEvent &);
+
 };
 
 UpperController::UpperController() {
@@ -194,25 +199,107 @@ void UpperController::goalReachingCB(const ros::TimerEvent &) {
   }
 }
 
+bool UpperController::isForwardWayPt(const geometry_msgs::Point &wayPt,
+                                  const geometry_msgs::Pose &carPose) {
+  float car2wayPt_x = wayPt.x - carPose.position.x;
+  float car2wayPt_y = wayPt.y - carPose.position.y;
+  double car_theta = getYawFromPose(carPose);
+
+  float car_car2wayPt_x =
+      cos(car_theta) * car2wayPt_x + sin(car_theta) * car2wayPt_y;
+  float car_car2wayPt_y =
+      -sin(car_theta) * car2wayPt_x + cos(car_theta) * car2wayPt_y;
+
+  if (car_car2wayPt_x > 0) /*is Forward WayPt*/
+    return true;
+  else
+    return false;
+}
+
+geometry_msgs::Pose UpperController::getTrackPose(const geometry_msgs::Pose &carPose){
+double carPose_yaw = getYawFromPose(carPose);
+geometry_msgs::Point forwardPt;
+geometry_msgs::Point odom_car2WayPtVec;
+geometry_msgs::Point carPose_pos = carPose.position;
+geometry_msgs::Pose forwardPose;
 
 
+if (!goal_reached) {
+    for (int i = 0; i < map_path.poses.size(); i++) {
+      geometry_msgs::Point odom_path_wayPt = map_path.poses[i].pose.position;
+      bool _isForwardWayPt = isForwardWayPt(odom_path_wayPt, carPose);
+      
+      if (_isForwardWayPt) {
+              forwardPt = odom_path_wayPt;
+              forwardPose = map_path.poses[i].pose;
+              foundForwardPt = true;
+              break;
+        }
+    }     
+}else if (goal_reached) {
+    forwardPt = odom_goal_pos;
+    foundForwardPt = false;
+    // ROS_INFO("goal REACHED!");
+  }
+ 
+ 
+ 
+ /*Visualized Target Point on RVIZ*/
+  /*Clear former target point Marker*/
+  points.points.clear();
+  line_strip.points.clear();
+
+  if (foundForwardPt && !goal_reached) {
+    points.points.push_back(carPose_pos);
+    points.points.push_back(forwardPt);
+    line_strip.points.push_back(carPose_pos);
+    line_strip.points.push_back(forwardPt);
+  }
+
+  marker_pub.publish(points);
+  marker_pub.publish(line_strip);
+
+  odom_car2WayPtVec.x = cos(carPose_yaw) * (forwardPt.x - carPose_pos.x) +
+                        sin(carPose_yaw) * (forwardPt.y - carPose_pos.y);
+  odom_car2WayPtVec.y = -sin(carPose_yaw) * (forwardPt.x - carPose_pos.x) +
+                        cos(carPose_yaw) * (forwardPt.y - carPose_pos.y);
+  // return odom_car2WayPtVec;
+  return forwardPose;
+}
+
+
+// double UpperController::getEta(const geometry_msgs::Pose &carPose) {
+//   geometry_msgs::Point odom_car2WayPtVec = getTrackPt(carPose);
+
+//   double eta = atan2(odom_car2WayPtVec.y, odom_car2WayPtVec.x);
+//   return eta;
+// };
 
 void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
   geometry_msgs::Pose carPose = odom.pose.pose;
   geometry_msgs::Twist carVel = odom.twist.twist;
+  geometry_msgs::Pose ForwardPose = getTrackPose(carPose);
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
 
   if (goal_received) {
-        if (!goal_reached) {
+        double thetar = getYawFromPose(carPose);
+        double theta = getYawFromPose(ForwardPose);
+        double d_theta = theta - thetar;
+        if (foundForwardPt) {
+          cmd_vel.angular.z =d_theta;//PD control here!! no finish
 
+        last_d_theta = d_theta;
+        if (!goal_reached) {
+            cmd_vel.linear.x =0.5;
         }
   }
+  ROS_INFO("Vyaw:%.2f,Vt:%.2f",cmd_vel.angular.z,cmd_vel.linear.x);
   pub_.publish(cmd_vel);
 }
-
+}
 
 /*****************/
 /* MAIN FUNCTION */
