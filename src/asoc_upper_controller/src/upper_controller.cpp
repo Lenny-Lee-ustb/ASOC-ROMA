@@ -21,6 +21,7 @@ public:
     bool isForwardWayPt(const geometry_msgs::Point &wayPt,
                                                   const geometry_msgs::Pose &carPose);
     double getYawFromPose(const geometry_msgs::Pose &carPose);
+    double getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt);
     double getCar2GoalDist();
     geometry_msgs::Pose  getTrackPose(const geometry_msgs::Pose &carPose);
     double getEta(const geometry_msgs::Pose &carPose);
@@ -39,6 +40,9 @@ private:
 
   double controller_freq, baseSpeed;
   double  goalRadius, goal_pose;
+  double lateral_dist;
+  double P_Yaw, I_Yaw, D_Yaw;
+  double P_Lateral, I_Lateral, D_Lateral;
 
   bool foundForwardPt,goal_received, goal_reached;
 
@@ -176,6 +180,15 @@ double UpperController::getYawFromPose(const geometry_msgs::Pose &carPose) {
   return yaw;
 }
 
+double getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt){
+
+  double car2goal_x = ForwardPt.position.x - carPose.position.x;
+  double car2goal_y = ForwardPt.position.y - carPose.position.y;
+  double dist = sqrt(car2goal_x * car2goal_x + car2goal_y * car2goal_y);
+  
+  return dist;
+}
+
 double UpperController::getCar2GoalDist() {
   geometry_msgs::Point car_pose = odom.pose.pose.position;
   double car2goal_x = odom_goal_pos.x - car_pose.x;
@@ -265,21 +278,15 @@ if (!goal_reached) {
                         cos(carPose_yaw) * (forwardPt.y - carPose_pos.y);
   // return odom_car2WayPtVec;
   return forwardPose;
-}
+};
 
-
-// double UpperController::getEta(const geometry_msgs::Pose &carPose) {
-//   geometry_msgs::Point odom_car2WayPtVec = getTrackPt(carPose);
-
-//   double eta = atan2(odom_car2WayPtVec.y, odom_car2WayPtVec.x);
-//   return eta;
-// };
 
 void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
   geometry_msgs::Pose carPose = odom.pose.pose;
   geometry_msgs::Twist carVel = odom.twist.twist;
   geometry_msgs::Pose ForwardPose = getTrackPose(carPose);
+  lateral_dist = getLateralDist(carPose, ForwardPose);
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
@@ -291,12 +298,13 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
         if (foundForwardPt) {
           cmd_vel.angular.z =d_theta;//PD control here!! no finish
 
+
         last_d_theta = d_theta;
         if (!goal_reached) {
             cmd_vel.linear.x =0.5;
         }
   }
-  ROS_INFO("Vyaw:%.2f,Vt:%.2f",cmd_vel.angular.z,cmd_vel.linear.x);
+  ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%2.f",cmd_vel.angular.z,cmd_vel.linear.x,cmd_vel.linear.y);
   pub_.publish(cmd_vel);
 }
 }
