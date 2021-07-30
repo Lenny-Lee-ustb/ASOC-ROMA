@@ -1137,23 +1137,23 @@ int main(int argc, char** argv) {
 
 
 	}
-	ros::param::get("~motor_low[0].ori_encoder",motor_low[0].ori_encoder);
-	ros::param::get("~motor_low[1].ori_encoder",motor_low[1].ori_encoder);
-	ros::param::get("~motor_low[2].ori_encoder",motor_low[2].ori_encoder);
-	ros::param::get("~motor_low[3].ori_encoder",motor_low[3].ori_encoder);
-	ros::param::get("~motor_high[0].ori_encoder",motor_high[0].ori_encoder);
-	ros::param::get("~motor_high[1].ori_encoder",motor_high[1].ori_encoder);
-	ros::param::get("~motor_high[2].ori_encoder",motor_high[2].ori_encoder);
-	ros::param::get("~motor_high[3].ori_encoder",motor_high[3].ori_encoder);
+	// ros::param::get("~motor_low[0].ori_encoder",motor_low[0].ori_encoder);
+	// ros::param::get("~motor_low[1].ori_encoder",motor_low[1].ori_encoder);
+	// ros::param::get("~motor_low[2].ori_encoder",motor_low[2].ori_encoder);
+	// ros::param::get("~motor_low[3].ori_encoder",motor_low[3].ori_encoder);
+	// ros::param::get("~motor_high[0].ori_encoder",motor_high[0].ori_encoder);
+	// ros::param::get("~motor_high[1].ori_encoder",motor_high[1].ori_encoder);
+	// ros::param::get("~motor_high[2].ori_encoder",motor_high[2].ori_encoder);
+	// ros::param::get("~motor_high[3].ori_encoder",motor_high[3].ori_encoder);
 
-    // motor_low[0].ori_encoder = 14;
-	// motor_low[1].ori_encoder = 14;
-	// motor_low[2].ori_encoder = 219;
-	// motor_low[3].ori_encoder = 219;
-	// motor_high[0].ori_encoder = 60;
-	// motor_high[1].ori_encoder = 60;
-	// motor_high[2].ori_encoder = 23;
-	// motor_high[3].ori_encoder = 23;
+    motor_low[0].ori_encoder = 14;
+	motor_low[1].ori_encoder = 14;
+	motor_low[2].ori_encoder = 219;
+	motor_low[3].ori_encoder = 219;
+	motor_high[0].ori_encoder = 60;
+	motor_high[1].ori_encoder = 60;
+	motor_high[2].ori_encoder = 23;
+	motor_high[3].ori_encoder = 23;
 
     positionPub_low = n.advertise<std_msgs::Int32MultiArray>("position_low",100);
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
