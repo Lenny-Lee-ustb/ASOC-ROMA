@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python3
 import csv
 import os
 
@@ -14,6 +14,8 @@ class Path_loader(object):
 		rospy.init_node('path_publisher', log_level=rospy.DEBUG)
 		self.hz = rospy.get_param('~pub_hz')
 		self.load_file = rospy.get_param('~file_path')
+		# self.hz = 3
+		# self.load_file = '/home/roma/asoc-roma/src/path_load/src/data_small.csv'
 		print(self.load_file)
 		self.rate = rospy.Rate(self.hz) 
 		self.pub = rospy.Publisher('/fix_path', Path, queue_size=1, latch=True)
@@ -60,9 +62,7 @@ class Path_loader(object):
 	def publish(self,paths):
 		pub_path = Path()
 		pub_path.header.frame_id = '/map'
-		pub_path.header.stamp = rospy.Time.now()
-		# pub_path.poses.header.frame_id='/world'
-		# pub_path.poses.header.stamp=rospy.Time.now()
+		pub_path.header.stamp = rospy.Time.now() 
 		pub_path.poses = paths.poses
 		self.pub.publish(pub_path)
 
