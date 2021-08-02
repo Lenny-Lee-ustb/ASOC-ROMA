@@ -7,6 +7,14 @@ Panels:
         - /Global Options1
         - /Status1
         - /Path1
+        - /TF1
+        - /TF1/Frames1
+        - /TF1/Tree1
+        - /TF1/Tree1/map1
+        - /TF1/Tree1/map1/camera_odom_frame1
+        - /TF1/Tree1/map1/camera_odom_frame1/camera_pose_frame1
+        - /TF1/Tree1/map1/camera_odom_frame1/camera_pose_frame1/camera_link1
+        - /TF1/Tree1/map1/camera_odom_frame1/camera_pose_frame1/camera_link1/camera_accel_frame1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -70,6 +78,7 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
+      Queue Size: 10
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
@@ -80,30 +89,40 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
-        RTK:
+        All Enabled: false
+        camera_accel_frame:
+          Value: false
+        camera_accel_optical_frame:
+          Value: false
+        camera_gyro_frame:
+          Value: false
+        camera_gyro_optical_frame:
+          Value: false
+        camera_link:
           Value: true
-        base_footprint:
+        camera_odom_frame:
           Value: true
-        imu_link:
-          Value: true
+        camera_pose_frame:
+          Value: false
         map:
-          Value: true
-        odom:
-          Value: true
-      Marker Scale: 1
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
         map:
-          odom:
-            base_footprint:
-              RTK:
-                {}
-              imu_link:
-                {}
+          camera_odom_frame:
+            camera_pose_frame:
+              camera_link:
+                camera_accel_frame:
+                  camera_accel_optical_frame:
+                    {}
+                camera_gyro_frame:
+                  camera_gyro_optical_frame:
+                    {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -134,25 +153,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 21.0345401763916
+      Distance: 0.7777309417724609
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.22113226354122162
-        Y: 3.347101926803589
-        Z: 1.9613378047943115
+        X: -0.0817057266831398
+        Y: 0.09934664517641068
+        Z: 0.20713689923286438
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8697969913482666
+      Pitch: 0.1597970426082611
       Target Frame: <Fixed Frame>
-      Value: Orbit (rviz)
-      Yaw: 3.8635478019714355
+      Yaw: 4.633547306060791
     Saved: ~
 Window Geometry:
   Displays:
@@ -170,5 +189,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1267
-  X: 67
+  X: 72
   Y: 27

@@ -180,7 +180,7 @@ double UpperController::getYawFromPose(const geometry_msgs::Pose &carPose) {
   return yaw;
 }
 
-double getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt){
+double UpperController::getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt){
 
   double car2goal_x = ForwardPt.position.x - carPose.position.x;
   double car2goal_y = ForwardPt.position.y - carPose.position.y;
