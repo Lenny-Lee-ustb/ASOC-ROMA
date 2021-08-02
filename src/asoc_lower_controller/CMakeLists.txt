@@ -67,3 +67,6 @@ target_link_libraries(canTest5s ${catkin_LIBRARIES})
 
 add_executable(canTest5s_body src/canTest5s_body.cpp)
 target_link_libraries(canTest5s_body ${catkin_LIBRARIES})
+
+add_executable(asoc_lower_controller src/asoc_lower_controller.cpp)
+target_link_libraries(asoc_lower_controller ${catkin_LIBRARIES})
