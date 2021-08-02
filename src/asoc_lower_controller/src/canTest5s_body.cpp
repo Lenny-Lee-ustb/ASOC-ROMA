@@ -91,6 +91,7 @@ ros::Subscriber encoder_turn_sub;
 ros::Subscriber encoder_angle_sub;
 ros::Subscriber encoder_dir;
 ros::Subscriber encoder_angle_sum;
+ros::Subscriber upper_controller;
 
 
 struct Motor{
@@ -360,6 +361,11 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	}
 }
 
+void upper_controller_callback(geometry_msgs::Twist cmd_vel){
+	frame_vt = cmd_vel.linear.x;
+	frame_vn = cmd_vel.linear.y;
+	frame_w = cmd_vel.angular.z;
+}
 
 std_msgs::Int32MultiArray positionMessage_low,positionMessage_high,velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high,targetPositionMessage_low,targetPositionMessage_high,targetVelocityMessage_low,targetVelocityMessage_high;
 
@@ -1251,6 +1257,7 @@ int main(int argc, char** argv) {
 	targetPositionSub_high = n.subscribe("targetPosition", 10, targetPosition_Callback_high);
     joy_sub = n.subscribe<sensor_msgs::Joy>("joy",10,buttonCallback);
     encoder_angle_sum = n.subscribe("MultiAngleSum",10,encoder_angle_sum_callback);
+	upper_controller = n.subscribe("pub_",10,upper_controller_callback);
 	while (ros::ok())
     {
 
