@@ -42,6 +42,9 @@ float frame_w_min = -15;
 
 int rxCounter_low;
 int rxCounter_high;
+float power;
+float power_last;
+int on_off = 1;
 
 int judge_forward=0;          //high[1],high[2] angle 1
 int judge_backward=0;         //high[3],high[4]   angle 0
@@ -79,6 +82,7 @@ ros::Publisher sendIPub_low;
 ros::Publisher sendIPub_high;
 ros::Publisher leg_angle_Pub_high;
 ros::Publisher leg_angle_Pub_low;
+
 
 ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
@@ -193,6 +197,11 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     stick_forward = joy->axes[1];
     stick_right = joy->axes[0];
 	stick_yaw = joy->axes[3];
+    power = joy -> buttons[8];
+    if(power>power_last){
+        on_off = -on_off;
+    }
+    power_last = power;
 	
     for (int i=0; i<4; i++){
         
@@ -285,7 +294,7 @@ void upper_controller_callback(geometry_msgs::Twist cmd_vel){
 }
 
 std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high, leg_angle_Message_high, leg_angle_Message_low;
-
+std_msgs::Float32 power_Message;
 void rxThread_low(int s)
 {
 	int ID;
@@ -701,7 +710,8 @@ void txThread_low(int s)
 		
 		for (j = 0;j<4;j++)
 		{
-			if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 || stick_yaw != 0){
+			//if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 || stick_yaw != 0){
+            if(on_off > 0){    
                 if (motor_low[j].sendI >15000) {
 				    motor_low[j].sendI = 15000;
 			    }
@@ -777,7 +787,8 @@ void txThread_high(int s)
 		
 		for (j = 0;j<4;j++)
 		{
-			if(judge_forward==1 || judge_backward || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 || stick_yaw != 0){
+			//if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 || stick_yaw != 0){
+            if(on_off > 0){
                 if (motor_high[j].sendI >15000) {
 				    motor_high[j].sendI = 15000;
 			    }
@@ -915,7 +926,7 @@ int main(int argc, char** argv) {
 
     joy_sub = n.subscribe<sensor_msgs::Joy>("joy",10,buttonCallback);
     encoder_angle_sum = n.subscribe("MultiAngleSum",10,encoder_angle_sum_callback);
-	// upper_controller = n.subscribe("pub_",10,upper_controller_callback);
+	upper_controller = n.subscribe("pub_",10,upper_controller_callback);
 	while (ros::ok())
     {
 
