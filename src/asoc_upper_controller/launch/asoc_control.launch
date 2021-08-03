@@ -6,14 +6,14 @@
         <param name = "goalRadius" type="double" value = "1.0"/>
         <param name = "goal_pose_err" type="double" value = "1.0"/>
 
-        <param name = "baseSpeed" type="double" value = "0.5"/> 
+        <param name = "baseSpeed" type="double" value = "2"/> 
         <param name = "P_Yaw" type="double" value = "1.0"/>
         <param name = "I_Yaw" type="double" value = "1.0"/>
         <param name = "D_Yaw" type="double" value = "0.1"/>
 
-        <param name = "P_Lateral" type="double" value = "1.0"/>
-        <param name = "I_Lateral" type="double" value = "1.0"/>
-        <param name = "D_Lateral" type="double" value = "1.0"/>
+        <param name = "P_Lateral" type="double" value = "0.0"/>
+        <param name = "I_Lateral" type="double" value = "0.0"/>
+        <param name = "D_Lateral" type="double" value = "0.0"/>
 
         <!-- <param name = "goalRadius" type="double" value = "1.0"/>
         <param name = "goalRadius" type="double" value = "1.0"/>

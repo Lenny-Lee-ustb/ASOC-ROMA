@@ -81,7 +81,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
     last_d_theta = d_theta;
     if (!goal_reached) {
-        cmd_vel.linear.x =0.5;
+        cmd_vel.linear.x =baseSpeed;
     }
   }
   ROS_INFO("----------");

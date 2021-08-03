@@ -255,8 +255,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 		}
 		else{
             frame_vt = 5*stick_forward;
-            frame_vn = 5*stick_right;
-			frame_w = 12*stick_yaw;
+            frame_vn = -5*stick_right;
+			frame_w = -12*stick_yaw;
 		}
 	}
 }
@@ -855,14 +855,14 @@ int main(int argc, char** argv) {
         motor_high[i].Kd_encoder = 5;
 	}
 
-    motor_low[0].ori_encoder = 47;
-	motor_low[1].ori_encoder = 47;
-	motor_low[2].ori_encoder = 217;
-	motor_low[3].ori_encoder = 217;
-	motor_high[0].ori_encoder = 88;
-	motor_high[1].ori_encoder = 88;
-	motor_high[2].ori_encoder = 38;
-	motor_high[3].ori_encoder = 38;
+    motor_low[0].ori_encoder = 42;
+	motor_low[1].ori_encoder = 42;
+	motor_low[2].ori_encoder = 227;
+	motor_low[3].ori_encoder = 227;
+	motor_high[0].ori_encoder = 77;
+	motor_high[1].ori_encoder = 77;
+	motor_high[2].ori_encoder = 55;
+	motor_high[3].ori_encoder = 55;
     
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
@@ -926,7 +926,7 @@ int main(int argc, char** argv) {
 
     joy_sub = n.subscribe<sensor_msgs::Joy>("joy",10,buttonCallback);
     encoder_angle_sum = n.subscribe("MultiAngleSum",10,encoder_angle_sum_callback);
-	upper_controller = n.subscribe("pub_",10,upper_controller_callback);
+	upper_controller = n.subscribe("cmd_vel",10,upper_controller_callback);
 	while (ros::ok())
     {
 
