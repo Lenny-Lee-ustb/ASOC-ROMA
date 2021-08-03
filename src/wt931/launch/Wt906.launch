@@ -1,12 +1,28 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Spawn core IMU !! -->
-    <node pkg="wt931" type="main_cpp" name="imu_wt906" clear_params="true" output="screen" >
+    <node pkg="wt931" type="main_cpp" name="imu_0" clear_params="true" output="screen" >
+       <param name = "ID" type="string" value ="0"/>
+       <param name = "serialport_name" type="string" value = "/dev/ttyUSB0"/> 
+       <param name = "baudrate" type="int" value = "921600"/>
+    </node>
+
+    <!-- <node pkg="wt931" type="main_cpp" name="imu_1" clear_params="true" output="screen" >
+       <param name = "ID" type="string" value ="1"/>
        <param name = "serialport_name" type="string" value = "/dev/ttyUSB1"/> 
        <param name = "baudrate" type="int" value = "921600"/>
     </node>
 
-    <!-- Broadcast imu tf -->
-    <node pkg="tf2_ros" type="static_transform_publisher" 
-            name="imu_static_transform_publisher" args="0 0 0 0 0 0 base_footprint imu_link " />
+   <node pkg="wt931" type="main_cpp" name="imu_2" clear_params="true" output="screen" >
+       <param name = "ID" type="string" value ="2"/>
+       <param name = "serialport_name" type="string" value = "/dev/ttyUSB2"/> 
+       <param name = "baudrate" type="int" value = "921600"/>
+    </node>
+
+   <node pkg="wt931" type="main_cpp" name="imu_3" clear_params="true" output="screen" >
+       <param name = "ID" type="string" value ="3"/>
+       <param name = "serialport_name" type="string" value = "/dev/ttyUSB3"/> 
+       <param name = "baudrate" type="int" value = "921600"/>
+    </node> -->
+
 </launch>

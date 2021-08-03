@@ -4,6 +4,7 @@ ImuController::ImuController()
 {
     //私有参数 获取
     ros::NodeHandle nh_private("~");
+    nh_private.param<string>("ID",ID,"00");
     nh_private.param<string>("serialport_name", serialport_name, "/dev/ttyUSB0");
     nh_private.param<int>("baudrate", baudrate, 921600);
     
@@ -36,15 +37,16 @@ ImuController::ImuController()
     
 
     //休眠3s,丢弃掉串口中错误的信息
-    //usleep(3000000);
-    //serialPort->flush ();
+    usleep(3000000);
+    serialPort->flush ();
 
     //发布者 接收者 初始化
-    publisher = nh.advertise<sensor_msgs::Imu>("/imu_data", 1000);
+    string topic_name = "/imu_leg_"+ID;
+    publisher = nh.advertise<sensor_msgs::Imu>(topic_name, 1000);
 
 	//ros系统时间
 	time_current = ros::Time::now();
-    msg.header.frame_id = "imu_link";
+    msg.header.frame_id = "imu_link_"+ID;
 
     //接收是否可以进行正常的读取
     uint8_t canReadCount = 0;

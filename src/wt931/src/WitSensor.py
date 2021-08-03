@@ -75,7 +75,7 @@ def DueData(inputdata):   #新增的核心程序，对读取的数据进行划�
                     Angle = get_angle(AngleData)
                     d = a+w+Angle
                     # print(d)
-                    print("a(g):%10.3f %10.3f %10.3f w(deg/s):%10.3f %10.3f %10.3f Angle(deg):%10.3f %10.3f %10.3f"%d)
+                    print("a(g):%10.3f,%10.3f,%10.3f  w(deg/s):%10.3f,%10.3f,%10.3f  Angle(deg):%10.3f,%10.3f,%10.3f"%d)
                 CheckSum=0
                 Bytenum=0
                 FrameState=0
@@ -151,7 +151,7 @@ if __name__=='__main__':
     # port = raw_input('please input port No. such as com7:')               #Python2软件版本用    port = raw_input('please input port No. such as com7:');*****************************************************************************************************
     #port = input('please input port No. such as com7:'));
     # baud = int(input('please input baudrate(115200 for JY61 or 9600 for JY901):'))
-    port ='/dev/ttyUSB0' 
+    port ='/dev/ttyUSB2' 
     baud =921600
 
     ser = serial.Serial(port, baud, timeout=0.5)  # ser = serial.Serial('com7',115200, timeout=0.5) 

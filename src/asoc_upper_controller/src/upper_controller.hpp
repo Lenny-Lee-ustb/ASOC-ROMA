@@ -138,9 +138,9 @@ double UpperController::getYawFromPose(const geometry_msgs::Pose &carPose) {
 
 double UpperController::getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt){
 
-  double car2goal_x = ForwardPt.position.x - carPose.position.x;
-  double car2goal_y = ForwardPt.position.y - carPose.position.y;
-  double dist = sqrt(car2goal_x * car2goal_x + car2goal_y * car2goal_y);
+  double car2pt_x = ForwardPt.position.x - carPose.position.x;
+  double car2pt_y = ForwardPt.position.y - carPose.position.y;
+  double dist = sqrt(car2pt_x * car2pt_x + car2pt_y * car2pt_y);
   
   return dist;
 }
@@ -248,7 +248,7 @@ if (!goal_reached) {
   odom_car2WayPtVec.y = -sin(carPose_yaw) * (forwardPt.point.x - carPose_pos.x) +
                         cos(carPose_yaw) * (forwardPt.point.y - carPose_pos.y);
 //   endTime = clock();
-//   ROS_INFO("point=(%.2f,%.2f) in %.6f",forwardPt.x,forwardPt.y,(double)(endTime-startTime)/CLOCKS_PER_SEC);
+  ROS_INFO("point=(%.2f,%.2f)",odom_car2WayPtVec.x,odom_car2WayPtVec.y);
   return forwardPose;
 };
 

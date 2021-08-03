@@ -24,6 +24,7 @@ private:
 	Serial * serialPort;
 	string serialport_name;
     int baudrate;
+	string ID;
 
 	//通信协议
 	CJY901 * protocol;
