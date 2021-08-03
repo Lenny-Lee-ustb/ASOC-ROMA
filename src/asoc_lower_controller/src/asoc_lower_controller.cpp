@@ -71,6 +71,14 @@ Matrix<float,2,1> vc_low2;
 Matrix<float,2,1> vc_high0;
 Matrix<float,2,1> vc_high2;
 
+ros::Publisher velocityPub_low;
+ros::Publisher velocityPub_high;
+ros::Publisher IPub_low;
+ros::Publisher IPub_high;
+ros::Publisher sendIPub_low;
+ros::Publisher sendIPub_high;
+ros::Publisher leg_angle_Pub_high;
+ros::Publisher leg_angle_Pub_low;
 
 ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
@@ -276,6 +284,8 @@ void upper_controller_callback(geometry_msgs::Twist cmd_vel){
 	}
 }
 
+std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high, leg_angle_Message_high, leg_angle_Message_low;
+
 void rxThread_low(int s)
 {
 	int ID;
@@ -283,6 +293,9 @@ void rxThread_low(int s)
 	int j;
 	struct can_frame frame_low;
 	int nbytes_low;
+
+    velocityMessage_low.data.resize(4);
+	IMessage_low.data.resize(4);
 
     rxCounter_low= 0;
 	for (j = 0;j<4;j++)
@@ -327,6 +340,9 @@ void rxThread_low(int s)
         motor_low[ID].position = 8192*motor_low[ID].NumOfTurns+motor_low[ID].angle;
         motor_low[ID].angleLast = motor_low[ID].angle;
 
+        velocityMessage_low.data[ID] = motor_low[ID].velocity;
+		IMessage_low.data[ID] = motor_low[ID].I;
+
 		if(i%4==0)
 		{
 			printfMultiMotorVelocity_low();
@@ -338,6 +354,9 @@ void rxThread_low(int s)
             printf("VN %f\r\n",frame_vn);
             printf("W is %f\r\n", frame_w);
             printf("target V is %f, %f, %f, %f, %f, %f, %f, %f \r\n",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity,motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
+
+            velocityPub_low.publish(velocityMessage_low);
+			IPub_low.publish(IMessage_low);
 
             std::ofstream fout;
 			fout.open("speed.txt",ios::app);
@@ -371,6 +390,9 @@ void rxThread_high(int s)
 	int j;
 	struct can_frame frame_high;
 	int nbytes_high;
+
+    velocityMessage_high.data.resize(4);
+	IMessage_high.data.resize(4);
 
     rxCounter_high= 0;
 	for (j = 0;j<4;j++)
@@ -415,6 +437,14 @@ void rxThread_high(int s)
         motor_high[ID].position = 8192*motor_high[ID].NumOfTurns+motor_high[ID].angle;
         motor_high[ID].angleLast = motor_high[ID].angle;
 
+        velocityMessage_high.data[ID] = motor_high[ID].velocity;
+		IMessage_high.data[ID] = motor_high[ID].I;
+
+        if(i%4==0)
+		{
+			velocityPub_high.publish(velocityMessage_high);
+			IPub_high.publish(IMessage_high);
+		}
         if(i == 16)
 		{
 			flag = 1;
@@ -644,6 +674,9 @@ void txThread_low(int s)
 	frame_low.can_dlc = 8;
     
 	int j;
+
+    sendIMessage_low.data.resize(4);
+    leg_angle_Message_low.data.resize(4);
   
     for (j = 0; j < 4; j++)
 	{
@@ -678,12 +711,21 @@ void txThread_low(int s)
 			    }
 			    frame_low.data[2*j] = motor_low[j].sendI>>8;
 			    frame_low.data[2*j+1] = motor_low[j].sendI>>0;
+
+                sendIMessage_low.data[j] = motor_low[j].sendI;
+                leg_angle_Message_low.data[j] = motor_low[j].leg_angle;
             }
             else{
                 frame_low.data[2*j] = 0;
 			    frame_low.data[2*j+1] = 0;
+
+                sendIMessage_low.data[j] = 0;
+                leg_angle_Message_low.data[j] = motor_low[j].leg_angle;
             }
 		}
+
+        sendIPub_low.publish(sendIMessage_low);
+        leg_angle_Pub_low.publish(leg_angle_Message_low);
         
         nbytes_low = write(s, &frame_low, sizeof(struct can_frame));
         
@@ -704,6 +746,9 @@ void txThread_high(int s)
 	frame_high.can_dlc = 8;
     
 	int j;
+
+    sendIMessage_high.data.resize(4);
+    leg_angle_Message_high.data.resize(4);
     
 	for(j=0; j<4; j++){
         motor_high[j].sendI = 0;
@@ -743,12 +788,20 @@ void txThread_high(int s)
                 
 			    frame_high.data[2*j] = motor_high[j].sendI>>8;
 			    frame_high.data[2*j+1] = motor_high[j].sendI>>0;
+
+                sendIMessage_high.data[j] = motor_high[j].sendI;
+                leg_angle_Message_high.data[j] = motor_high[j].leg_angle;
             }
             else{
                 frame_high.data[2*j] = 0;
 			    frame_high.data[2*j+1] = 0;
+
+                sendIMessage_high.data[j] = 0;
+                leg_angle_Message_high.data[j] = motor_high[j].leg_angle;
             }
 		}
+        sendIPub_high.publish(sendIMessage_high);
+        leg_angle_Pub_high.publish(leg_angle_Message_high);
         
         nbytes_high = write(s, &frame_high, sizeof(struct can_frame));
         
@@ -800,6 +853,16 @@ int main(int argc, char** argv) {
 	motor_high[2].ori_encoder = 38;
 	motor_high[3].ori_encoder = 38;
     
+    velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
+    IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
+	sendIPub_low = n.advertise<std_msgs::Int32MultiArray>("sendI_low",100);
+    velocityPub_high = n.advertise<std_msgs::Int32MultiArray>("velocity_high",100);
+    IPub_high = n.advertise<std_msgs::Int32MultiArray>("I_high",100);
+	sendIPub_high = n.advertise<std_msgs::Int32MultiArray>("sendI_high",100);
+    leg_angle_Pub_low = n.advertise<std_msgs::Int32MultiArray>("leg_angle_low",100);
+    leg_angle_Pub_high = n.advertise<std_msgs::Int32MultiArray>("leg_angle_high",100);
+    
+
 	int s_low;
 	int s_high;
 	struct sockaddr_can addr_low;
