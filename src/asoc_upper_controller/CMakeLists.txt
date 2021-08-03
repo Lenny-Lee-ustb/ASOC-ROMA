@@ -141,7 +141,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(upper_controller 
-src/upper_controller.cpp)
+src/upper_controller.cpp
+src/upper_controller.hpp)
 target_link_libraries(upper_controller
   ${catkin_LIBRARIES}
 )

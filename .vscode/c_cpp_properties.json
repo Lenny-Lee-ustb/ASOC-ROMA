@@ -6,7 +6,7 @@
         "limitSymbolsToIncludedHeaders": true
       },
       "includePath": [
-        "/opt/ros/melodic/include/**",
+        "/opt/ros/noetic/include/**",
         "/usr/include/**",
         "/home/roma/asoc-roma/src/wt906/include",
         "/usr/lib/gcc/x86_64-linux-gnu/7/include/**",
