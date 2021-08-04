@@ -86,8 +86,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double theta = getYawFromPose(ForwardPose);
     double d_theta = theta - thetar;
     if (foundForwardPt) {
-        cmd_vel.angular.z = P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta);//PD control here!! no finish
-        cmd_vel.linear.y = P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist);
+        cmd_vel.angular.z = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));//PD control here!! no finish
+        cmd_vel.linear.y = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
         last_d_theta = d_theta;
         last_lateral_dist = lateral_dist;
         if (!goal_reached) {

@@ -1,5 +1,5 @@
 #!/bin/bash
-source /opt/ros/melodic/setup.bash
+source /opt/ros/noetic/setup.bash
 
 #gnome-terminal -x bash -c "roscore" & 
 #sleep 2
@@ -19,7 +19,7 @@ echo "1234" | sudo ip link set up can0
 echo "1234" | sudo ip link set can1 type can bitrate 1000000
 echo "1234" | sudo ip link set up can1
 {
-gnome-terminal -t "start_lower_controller" -x bash -c "cd ~/asoc_roma;source devel/setup.bash;roslaunch asoc_lower_controller asoc_lower_controller.launch;exec bash"
+gnome-terminal -t "start_lower_controller" -x bash -c "cd ~/asoc-roma;source devel/setup.bash;roslaunch asoc_lower_controller asoc_lower_controller.launch;exec bash"
 }&
 #roslaunch asoc_lower_controller asoc_lower_controller.launch &
 sleep 0.1

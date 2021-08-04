@@ -33,12 +33,12 @@ uint16_t KP,KI;
 
 int flag;
 
-float frame_vt_max = 5;
-float frame_vt_min = -5;
-float frame_vn_max = 5;
-float frame_vn_min = -5;
-float frame_w_max = 15;
-float frame_w_min = -15;
+float frame_vt_max = 8;
+float frame_vt_min = -8;
+float frame_vn_max = 8;
+float frame_vn_min = -8;
+float frame_w_max = 20;
+float frame_w_min = -20;
 
 int rxCounter_low;
 int rxCounter_high;
