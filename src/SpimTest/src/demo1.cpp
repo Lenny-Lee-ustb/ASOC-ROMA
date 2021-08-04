@@ -29,6 +29,8 @@ FT_HANDLE ftHandle[4];
 FT4222_STATUS ft4222Status;
 FT_STATUS ftStatus;
 
+int count;
+
 struct encoderSingleTurn
 {
     uint8 sendData[1] = {0x05};
@@ -323,7 +325,12 @@ void getDateMultiTurn(){
                 enMT[i].angle_sum = enMT[i].turn_count *360 + enMT[i].angle_deg;
             }
             MultiAngleSumMSg.data[i]=enMT[i].angle_sum;
-
+        }
+        if(count==10000){
+            ros::param::set("ori0",enMT[0].angle_deg);
+            ros::param::set("ori1",enMT[1].angle_deg);
+            ros::param::set("ori2",enMT[2].angle_deg);
+            ros::param::set("ori3",enMT[3].angle_deg);
         }
         usleep(100);
         printenMTAngle();
@@ -336,6 +343,7 @@ void getDateMultiTurn(){
         MultiTurnPub.publish(MultiTurnMsg);
         Dir.publish(DirMsg);
         MultiAngleSumPub.publish(MultiAngleSumMSg);
+        count++;
 
 
     }
@@ -364,7 +372,7 @@ int main(int argc,char **argv)
     spiInit();
     signal(SIGINT, signalCallback);
     //getDateSingleTurn();//单圈
-    getOriangle();
+    //getOriangle();
     getDateMultiTurn();//多圈
     return 0;
 }

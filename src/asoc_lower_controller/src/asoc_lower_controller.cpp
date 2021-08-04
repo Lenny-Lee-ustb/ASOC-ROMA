@@ -855,14 +855,23 @@ int main(int argc, char** argv) {
         motor_high[i].Kd_encoder = 5;
 	}
 
-    motor_low[0].ori_encoder = 42;
-	motor_low[1].ori_encoder = 42;
-	motor_low[2].ori_encoder = 227;
-	motor_low[3].ori_encoder = 227;
-	motor_high[0].ori_encoder = 77;
-	motor_high[1].ori_encoder = 77;
-	motor_high[2].ori_encoder = 55;
-	motor_high[3].ori_encoder = 55;
+	ros::param::get("ori2",motor_low[0].ori_encoder);
+	ros::param::get("ori2",motor_low[1].ori_encoder);
+	ros::param::get("ori3",motor_low[2].ori_encoder);
+	ros::param::get("ori3",motor_low[3].ori_encoder);
+	ros::param::get("ori1",motor_high[0].ori_encoder);
+	ros::param::get("ori1",motor_high[1].ori_encoder);
+	ros::param::get("ori0",motor_high[2].ori_encoder);
+	ros::param::get("ori0",motor_high[3].ori_encoder);
+
+    // motor_low[0].ori_encoder = 42;
+	// motor_low[1].ori_encoder = 42;
+	// motor_low[2].ori_encoder = 227;
+	// motor_low[3].ori_encoder = 227;
+	// motor_high[0].ori_encoder = 77;
+	// motor_high[1].ori_encoder = 77;
+	// motor_high[2].ori_encoder = 55;
+	// motor_high[3].ori_encoder = 55;
     
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
