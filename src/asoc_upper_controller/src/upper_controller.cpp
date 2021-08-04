@@ -1,6 +1,8 @@
 #include "upper_controller.hpp"
 
 double last_d_theta = 0;
+double last_lateral_dist = 0;
+
 
 UpperController::UpperController() {
   // Private parameters handler
@@ -17,6 +19,9 @@ UpperController::UpperController() {
   pn.param("P_Lateral", P_Lateral, 1.0);
   pn.param("I_Lateral", I_Lateral, 1.0);
   pn.param("D_Lateral", D_Lateral, 1.0);
+  pn.param("P_Long", P_Long, 1.0);
+  pn.param("I_Long", I_Long, 1.0);
+  pn.param("D_Long", D_Long, 1.0);
 
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);
@@ -56,6 +61,9 @@ UpperController::UpperController() {
   ROS_INFO("[param] P_Lateral: %.2f", P_Lateral);
   ROS_INFO("[param] I_Lateral: %.2f", I_Lateral);
   ROS_INFO("[param] D_Lateral: %.2f", D_Lateral);
+  ROS_INFO("[param] P_Long: %.2f", P_Long);
+  ROS_INFO("[param] I_Long: %.2f", I_Long);
+  ROS_INFO("[param] D_Long: %.2f", D_Long);
 
   // Visualization Marker Settings
   initMarker();
@@ -66,7 +74,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   geometry_msgs::Pose carPose = odom.pose.pose;
   geometry_msgs::Twist carVel = odom.twist.twist;
   geometry_msgs::Pose ForwardPose = getTrackPose(carPose);
-  lateral_dist = getLateralDist(carPose, ForwardPose);
+  double LateralDir = GetLateralDir(carPose, ForwardPose);
+  // double LeftorRight = isRightorLeft(ForwardPose.position, carPose);
+  lateral_dist = LateralDir * getLateralDist(carPose, ForwardPose);
   cmd_vel.linear.x = baseSpeed;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
@@ -77,12 +87,12 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double d_theta = theta - thetar;
     if (foundForwardPt) {
         cmd_vel.angular.z = P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta);//PD control here!! no finish
-        cmd_vel.linear.y = -(P_Lateral * lateral_dist);
-
-    last_d_theta = d_theta;
-    if (!goal_reached) {
-        cmd_vel.linear.x =baseSpeed;
-    }
+        cmd_vel.linear.y = P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist);
+        last_d_theta = d_theta;
+        last_lateral_dist = lateral_dist;
+        if (!goal_reached) {
+            cmd_vel.linear.x = P_Long*(baseSpeed - carVel.linear.x);
+        }
   }
   ROS_INFO("----------");
   ROS_INFO("Yaw:%.2f, TrackYaw:%.2f",thetar,theta);

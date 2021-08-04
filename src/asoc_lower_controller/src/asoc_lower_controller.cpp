@@ -254,7 +254,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 			}
 		}
 		else{
-            frame_vt = 5*stick_forward;
+            frame_vt = 10*stick_forward;
             frame_vn = -5*stick_right;
 			frame_w = -12*stick_yaw;
 		}

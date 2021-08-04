@@ -23,8 +23,10 @@ public:
     double getYawFromPose(const geometry_msgs::Pose &carPose);
     double getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt);
     double getCar2GoalDist();
-    geometry_msgs::Pose  getTrackPose(const geometry_msgs::Pose &carPose);
+    double GetLateralDir(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPose);
+    double isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose);
     double getEta(const geometry_msgs::Pose &carPose);
+    geometry_msgs::Pose  getTrackPose(const geometry_msgs::Pose &carPose);
 
 private:
   ros::NodeHandle n_;
@@ -44,6 +46,7 @@ private:
   double lateral_dist;
   double P_Yaw, I_Yaw, D_Yaw;
   double P_Lateral, I_Lateral, D_Lateral;
+  double P_Long, I_Long, D_Long;
 
   bool foundForwardPt,goal_received, goal_reached;
 
@@ -184,6 +187,41 @@ bool UpperController::isForwardWayPt(const geometry_msgs::Point &wayPt,
   else
     return false;
 }
+
+double UpperController::isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose){
+  float car2wayPt_x = wayPt.x - carPose.position.x;
+  float car2wayPt_y = wayPt.y - carPose.position.y;
+  double car_theta = getYawFromPose(carPose);
+
+  float car_car2wayPt_x = 
+      cos(car_theta) * car2wayPt_x + sin(car_theta) * car2wayPt_y;
+  float car_car2wayPt_y = 
+      -sin(car_theta) * car2wayPt_x + cos(car_theta) * car2wayPt_y;
+  
+  // true means Left, false means right
+  if (car_car2wayPt_y > 0)
+      return 1;
+  else
+      return -1;
+}
+
+double UpperController::GetLateralDir(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPose){
+  double ForwardPose_yaw = getYawFromPose(ForwardPose);
+  double ForwardPose_x,ForwardPose_y;
+  double Car_x,Car_y;
+
+  ForwardPose_x = cos(ForwardPose_yaw);
+  ForwardPose_y = sin(ForwardPose_yaw);
+  Car_x = carPose.position.x - ForwardPose.position.x;
+  Car_y = carPose.position.y - ForwardPose.position.y;
+
+  if(ForwardPose_x*Car_y - ForwardPose_y*Car_x >=0){
+      return -1;
+  }
+  else{
+      return 1;
+  }
+  }
 
 geometry_msgs::Pose UpperController::getTrackPose(const geometry_msgs::Pose &carPose){
 clock_t startTime,endTime;
