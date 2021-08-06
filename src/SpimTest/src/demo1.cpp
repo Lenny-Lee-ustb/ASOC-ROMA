@@ -309,10 +309,11 @@ void getDateMultiTurn(){
         for (int i = 0;i<numOfMulti;i++) {
             spiWriteReadMultiTurn(i);
             MultiAngleMsg.data[i] = enMT[i].angle_deg;
-            if(enMT[i].angle_deg - enMT[i].angle_deg_last > 350){
+            //ROS_INFO("sub=(%.2f)",enMT[1].angle_deg-enMT[1].angle_deg_last);
+            if(enMT[i].angle_deg - enMT[i].angle_deg_last > 345){
                 enMT[i].turn_count--;
             }
-            else if(enMT[i].angle_deg - enMT[i].angle_deg_last < -350){
+            else if(enMT[i].angle_deg - enMT[i].angle_deg_last < -345){
                 enMT[i].turn_count ++;
             }
             MultiTurnMsg.data[i] = float(enMT[i].turn);

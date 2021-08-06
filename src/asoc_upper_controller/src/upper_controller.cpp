@@ -2,7 +2,7 @@
 
 double last_d_theta = 0;
 double last_lateral_dist = 0;
-
+double last_speed = 0;
 
 UpperController::UpperController() {
   // Private parameters handler
@@ -86,17 +86,20 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double theta = getYawFromPose(ForwardPose);
     double d_theta = theta - thetar;
     if (foundForwardPt) {
-        cmd_vel.angular.z = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));//PD control here!! no finish
-        cmd_vel.linear.y = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
-        last_d_theta = d_theta;
-        last_lateral_dist = lateral_dist;
         if (!goal_reached) {
-            cmd_vel.linear.x = P_Long*(baseSpeed - carVel.linear.x);
+          cmd_vel.angular.z = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));//PD control here!! no finish
+          cmd_vel.linear.y = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
+          cmd_vel.linear.x = P_Long*(baseSpeed - carVel.linear.x)+ D_Long * last_speed;
+          last_speed = baseSpeed - carVel.linear.x;
+          last_d_theta = d_theta;
+          last_lateral_dist = lateral_dist;
+
+
         }
   }
   ROS_INFO("----------");
   ROS_INFO("Yaw:%.2f, TrackYaw:%.2f",thetar,theta);
-  ROS_INFO("lateral:%.2f",lateral_dist);
+  ROS_INFO("lateral_dist:%.2f, lonf_vel:%.2f",lateral_dist,carVel.linear.x);
   ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",cmd_vel.angular.z,cmd_vel.linear.x,cmd_vel.linear.y);
   pub_.publish(cmd_vel);
 }

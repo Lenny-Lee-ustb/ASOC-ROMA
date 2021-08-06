@@ -237,6 +237,7 @@ geometry_msgs::Pose forwardPose;
 if (!goal_reached) {
     // startTime = clock();
     for (int i = 0; i < map_path.poses.size(); i++) {
+    // for (int i = map_path.poses.size(); i >0 ; i--) {
             geometry_msgs::PoseStamped map_path_pose = map_path.poses[i];
             geometry_msgs::PoseStamped odom_path_pose;
             try

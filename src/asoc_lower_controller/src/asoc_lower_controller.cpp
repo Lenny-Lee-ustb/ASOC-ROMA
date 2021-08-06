@@ -33,12 +33,12 @@ uint16_t KP,KI;
 
 int flag;
 
-float frame_vt_max = 8;
-float frame_vt_min = -8;
-float frame_vn_max = 8;
-float frame_vn_min = -8;
-float frame_w_max = 20;
-float frame_w_min = -20;
+float frame_vt_max = 15;
+float frame_vt_min = -15;
+float frame_vn_max = 15;
+float frame_vn_min = -15;
+float frame_w_max = 25;
+float frame_w_min = -25;
 
 int rxCounter_low;
 int rxCounter_high;
@@ -254,8 +254,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 			}
 		}
 		else{
-            frame_vt = 10*stick_forward;
-            frame_vn = -5*stick_right;
+            frame_vt = 30*stick_forward;
+            frame_vn = -30*stick_right;
 			frame_w = -12*stick_yaw;
 		}
 	}
