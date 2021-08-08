@@ -7,8 +7,8 @@ import  serial
 ACCData=[0.0]*8
 GYROData=[0.0]*8
 AngleData=[0.0]*8          
-FrameState = 0            #通过0x后面的值判断属于哪一种情况
-Bytenum = 0               #读取到这一段的第几位
+FrameState = 0            
+Bytenum = 0              
 CheckSum = 0              #求和校验位       
  
 a = [0.0]*3
@@ -73,8 +73,9 @@ def DueData(inputdata):   #新增的核心程序，对读取的数据进行划�
             else:
                 if data == (CheckSum&0xff):
                     Angle = get_angle(AngleData)
-                    d = a+w+Angle
-                    # print(d)
+                    # d = a + w + Angle
+                    d = tuple(a)+tuple(w)+tuple(Angle)
+                    # print(Angle)
                     print("a(g):%10.3f,%10.3f,%10.3f  w(deg/s):%10.3f,%10.3f,%10.3f  Angle(deg):%10.3f,%10.3f,%10.3f"%d)
                 CheckSum=0
                 Bytenum=0
@@ -151,7 +152,7 @@ if __name__=='__main__':
     # port = raw_input('please input port No. such as com7:')               #Python2软件版本用    port = raw_input('please input port No. such as com7:');*****************************************************************************************************
     #port = input('please input port No. such as com7:'));
     # baud = int(input('please input baudrate(115200 for JY61 or 9600 for JY901):'))
-    port ='/dev/ttyUSB2' 
+    port ='/dev/ttyUSB0' 
     baud =921600
 
     ser = serial.Serial(port, baud, timeout=0.5)  # ser = serial.Serial('com7',115200, timeout=0.5) 
