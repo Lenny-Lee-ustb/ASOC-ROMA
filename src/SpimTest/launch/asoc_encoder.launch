@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="rosbag" type="record" name="asoc_encoder_bag_record" output="screen" args="/MultiAngle /MultiAngleSum /MultiTurn" launch-prefix="gnome-terminal --tab--" />
+    <node pkg="SpimTest" type="demo1" name="demo1" required="true" />
+</launch>
