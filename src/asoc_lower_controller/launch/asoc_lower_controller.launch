@@ -1,5 +1,4 @@
 <launch>
-    <node pkg="rosbag" type="record" name="asoc_lower_controller_bag_record" output="screen" args="/velocity_low /velocity_high /sendI_low /sendI_high /leg_angle_low /leg_angle_high /leg_angle_sum_low /leg_angle_sum_high" launch-prefix="gnome-terminal --tab--" />
     <node pkg="joy" type="joy_node" name="joy_node" />
     <node pkg="asoc_lower_controller" type="asoc_lower_controller" name="asoc_lower_controller" required="true" output="screen" />
 

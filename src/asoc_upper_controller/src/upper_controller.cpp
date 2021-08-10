@@ -39,7 +39,7 @@ UpperController::UpperController() {
   timer1 = n_.createTimer(ros::Duration((1.0) / controller_freq),
                           &UpperController::controlLoopCB,
                           this); // Duration(0.05) -> 20Hz
-  timer2 = n_.createTimer(ros::Duration((0.5) / controller_freq),
+  timer2 = n_.createTimer(ros::Duration((1.0) / controller_freq),
                           &UpperController::goalReachingCB,
                           this); // Duration(0.05) -> 20Hz
 
@@ -77,7 +77,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   double LateralDir = GetLateralDir(carPose, ForwardPose);
   // double LeftorRight = isRightorLeft(ForwardPose.position, carPose);
   lateral_dist = LateralDir * getLateralDist(carPose, ForwardPose);
-  cmd_vel.linear.x = baseSpeed;
+  cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
 
@@ -93,16 +93,19 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           last_speed = baseSpeed - carVel.linear.x;
           last_d_theta = d_theta;
           last_lateral_dist = lateral_dist;
-
-
+          ROS_INFO("----------");
+          // ROS_INFO("Yaw:%.2f, TrackYaw:%.2f",thetar,theta);
+          ROS_INFO("lateral_dist:%.2f, long_vel:%.2f",lateral_dist,carVel.linear.x);
+          ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",cmd_vel.angular.z,cmd_vel.linear.x,cmd_vel.linear.y);
         }
+    }
+    pub_.publish(cmd_vel);
+  }else{
+    cmd_vel.angular.z = 0;
+    cmd_vel.linear.y = 0;
+    cmd_vel.linear.x = 0;
+    pub_.publish(cmd_vel);
   }
-  ROS_INFO("----------");
-  ROS_INFO("Yaw:%.2f, TrackYaw:%.2f",thetar,theta);
-  ROS_INFO("lateral_dist:%.2f, lonf_vel:%.2f",lateral_dist,carVel.linear.x);
-  ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",cmd_vel.angular.z,cmd_vel.linear.x,cmd_vel.linear.y);
-  pub_.publish(cmd_vel);
-}
 }
 
 /*****************/

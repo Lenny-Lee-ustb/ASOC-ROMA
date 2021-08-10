@@ -183,10 +183,11 @@ void recvData2enMTTurns2(encoderMultiTurn &enMT){
 }
 
 void printanglesum(){
-    printf("angle_sum are ");
-    for (int i = 0;i<numOfSingle;i++) printf("%f ;",enMT[i].angle_sum);
+    //printf("angle_sum are ");
+    //for (int i = 0;i<numOfSingle;i++) 
+    ROS_INFO("ANGLE SUM are %f, %f, %f, %f ;",enMT[0].angle_sum, enMT[1].angle_sum, enMT[2].angle_sum, enMT[3].angle_sum);
     //printf("%f ;",enST[2].angle_deg);
-    printf("\n");
+    //printf("\n");
 }
 
 void printenST(){
@@ -197,24 +198,27 @@ void printenST(){
 }
 
 void printenMTAngle(){
-    printf("enMT Angle are ");
-    for (int i = 0;i<numOfMulti;i++) printf("%f ;",enMT[i].angle_deg);
+    //printf("enMT Angle are ");
+    //for (int i = 0;i<numOfMulti;i++) 
+    ROS_INFO("enMT ANGLE are %f, %f, %f, %f ;",enMT[0].angle_deg, enMT[1].angle_deg, enMT[2].angle_deg, enMT[3].angle_deg);
     //printf("%f ;",enMT[2].angle_deg);
-    printf("\n");
+    //printf("\n");
 }
 
 void printenMTTurn(){
-    printf("enMT Turn are ");
-    for (int i = 0;i<numOfMulti;i++) printf("%f ;",enMT[i].turn);
+    //printf("enMT Turn are ");
+    //for (int i = 0;i<numOfMulti;i++) 
+    ROS_INFO("enMT TURN are %f, %f, %f, %f ;",enMT[0].turn, enMT[1].turn, enMT[2].turn, enMT[3].turn);
     //printf("%f ;",enMT[2].turn);
-    printf("\n");
+    //printf("\n");
 }
 
 void printturncount(){
-    printf("enMT turn count are ");
-    for (int i = 0;i<numOfMulti;i++) printf("%f ;",enMT[i].turn_count);
+    //printf("enMT turn count are ");
+    //for (int i = 0;i<numOfMulti;i++) 
+    ROS_INFO("enMT TURN_COUNT are %f, %f, %f, %f ;",enMT[0].turn_count, enMT[1].turn_count, enMT[2].turn_count, enMT[3].turn_count);
     //printf("%f ;",enMT[2].turn);
-    printf("\n");
+    //printf("\n");
 }
 
 void printfBitData(encoderMultiTurn enMT)
@@ -226,10 +230,11 @@ void printfBitData(encoderMultiTurn enMT)
 }
 
 void printDir(){
-    printf("enMT direction is");
-    for(int i=0; i<numOfSingle; i++) printf("%f ;",enMT[i].dir);
+    //printf("enMT direction is");
+    //for(int i=0; i<numOfSingle; i++) 
+    ROS_INFO("enMT DIRECTION is %f, %f, %f, %f ;",enMT[0].dir, enMT[1].dir, enMT[2].dir, enMT[3].dir);
     //printf("%f ;",enMT[2].dir);
-    printf("\n");
+    //printf("\n");
 }
 
 void spiWriteReadSingleTurn(int id)
@@ -310,10 +315,10 @@ void getDateMultiTurn(){
             spiWriteReadMultiTurn(i);
             MultiAngleMsg.data[i] = enMT[i].angle_deg;
             //ROS_INFO("sub=(%.2f)",enMT[1].angle_deg-enMT[1].angle_deg_last);
-            if(enMT[i].angle_deg - enMT[i].angle_deg_last > 345){
+            if(enMT[i].angle_deg - enMT[i].angle_deg_last > 300){
                 enMT[i].turn_count--;
             }
-            else if(enMT[i].angle_deg - enMT[i].angle_deg_last < -345){
+            else if(enMT[i].angle_deg - enMT[i].angle_deg_last < -300){
                 enMT[i].turn_count ++;
             }
             MultiTurnMsg.data[i] = float(enMT[i].turn);

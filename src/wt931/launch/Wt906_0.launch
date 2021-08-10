@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="node_name" default="imu_0"></arg>
+    <param name = "ID" type="string" value ="0"/>
+    
+    <node pkg="wt931" type="IMU_pub.py" name="$(arg node_name)" clear_params="true" output="screen" >
+        <param name = "serialport_name" type="string" value = "/dev/ttyUSB0"/> 
+        <param name = "baudrate" type="int" value = "921600"/>
+    </node>
+</launch>

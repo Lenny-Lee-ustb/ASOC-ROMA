@@ -162,7 +162,7 @@ void UpperController::goalReachingCB(const ros::TimerEvent &) {
 
   if (goal_received) {
     double car2goal_dist = getCar2GoalDist();
-    if (car2goal_dist < goalRadius && 0) {
+    if (car2goal_dist < goalRadius) {
         // !!! not finish here !!!
       goal_reached = true;
       goal_received = false;
@@ -235,9 +235,7 @@ geometry_msgs::Pose forwardPose;
 
 
 if (!goal_reached) {
-    // startTime = clock();
     for (int i = 0; i < map_path.poses.size(); i++) {
-    // for (int i = map_path.poses.size(); i >0 ; i--) {
             geometry_msgs::PoseStamped map_path_pose = map_path.poses[i];
             geometry_msgs::PoseStamped odom_path_pose;
             try
@@ -264,7 +262,7 @@ if (!goal_reached) {
 }else if (goal_reached) {
     forwardPt.point = odom_goal_pos;
     foundForwardPt = false;
-    // ROS_INFO("goal REACHED!");
+    ROS_INFO("goal REACHED!");
   }
 
  /*Visualized Target Point on RVIZ*/
@@ -286,8 +284,6 @@ if (!goal_reached) {
                         sin(carPose_yaw) * (forwardPt.point.y - carPose_pos.y);
   odom_car2WayPtVec.y = -sin(carPose_yaw) * (forwardPt.point.x - carPose_pos.x) +
                         cos(carPose_yaw) * (forwardPt.point.y - carPose_pos.y);
-//   endTime = clock();
-  ROS_INFO("point=(%.2f,%.2f)",odom_car2WayPtVec.x,odom_car2WayPtVec.y);
   return forwardPose;
 };
 

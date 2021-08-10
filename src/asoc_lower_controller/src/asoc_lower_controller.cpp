@@ -145,19 +145,19 @@ Motor motor_low[4];
 Motor motor_high[4];
 
 void printfMultiMotorVelocity_low(void){
-	printf("velocity is %d,%d,%d,%d;\r\n",motor_low[0].velocity,motor_low[1].velocity,motor_low[2].velocity,motor_low[3].velocity);
+	ROS_INFO("velocity is %d,%d,%d,%d;\r\n",motor_low[0].velocity,motor_low[1].velocity,motor_low[2].velocity,motor_low[3].velocity);
 }
 
 void printfMultiMotorVelocity_high(void){
-	printf("velocity is %d,%d,%d,%d;\r\n",motor_high[0].velocity,motor_high[1].velocity,motor_high[2].velocity,motor_high[3].velocity);
+	ROS_INFO("velocity is %d,%d,%d,%d;\r\n",motor_high[0].velocity,motor_high[1].velocity,motor_high[2].velocity,motor_high[3].velocity);
 }
 
 void printfMultiMotorI_low(void){
-	printf("I is %d,%d,%d,%d;\r\n",motor_low[0].I,motor_low[1].I,motor_low[2].I,motor_low[3].I);
+	ROS_INFO("I is %d,%d,%d,%d;\r\n",motor_low[0].I,motor_low[1].I,motor_low[2].I,motor_low[3].I);
 }
 
 void printfMultiMotorI_high(void){
-	printf("I is %d,%d,%d,%d;\r\n",motor_high[0].I,motor_high[1].I,motor_high[2].I,motor_high[3].I);
+	ROS_INFO("I is %d,%d,%d,%d;\r\n",motor_high[0].I,motor_high[1].I,motor_high[2].I,motor_high[3].I);
 }
 
 void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
@@ -255,8 +255,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 			}
 		}
 		else{
-            frame_vt = 30*stick_forward;
-            frame_vn = -30*stick_right;
+            frame_vt = 15*stick_forward;
+            frame_vn = -15*stick_right;
 			frame_w = -12*stick_yaw;
 		}
 	}
@@ -358,13 +358,13 @@ void rxThread_low(int s)
 		{
 			printfMultiMotorVelocity_low();
 			printfMultiMotorI_low();
-			printf("leg_angle is  %f,  %f,  %f,  %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);
-			printf("ori is %f, %f, %f, %f\r\n",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);
-            printf("target leg are %f, %f, %f, %f\r\n",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);
-			printf("VT %f\r\n",frame_vt);
-            printf("VN %f\r\n",frame_vn);
-            printf("W is %f\r\n", frame_w);
-            printf("target V is %f, %f, %f, %f, %f, %f, %f, %f \r\n",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity,motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
+			ROS_INFO("leg_angle is  %f,  %f,  %f,  %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);
+			ROS_INFO("ori is %f, %f, %f, %f\r\n",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);
+            ROS_INFO("target leg are %f, %f, %f, %f\r\n",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);
+			ROS_INFO("VT %f\r\n",frame_vt);
+            ROS_INFO("VN %f\r\n",frame_vn);
+            ROS_INFO("W is %f\r\n", frame_w);
+            ROS_INFO("target V is %f, %f, %f, %f, %f, %f, %f, %f \r\n",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity,motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
 
             velocityPub_low.publish(velocityMessage_low);
 			IPub_low.publish(IMessage_low);
