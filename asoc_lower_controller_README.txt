@@ -13,8 +13,6 @@ FYI: the first USB you plug in will be CAN0, which shall be used as CAN_low for 
 
 steps to run the program:
 1. sudo -s
-2. sudo ip link set can0 type can bitrate 1000000
-3. sudo ip link set up can0
-4. sudo ip link set can1 type can bitrate 1000000
-5. sudo ip link set up can1
-6.~/catkin_ws/asoc_lower_controller.sh start
+2. rosrun SpimTest demo1
+3.rosparam get ori0 (see if you get the latest ori0, if so, go to the next step, if not, repeat until you get it)
+4.~/catkin_ws/asoc_lower_controller.sh start
