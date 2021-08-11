@@ -13,6 +13,7 @@
                 "/usr/local/include/**"
             ],
             "name": "ROS",
+            "cppStandard": "c++17",
             "defines": [
                 "a"
             ]

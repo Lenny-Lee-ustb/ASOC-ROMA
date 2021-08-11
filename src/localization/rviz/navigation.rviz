@@ -108,7 +108,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: true
+      Enabled: false
       Keep: 100
       Name: Odometry
       Position Tolerance: 0.10000000149011612
@@ -125,6 +125,14 @@ Visualization Manager:
         Value: Arrow
       Topic: /odometry/filtered
       Unreliable: false
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /car_path
+      Name: Marker
+      Namespaces:
+        Markers: true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:

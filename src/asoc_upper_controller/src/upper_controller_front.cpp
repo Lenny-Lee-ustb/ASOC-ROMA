@@ -75,10 +75,11 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
   geometry_msgs::Pose carPose = odom.pose.pose;
   geometry_msgs::Twist carVel = odom.twist.twist;
-  geometry_msgs::Pose ForwardPose = getTrackPose(carPose);
-  double LateralDir = GetLateralDir(carPose, ForwardPose);
-  // double LeftorRight = isRightorLeft(ForwardPose.position, carPose);
-  lateral_dist = LateralDir * getLateralDist(carPose, ForwardPose);
+  geometry_msgs::Pose LateralPose = getTrackPose(carPose);
+  geometry_msgs::Pose ForwardPose = getTrackForwardPose(carPose,forward_dist);
+  double LateralDir = GetLateralDir(carPose, LateralPose);
+  // double LeftorRight = isRightorLeft(LateralPose.position, carPose);
+  lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
@@ -97,6 +98,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           last_lateral_dist = lateral_dist;
           ROS_INFO("----------");
           // ROS_INFO("Yaw:%.2f, TrackYaw:%.2f",thetar,theta);
+          ROS_INFO("pos:(%.2f,%.2f)",ForwardPose.position.x,ForwardPose.position.y);
           ROS_INFO("lateral_dist:%.2f, long_vel:%.2f",lateral_dist,carVel.linear.x);
           ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",cmd_vel.angular.z,cmd_vel.linear.x,cmd_vel.linear.y);
         }

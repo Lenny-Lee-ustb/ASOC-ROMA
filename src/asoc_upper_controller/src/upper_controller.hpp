@@ -27,6 +27,7 @@ public:
     double isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose);
     double getEta(const geometry_msgs::Pose &carPose);
     geometry_msgs::Pose  getTrackPose(const geometry_msgs::Pose &carPose);
+    geometry_msgs::Pose  getTrackForwardPose(const geometry_msgs::Pose &carPose, const double forward_dist);
 
 private:
   ros::NodeHandle n_;
@@ -43,7 +44,7 @@ private:
 
   double controller_freq, baseSpeed;
   double  goalRadius, goal_pose_err;
-  double lateral_dist;
+  double lateral_dist, forward_dist;
   double P_Yaw, I_Yaw, D_Yaw;
   double P_Lateral, I_Lateral, D_Lateral;
   double P_Long, I_Long, D_Long;
@@ -228,6 +229,7 @@ clock_t startTime,endTime;
 double carPose_yaw = getYawFromPose(carPose);
 double min_dist = 10;
 double min_i;
+
 geometry_msgs::PointStamped forwardPt;
 geometry_msgs::Point odom_car2WayPtVec;
 geometry_msgs::Point carPose_pos = carPose.position;
@@ -269,6 +271,77 @@ if (!goal_reached) {
   /*Clear former target point Marker*/
   points.points.clear();
   line_strip.points.clear();
+
+  if (foundForwardPt && !goal_reached) {
+    points.points.push_back(carPose_pos);
+    points.points.push_back(forwardPt.point);
+    line_strip.points.push_back(carPose_pos);
+    line_strip.points.push_back(forwardPt.point);
+  }
+
+  marker_pub.publish(points);
+  marker_pub.publish(line_strip);
+
+  odom_car2WayPtVec.x = cos(carPose_yaw) * (forwardPt.point.x - carPose_pos.x) +
+                        sin(carPose_yaw) * (forwardPt.point.y - carPose_pos.y);
+  odom_car2WayPtVec.y = -sin(carPose_yaw) * (forwardPt.point.x - carPose_pos.x) +
+                        cos(carPose_yaw) * (forwardPt.point.y - carPose_pos.y);
+  return forwardPose;
+};
+
+geometry_msgs::Pose UpperController::getTrackForwardPose(const geometry_msgs::Pose &carPose, const double forward_dist){
+double carPose_yaw = getYawFromPose(carPose);
+double min_dist = 10;
+double min_i;
+int forward_pts = 100 * forward_dist;
+
+geometry_msgs::PointStamped forwardPt;
+geometry_msgs::Point odom_car2WayPtVec;
+geometry_msgs::Point carPose_pos = carPose.position;
+geometry_msgs::Pose forwardPose;
+
+
+if (!goal_reached) {
+    for (int i = 0; i < map_path.poses.size(); i++) {
+            geometry_msgs::PoseStamped map_path_pose = map_path.poses[i];
+            geometry_msgs::PoseStamped map_forward_path_pose;
+            geometry_msgs::PoseStamped odom_path_pose;
+            geometry_msgs::PoseStamped odom_forward_path_pose;
+
+            if(i+forward_pts < map_path.poses.size()){
+              map_forward_path_pose = map_path.poses[i+forward_pts];
+            }
+            else{
+              map_forward_path_pose = map_path.poses[map_path.poses.size()-1];
+            }
+            
+            try
+            {
+                tf_listener.transformPose("camera_odom_frame", ros::Time(0) , map_path_pose, "map" ,odom_path_pose);
+                geometry_msgs::Point odom_path_wayPt = odom_path_pose.pose.position;
+                double dist = sqrt((odom_path_wayPt.x-carPose_pos.x)*(odom_path_wayPt.x-carPose_pos.x) +
+                                   (odom_path_wayPt.y-carPose_pos.y)*(odom_path_wayPt.y-carPose_pos.y));
+                if(dist<min_dist){
+                    min_dist=dist;
+                    min_i = i;
+                    tf_listener.transformPose("camera_odom_frame", ros::Time(0) , map_forward_path_pose, "map" ,odom_forward_path_pose);
+                    forwardPose = odom_forward_path_pose.pose;
+                    forwardPt.point = forwardPose.position;
+                }
+            }
+            catch(tf::TransformException &ex)
+            {
+                ROS_ERROR("%s",ex.what());
+                ros::Duration(1.0).sleep();
+            }
+        i = i + 4;
+    }
+}else if (goal_reached) {
+    forwardPt.point = odom_goal_pos;
+  }
+
+ /*Visualized Target Point on RVIZ*/
+  /*Clear former target point Marker*/
 
   if (foundForwardPt && !goal_reached) {
     points.points.push_back(carPose_pos);

@@ -146,6 +146,13 @@ src/upper_controller.hpp)
 target_link_libraries(upper_controller
   ${catkin_LIBRARIES}
 )
+
+add_executable(upper_controller_front 
+src/upper_controller_front.cpp
+src/upper_controller.hpp)
+target_link_libraries(upper_controller_front
+  ${catkin_LIBRARIES}
+)
 # add_dependencies(upper_controller upper_controller_generate_messages_cpp)
 
 ## Rename C++ executable without prefix
