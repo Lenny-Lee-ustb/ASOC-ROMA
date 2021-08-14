@@ -33,12 +33,12 @@ uint16_t KP,KI;
 
 int flag;
 
-float frame_vt_max = 15;
-float frame_vt_min = -15;
-float frame_vn_max = 15;
-float frame_vn_min = -15;
-float frame_w_max = 25;
-float frame_w_min = -25;
+float frame_vt_max = 30;
+float frame_vt_min = -30;
+float frame_vn_max = 25;
+float frame_vn_min = -25;
+float frame_w_max = 100; // 100 = 320 degree/s
+float frame_w_min = -100;
 
 int rxCounter_low;
 int rxCounter_high;
@@ -204,8 +204,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     }
     power_last = power;
 	
-    for (int i=0; i<4; i++){
-        
+    for (int i=0; i<4; i++){    
 		if(judge_forward==1){
 			if(i%2==0)
 			{
@@ -257,7 +256,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 		else{
             frame_vt = 15*stick_forward;
             frame_vn = -15*stick_right;
-			frame_w = -12*stick_yaw;
+			frame_w =  -40*stick_yaw;
 		}
 	}
 }
@@ -297,6 +296,7 @@ void upper_controller_callback(geometry_msgs::Twist cmd_vel){
 std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
 std_msgs::Float32 power_Message;
 std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
+
 void rxThread_low(int s)
 {
 	int ID;
@@ -358,7 +358,7 @@ void rxThread_low(int s)
 		{
 			printfMultiMotorVelocity_low();
 			printfMultiMotorI_low();
-			ROS_INFO("leg_angle is  %f,  %f,  %f,  %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);
+			ROS_INFO("leg_angle is %f, %f, %f, %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);
 			ROS_INFO("ori is %f, %f, %f, %f\r\n",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);
             ROS_INFO("target leg are %f, %f, %f, %f\r\n",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);
 			ROS_INFO("VT %f\r\n",frame_vt);
@@ -369,16 +369,16 @@ void rxThread_low(int s)
             velocityPub_low.publish(velocityMessage_low);
 			IPub_low.publish(IMessage_low);
 
-            std::ofstream fout;
-			fout.open("speed.txt",ios::app);
-			for(int i=0; i<4; i++){
-				fout<<motor_low[i].leg_angle<<"\t";
-			}
-			for(int i=0; i<4; i++){
-				fout<<motor_high[i].leg_angle<<"\t";
-			}
-			fout<<"\r\n";
-			fout.close();
+            // std::ofstream fout;
+			// fout.open("speed.txt",ios::app);
+			// for(int i=0; i<4; i++){
+			// 	fout<<motor_low[i].leg_angle<<"\t";
+			// }
+			// for(int i=0; i<4; i++){
+			// 	fout<<motor_high[i].leg_angle<<"\t";
+			// }
+			// fout<<"\r\n";
+			// fout.close();
 
 		}
         if(i == 16)

@@ -7,8 +7,9 @@
         <param name = "goal_pose_err" type="double" value = "10.0"/>
 
         <param name = "baseSpeed" type="double" value = "1.5"/>
+        <!-- vt = 19 -> 1m/s   -->
 
-        <param name = "P_Long" type="double" value = "8.0"/>
+        <param name = "P_Long" type="double" value = "19.0"/>
         <param name = "I_Long" type="double" value = "0.0"/>
         <param name = "D_Long" type="double" value = "2.0"/>
 
@@ -16,7 +17,7 @@
         <param name = "I_Yaw" type="double" value = "0.0"/>
         <param name = "D_Yaw" type="double" value = "0.1"/>
 
-        <param name = "P_Lateral" type="double" value = "30.0"/>
+        <param name = "P_Lateral" type="double" value = "20.0"/>
         <param name = "I_Lateral" type="double" value = "0.0"/>
         <param name = "D_Lateral" type="double" value = "1.0"/>
 

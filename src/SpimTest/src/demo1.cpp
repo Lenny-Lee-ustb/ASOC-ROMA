@@ -332,7 +332,7 @@ void getDateMultiTurn(){
             }
             MultiAngleSumMSg.data[i]=enMT[i].angle_sum;
         }
-        if(count==2000){
+        if(count==1000){
             ros::param::set("ori0",enMT[0].angle_deg);
             ros::param::set("ori1",enMT[1].angle_deg);
             ros::param::set("ori2",enMT[2].angle_deg);

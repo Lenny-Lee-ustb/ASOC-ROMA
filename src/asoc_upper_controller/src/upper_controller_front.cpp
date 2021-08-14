@@ -92,7 +92,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
         if (!goal_reached) {
           cmd_vel.angular.z = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));//PD control here!! no finish
           cmd_vel.linear.y = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
-          cmd_vel.linear.x = P_Long*(baseSpeed - carVel.linear.x)+ D_Long * last_speed;
+          cmd_vel.linear.x = P_Long;
           last_speed = baseSpeed - carVel.linear.x;
           last_d_theta = d_theta;
           last_lateral_dist = lateral_dist;

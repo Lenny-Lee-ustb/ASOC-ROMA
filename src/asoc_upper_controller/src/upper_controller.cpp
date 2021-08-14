@@ -14,32 +14,31 @@ UpperController::UpperController() {
   pn.param("goalRadius", goalRadius, 1.0);
   pn.param("goal_pose_err", goal_pose_err, 1.0);
   pn.param("forward_dist", forward_dist, 1.0);
+
   pn.param("P_Yaw", P_Yaw, 1.0);
   pn.param("I_Yaw", I_Yaw, 0.0);
   pn.param("D_Yaw", D_Yaw, 1.0);
+
   pn.param("P_Lateral", P_Lateral, 1.0);
   pn.param("I_Lateral", I_Lateral, 1.0);
   pn.param("D_Lateral", D_Lateral, 1.0);
+
   pn.param("P_Long", P_Long, 1.0);
   pn.param("I_Long", I_Long, 1.0);
   pn.param("D_Long", D_Long, 1.0);
 
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);
-
-  path_sub = n_.subscribe("/fix_path", 1,
-                          &UpperController::pathCB, this);
-  goal_sub =
-      n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
-
+  path_sub = n_.subscribe("/fix_path", 1, &UpperController::pathCB, this);
+  goal_sub = n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
   marker_pub = n_.advertise<visualization_msgs::Marker>("/car_path", 10);
-
   pub_ = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
   // Timer
   timer1 = n_.createTimer(ros::Duration((1.0) / controller_freq),
                           &UpperController::controlLoopCB,
                           this); // Duration(0.05) -> 20Hz
+                        
   timer2 = n_.createTimer(ros::Duration((1.0) / controller_freq),
                           &UpperController::goalReachingCB,
                           this); // Duration(0.05) -> 20Hz
@@ -89,9 +88,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double d_theta = theta - thetar;
     if (foundForwardPt) {
         if (!goal_reached) {
-          cmd_vel.angular.z = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));//PD control here!! no finish
+          cmd_vel.angular.z = -(P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));//PD control here!! no finish
           cmd_vel.linear.y = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
-          cmd_vel.linear.x = P_Long*(baseSpeed - carVel.linear.x)+ D_Long * last_speed;
+          cmd_vel.linear.x = P_Long;
           last_speed = baseSpeed - carVel.linear.x;
           last_d_theta = d_theta;
           last_lateral_dist = lateral_dist;
