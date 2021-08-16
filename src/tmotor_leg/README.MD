@@ -28,6 +28,6 @@ rosrun joy joy_node
 工作空间下：
 catkin_make
 source devel/setup.bash
-rosrun tmotortest tmotortest3
+rosrun tmotor_leg tmotortest3
 xbox操作请自行探索
 

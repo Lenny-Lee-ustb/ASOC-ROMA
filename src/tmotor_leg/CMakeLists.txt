@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(tmotortest)
+project(tmotor_leg)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -204,36 +204,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-add_executable(rostest1 src/rostest1.cpp)
-target_link_libraries(rostest1 ${catkin_LIBRARIES})
-
-add_executable(rostest2 src/rostest2.cpp)
-target_link_libraries(rostest2 ${catkin_LIBRARIES})
-
-add_executable(rostest3 src/rostest3.cpp)
-target_link_libraries(rostest3 ${catkin_LIBRARIES})
-
-add_executable(rostest4 src/rostest4.cpp)
-target_link_libraries(rostest4 ${catkin_LIBRARIES})
-
-add_executable(rostest5 src/rostest5.cpp)
-target_link_libraries(rostest5 ${catkin_LIBRARIES})
-
-add_executable(tmotor_springtest1 src/tmotor_springtest1.cpp)
-target_link_libraries(tmotor_springtest1 ${catkin_LIBRARIES})
-
-add_executable(tmotor_springtest2 src/tmotor_springtest2.cpp)
-target_link_libraries(tmotor_springtest2 ${catkin_LIBRARIES})
-
-add_executable(tmotortest1 src/tmotortest1.cpp)
-target_link_libraries(tmotortest1 ${catkin_LIBRARIES})
-
-add_executable(joytest1 src/joytest1.cpp)
-target_link_libraries(joytest1 ${catkin_LIBRARIES})
-
-add_executable(tmotortest2 src/tmotortest2.cpp)
-target_link_libraries(tmotortest2 ${catkin_LIBRARIES})
 
 add_executable(tmotortest3 src/tmotortest3.cpp)
 target_link_libraries(tmotortest3 ${catkin_LIBRARIES})
