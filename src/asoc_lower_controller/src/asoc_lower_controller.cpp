@@ -23,20 +23,17 @@
 #include <stdio.h>
 #include <math.h>
 
-
 #define PI 3.14159265
 
 using namespace std;
 using namespace Eigen;
 
-uint16_t KP,KI;
-
 int flag;
 
 float frame_vt_max = 30;
 float frame_vt_min = -30;
-float frame_vn_max = 25;
-float frame_vn_min = -25;
+float frame_vn_max = 30;
+float frame_vn_min = -30;
 float frame_w_max = 100; // 100 = 320 degree/s
 float frame_w_min = -100;
 
@@ -89,6 +86,8 @@ ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
 ros::Subscriber upper_controller;
 
+std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
+std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
 
 struct Motor{
     int rows = 2;
@@ -144,21 +143,26 @@ struct Motor{
 Motor motor_low[4];
 Motor motor_high[4];
 
+
 void printfMultiMotorVelocity_low(void){
 	ROS_INFO("velocity is %d,%d,%d,%d;\r\n",motor_low[0].velocity,motor_low[1].velocity,motor_low[2].velocity,motor_low[3].velocity);
 }
+
 
 void printfMultiMotorVelocity_high(void){
 	ROS_INFO("velocity is %d,%d,%d,%d;\r\n",motor_high[0].velocity,motor_high[1].velocity,motor_high[2].velocity,motor_high[3].velocity);
 }
 
+
 void printfMultiMotorI_low(void){
 	ROS_INFO("I is %d,%d,%d,%d;\r\n",motor_low[0].I,motor_low[1].I,motor_low[2].I,motor_low[3].I);
 }
 
+
 void printfMultiMotorI_high(void){
 	ROS_INFO("I is %d,%d,%d,%d;\r\n",motor_high[0].I,motor_high[1].I,motor_high[2].I,motor_high[3].I);
 }
+
 
 void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 	motor_low[0].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
@@ -188,6 +192,7 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 		}
 	}
 }
+
 
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
@@ -254,12 +259,13 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 			}
 		}
 		else{
-            frame_vt = 15*stick_forward;
-            frame_vn = -15*stick_right;
+            frame_vt = 30*stick_forward;
+            frame_vn = -30*stick_right;
 			frame_w =  -40*stick_yaw;
 		}
 	}
 }
+
 
 void upper_controller_callback(geometry_msgs::Twist cmd_vel){
 	if(cmd_vel.linear.x >= frame_vt_min && cmd_vel.linear.x <= frame_vt_max){
@@ -293,9 +299,82 @@ void upper_controller_callback(geometry_msgs::Twist cmd_vel){
 	}
 }
 
-std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
-std_msgs::Float32 power_Message;
-std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
+
+void controlV_calSendI_PI_low(int ID){
+	int limit = 16667;
+	motor_low[ID].velocityDifference = fmin(fmax(
+		motor_low[ID].targetVelocity - motor_low[ID].velocity, -1000), 1000); // -1000 < d_vel < 1000
+
+	motor_low[ID].velocityDifferenceSum = fmin(fmax(
+		motor_low[ID].velocityDifference + motor_low[ID].velocityDifferenceSum, -limit), limit); // -limit < Sum < limit 
+
+	motor_low[ID].sendI = motor_low[ID].Kp*motor_low[ID].velocityDifference + motor_low[ID].Ki/10*motor_low[ID].velocityDifferenceSum;
+}
+
+
+void controlV_calSendI_PI_high(int ID){
+	int limit = 16667;
+	motor_high[ID].velocityDifference = fmin(fmax(
+		motor_high[ID].targetVelocity - motor_high[ID].velocity, -1000), 1000); // -1000 < d_vel < 1000
+
+	motor_high[ID].velocityDifferenceSum = fmin(fmax(
+		motor_high[ID].velocityDifference + motor_high[ID].velocityDifferenceSum, -limit), limit); // -limit < Sum < limit 
+
+	motor_high[ID].sendI = motor_high[ID].Kp*motor_high[ID].velocityDifference + motor_high[ID].Ki/10*motor_high[ID].velocityDifferenceSum;
+}
+
+
+void body_to_wheel(float vt, float vn, float w){
+    for(int i=0; i<4; i++){
+        motor_low[i].vct = vt;
+        motor_high[i].vcn = vn;
+    }
+
+    vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D;
+    vc_low0(0,0) = motor_low[0].vct;
+    vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D;
+    vc_low2(0,0) = motor_low[2].vct;
+    vc_high0(1,0) = motor_high[0].vcn;
+    vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D;
+    vc_high2(1,0) = motor_high[2].vcn;
+    vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D;
+
+	motor_low[0].C(0,0) = motor_low[1].C(0,0) = (cos(-motor_low[0].leg_angle*PI/180) + 0.5*L*sin(-motor_low[0].leg_angle*PI/180))/2;
+    motor_low[0].C(0,1) = motor_low[1].C(0,1) = (-sin(-motor_low[0].leg_angle*PI/180) + 0.5*L*cos(-motor_low[0].leg_angle*PI/180))/2;
+    motor_low[0].C(1,0) = motor_low[1].C(1,0) = (cos(-motor_low[0].leg_angle*PI/180) - 0.5*L*sin(-motor_low[0].leg_angle*PI/180))/2;
+    motor_low[0].C(1,1) = motor_low[1].C(1,1) = (-sin(-motor_low[0].leg_angle*PI/180) - 0.5*L*cos(-motor_low[0].leg_angle*PI/180))/2;
+    
+    motor_low[2].C(0,0) = motor_low[3].C(0,0) = (cos(-motor_low[2].leg_angle*PI/180) + 0.5*L*sin(-motor_low[2].leg_angle*PI/180))/2;
+    motor_low[2].C(0,1) = motor_low[3].C(0,1) = (-sin(-motor_low[2].leg_angle*PI/180) + 0.5*L*cos(-motor_low[2].leg_angle*PI/180))/2;
+    motor_low[2].C(1,0) = motor_low[3].C(1,0) = (cos(-motor_low[2].leg_angle*PI/180) - 0.5*L*sin(-motor_low[2].leg_angle*PI/180))/2;
+    motor_low[2].C(1,1) = motor_low[3].C(1,1) = (-sin(-motor_low[2].leg_angle*PI/180) - 0.5*L*cos(-motor_low[2].leg_angle*PI/180))/2;
+
+    motor_high[0].C(0,0) = motor_high[1].C(0,0) = (cos(-motor_high[0].leg_angle*PI/180) + 0.5*L*sin(-motor_high[0].leg_angle*PI/180))/2;
+    motor_high[0].C(0,1) = motor_high[1].C(0,1) = (-sin(-motor_high[0].leg_angle*PI/180) + 0.5*L*cos(-motor_high[0].leg_angle*PI/180))/2;
+    motor_high[0].C(1,0) = motor_high[1].C(1,0) = (cos(-motor_high[0].leg_angle*PI/180) - 0.5*L*sin(-motor_high[0].leg_angle*PI/180))/2;
+    motor_high[0].C(1,1) = motor_high[1].C(1,1) = (-sin(-motor_high[0].leg_angle*PI/180) - 0.5*L*cos(-motor_high[0].leg_angle*PI/180))/2;
+
+    motor_high[2].C(0,0) = motor_high[3].C(0,0) = (cos(-motor_high[2].leg_angle*PI/180) + 0.5*L*sin(-motor_high[2].leg_angle*PI/180))/2;
+    motor_high[2].C(0,1) = motor_high[3].C(0,1) = (-sin(-motor_high[2].leg_angle*PI/180) + 0.5*L*cos(-motor_high[2].leg_angle*PI/180))/2;
+    motor_high[2].C(1,0) = motor_high[3].C(1,0) = (cos(-motor_high[2].leg_angle*PI/180) - 0.5*L*sin(-motor_high[2].leg_angle*PI/180))/2;
+    motor_high[2].C(1,1) = motor_high[3].C(1,1) = (-sin(-motor_high[2].leg_angle*PI/180) - 0.5*L*cos(-motor_high[2].leg_angle*PI/180))/2;
+
+	wheel_low0 = motor_low[0].C*vc_low0/r;
+    wheel_low2 = motor_low[2].C*vc_low2/r;
+    wheel_high0 = motor_high[0].C*vc_high0/r;
+    wheel_high2 = motor_high[2].C*vc_high2/r;
+
+    motor_low[0].targetVelocity = wheel_low0(0,0)*19;
+    motor_low[1].targetVelocity = -wheel_low0(1,0)*19;
+    motor_low[2].targetVelocity = wheel_low2(0,0)*19;
+    motor_low[3].targetVelocity = -wheel_low2(1,0)*19;
+
+    motor_high[0].targetVelocity = wheel_high0(0,0)*19;
+    motor_high[1].targetVelocity = -wheel_high0(1,0)*19;
+    motor_high[2].targetVelocity = wheel_high2(0,0)*19;
+    motor_high[3].targetVelocity = -wheel_high2(1,0)*19;
+}
+
 
 void rxThread_low(int s)
 {
@@ -394,6 +473,8 @@ void rxThread_low(int s)
     }
 
 }
+
+
 void rxThread_high(int s)
 {
 	int ID;
@@ -470,210 +551,6 @@ void rxThread_high(int s)
     }
 
 }
-void controlP_calSendI_PI_low(int ID){
-	motor_low[ID].positionDifference = motor_low[ID].targetPosition - motor_low[ID].position;
-	motor_low[ID].positionDifferenceSum = motor_low[ID].positionDifference + motor_low[ID].positionDifferenceSum;
-
-	motor_low[ID].sendI = motor_low[ID].Kp*motor_low[ID].positionDifference + motor_low[ID].Ki*motor_low[ID].positionDifferenceSum;
-}
-
-void controlP_calSendI_PI_high(int ID){
-	motor_high[ID].positionDifference = motor_high[ID].targetPosition - motor_high[ID].position;
-	motor_high[ID].positionDifferenceSum = motor_high[ID].positionDifference + motor_high[ID].positionDifferenceSum;
-
-	motor_high[ID].sendI = motor_high[ID].Kp*motor_high[ID].positionDifference + motor_high[ID].Ki*motor_high[ID].positionDifferenceSum;
-}
-
-void controlV_calSendI_PI_low(int ID){
-	int limit = 16667;
-	motor_low[ID].velocityDifference = motor_low[ID].targetVelocity - motor_low[ID].velocity;
-	if(motor_low[ID].velocityDifference > 1000) motor_low[ID].velocityDifference = 1000;
-	if(motor_low[ID].velocityDifference < -1000) motor_low[ID].velocityDifference = -1000;
-	motor_low[ID].velocityDifferenceSum = motor_low[ID].velocityDifference + motor_low[ID].velocityDifferenceSum;
-
-	if(motor_low[ID].velocityDifferenceSum>limit) motor_low[ID].velocityDifferenceSum = limit;
-	if(motor_low[ID].velocityDifferenceSum<(0-limit)) motor_low[ID].velocityDifferenceSum = (0-limit);
-
-	motor_low[ID].sendI = motor_low[ID].Kp*motor_low[ID].velocityDifference + motor_low[ID].Ki/10*motor_low[ID].velocityDifferenceSum;
-}
-
-void controlV_calSendI_PD_low(int ID){
-	int limit = 16667;
-	motor_low[ID].velocityDifference = motor_low[ID].targetVelocity - motor_low[ID].velocity;
-	if(motor_low[ID].velocityDifference > 1000) motor_low[ID].velocityDifference = 1000;
-	if(motor_low[ID].velocityDifference < -1000) motor_low[ID].velocityDifference = -1000;
-
-	motor_low[ID].velocity_diff = motor_low[ID].velocityDifference - motor_low[ID].velocityDifference_last;
-	if(motor_low[ID].velocity_diff>1000) motor_low[ID].velocity_diff = 1000;
-	if(motor_low[ID].velocity_diff<-1000) motor_low[ID].velocity_diff = -1000;
-
-	motor_low[ID].sendI = motor_low[ID].Kp*motor_low[ID].velocityDifference + motor_low[ID].Kd*motor_low[ID].velocity_diff;
-	
-	motor_low[ID].velocityDifference_last = motor_low[ID].velocityDifference;
-}
-
-void controlV_calSendI_PI_high(int ID){
-	int limit = 16667;
-	motor_high[ID].velocityDifference = motor_high[ID].targetVelocity - motor_high[ID].velocity;
-	if(motor_high[ID].velocityDifference > 1000) motor_high[ID].velocityDifference = 1000;
-	if(motor_high[ID].velocityDifference < -1000) motor_high[ID].velocityDifference = -1000;
-	motor_high[ID].velocityDifferenceSum = motor_high[ID].velocityDifference + motor_high[ID].velocityDifferenceSum;
-
-	if(motor_high[ID].velocityDifferenceSum>limit) motor_high[ID].velocityDifferenceSum = limit;
-	if(motor_high[ID].velocityDifferenceSum<(0-limit)) motor_high[ID].velocityDifferenceSum = (0-limit);
-
-	motor_high[ID].sendI = motor_high[ID].Kp*motor_high[ID].velocityDifference + motor_high[ID].Ki/10*motor_high[ID].velocityDifferenceSum;
-}
-
-void controlP_calSendI_PPI_low(int ID){
-	int limit = 16667;
-
-	motor_low[ID].positionDifference = motor_low[ID].targetPosition - motor_low[ID].position;
-	if(motor_low[ID].positionDifference > 4000) motor_low[ID].positionDifference = 4000;
-	if(motor_low[ID].positionDifference < -4000) motor_low[ID].positionDifference = -4000;
-
-	motor_low[ID].targetVelocity = motor_low[ID].K/100*(motor_low[ID].positionDifference);
-	motor_low[ID].velocityDifference = motor_low[ID].targetVelocity - motor_low[ID].velocity;
-	motor_low[ID].velocityDifferenceSum = motor_low[ID].velocityDifference + motor_low[ID].velocityDifferenceSum;
-
-	if(motor_low[ID].velocityDifferenceSum>limit) motor_low[ID].velocityDifferenceSum = limit;
-	if(motor_low[ID].velocityDifferenceSum<(0-limit)) motor_low[ID].velocityDifferenceSum = (0-limit);
-
-	motor_low[ID].sendI = 50*motor_low[ID].Kp*motor_low[ID].velocityDifference + 19*motor_low[ID].Ki/10*motor_low[ID].velocityDifferenceSum;
-}
-
-void controlP_calSendI_PPI_high(int ID){
-	int limit = 16667;
-
-	motor_high[ID].positionDifference = motor_high[ID].targetPosition - motor_high[ID].position;
-	if(motor_high[ID].positionDifference > 4000) motor_high[ID].positionDifference = 4000;
-	if(motor_high[ID].positionDifference < -4000) motor_high[ID].positionDifference = -4000;
-
-	motor_high[ID].targetVelocity = motor_high[ID].K/100*(motor_high[ID].positionDifference);
-	motor_high[ID].velocityDifference = motor_high[ID].targetVelocity - motor_high[ID].velocity;
-	motor_high[ID].velocityDifferenceSum = motor_high[ID].velocityDifference + motor_high[ID].velocityDifferenceSum;
-
-	if(motor_high[ID].velocityDifferenceSum>limit) motor_high[ID].velocityDifferenceSum = limit;
-	if(motor_high[ID].velocityDifferenceSum<(0-limit)) motor_high[ID].velocityDifferenceSum = (0-limit);
-
-	motor_high[ID].sendI = 50*motor_high[ID].Kp*motor_high[ID].velocityDifference + 19*motor_high[ID].Ki/10*motor_high[ID].velocityDifferenceSum;
-}
-
-void control_encoder_speed_leg_low(int ID){
-	int limit = 16667;
-
-	motor_low[ID].encoder_difference_leg = motor_low[ID].target_leg - motor_low[ID].leg_angle;
-
-	if(fabs(motor_low[ID].encoder_difference_leg)>360-fabs(motor_low[ID].encoder_difference_leg)){
-		if(motor_low[ID].encoder_difference_leg>0){
-			motor_low[ID].encoder_difference_leg = fabs(motor_low[ID].encoder_difference_leg)-360;
-		}
-		else{
-			motor_low[ID].encoder_difference_leg = 360 - fabs(motor_low[ID].encoder_difference_leg);
-		}
-	} 
-	else if(fabs(motor_low[ID].encoder_difference_leg)<360-fabs(motor_low[ID].encoder_difference_leg)){
-		motor_low[ID].encoder_difference_leg = motor_low[ID].encoder_difference_leg;
-	}
-	else if(fabs(motor_low[ID].encoder_difference_leg)==360-fabs(motor_low[ID].encoder_difference_leg)){
-		motor_low[ID].encoder_difference_leg = fabs(motor_low[ID].encoder_difference_leg);
-	}
-	
-	motor_low[ID].targetVelocity = motor_low[ID].K_encoder*(motor_low[ID].encoder_difference_leg);
-	motor_low[ID].velocityDifference = motor_low[ID].targetVelocity - motor_low[ID].velocity;
-
-    motor_low[ID].velocity_diff = motor_low[ID].velocityDifference - motor_low[ID].velocityDifference_last;
-    
-    if(motor_low[ID].velocity_diff>500) motor_low[ID].velocity_diff = 500;
-	if(motor_low[ID].velocity_diff<-500) motor_low[ID].velocity_diff = -500;
-
-	motor_low[ID].sendI = motor_low[ID].Kp_encoder*motor_low[ID].velocityDifference + 19*motor_low[ID].Kd_encoder/10*motor_low[ID].velocity_diff;
-    motor_low[ID].velocityDifference_last = motor_low[ID].velocityDifference;
-}
-
-void control_encoder_speed_leg_high(int ID){
-	int limit = 16667;
-
-	motor_high[ID].encoder_difference_leg = motor_high[ID].target_leg - motor_high[ID].leg_angle;
-
-	if(fabs(motor_high[ID].encoder_difference_leg)>360-fabs(motor_high[ID].encoder_difference_leg)){
-		if(motor_high[ID].encoder_difference_leg>0){
-			motor_high[ID].encoder_difference_leg = fabs(motor_high[ID].encoder_difference_leg)-360;
-		}
-		else{
-			motor_high[ID].encoder_difference_leg = 360 - fabs(motor_high[ID].encoder_difference_leg);
-		}
-	} 
-	else if(fabs(motor_high[ID].encoder_difference_leg)<360-fabs(motor_high[ID].encoder_difference_leg)){
-		motor_high[ID].encoder_difference_leg = motor_high[ID].encoder_difference_leg;
-	}
-	else if(fabs(motor_high[ID].encoder_difference_leg)==360-fabs(motor_high[ID].encoder_difference_leg)){
-		motor_high[ID].encoder_difference_leg = fabs(motor_high[ID].encoder_difference_leg);
-	}
-	
-
-	motor_high[ID].targetVelocity = motor_high[ID].K_encoder*(motor_high[ID].encoder_difference_leg);
-	motor_high[ID].velocityDifference = motor_high[ID].targetVelocity - motor_high[ID].velocity;
-
-    motor_high[ID].velocity_diff = motor_high[ID].velocityDifference - motor_high[ID].velocityDifference_last;
-    
-    if(motor_high[ID].velocity_diff>500) motor_high[ID].velocity_diff = 500;
-	if(motor_high[ID].velocity_diff<-500) motor_high[ID].velocity_diff = -500;
-
-	motor_high[ID].sendI = motor_high[ID].Kp_encoder*motor_high[ID].velocityDifference + 19*motor_high[ID].Kd_encoder/10*motor_high[ID].velocity_diff;
-    motor_high[ID].velocityDifference_last = motor_high[ID].velocityDifference;
-}
-
-void body_to_wheel(float vt, float vn, float w){
-    for(int i=0; i<4; i++){
-        motor_low[i].vct = vt;
-        motor_high[i].vcn = vn;
-    }
-
-    vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D;
-    vc_low0(0,0) = motor_low[0].vct;
-    vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D;
-    vc_low2(0,0) = motor_low[2].vct;
-    vc_high0(1,0) = motor_high[0].vcn;
-    vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D;
-    vc_high2(1,0) = motor_high[2].vcn;
-    vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D;
-
-	motor_low[0].C(0,0) = motor_low[1].C(0,0) = (cos(-motor_low[0].leg_angle*PI/180) + 0.5*L*sin(-motor_low[0].leg_angle*PI/180))/2;
-    motor_low[0].C(0,1) = motor_low[1].C(0,1) = (-sin(-motor_low[0].leg_angle*PI/180) + 0.5*L*cos(-motor_low[0].leg_angle*PI/180))/2;
-    motor_low[0].C(1,0) = motor_low[1].C(1,0) = (cos(-motor_low[0].leg_angle*PI/180) - 0.5*L*sin(-motor_low[0].leg_angle*PI/180))/2;
-    motor_low[0].C(1,1) = motor_low[1].C(1,1) = (-sin(-motor_low[0].leg_angle*PI/180) - 0.5*L*cos(-motor_low[0].leg_angle*PI/180))/2;
-    
-    motor_low[2].C(0,0) = motor_low[3].C(0,0) = (cos(-motor_low[2].leg_angle*PI/180) + 0.5*L*sin(-motor_low[2].leg_angle*PI/180))/2;
-    motor_low[2].C(0,1) = motor_low[3].C(0,1) = (-sin(-motor_low[2].leg_angle*PI/180) + 0.5*L*cos(-motor_low[2].leg_angle*PI/180))/2;
-    motor_low[2].C(1,0) = motor_low[3].C(1,0) = (cos(-motor_low[2].leg_angle*PI/180) - 0.5*L*sin(-motor_low[2].leg_angle*PI/180))/2;
-    motor_low[2].C(1,1) = motor_low[3].C(1,1) = (-sin(-motor_low[2].leg_angle*PI/180) - 0.5*L*cos(-motor_low[2].leg_angle*PI/180))/2;
-
-    motor_high[0].C(0,0) = motor_high[1].C(0,0) = (cos(-motor_high[0].leg_angle*PI/180) + 0.5*L*sin(-motor_high[0].leg_angle*PI/180))/2;
-    motor_high[0].C(0,1) = motor_high[1].C(0,1) = (-sin(-motor_high[0].leg_angle*PI/180) + 0.5*L*cos(-motor_high[0].leg_angle*PI/180))/2;
-    motor_high[0].C(1,0) = motor_high[1].C(1,0) = (cos(-motor_high[0].leg_angle*PI/180) - 0.5*L*sin(-motor_high[0].leg_angle*PI/180))/2;
-    motor_high[0].C(1,1) = motor_high[1].C(1,1) = (-sin(-motor_high[0].leg_angle*PI/180) - 0.5*L*cos(-motor_high[0].leg_angle*PI/180))/2;
-
-    motor_high[2].C(0,0) = motor_high[3].C(0,0) = (cos(-motor_high[2].leg_angle*PI/180) + 0.5*L*sin(-motor_high[2].leg_angle*PI/180))/2;
-    motor_high[2].C(0,1) = motor_high[3].C(0,1) = (-sin(-motor_high[2].leg_angle*PI/180) + 0.5*L*cos(-motor_high[2].leg_angle*PI/180))/2;
-    motor_high[2].C(1,0) = motor_high[3].C(1,0) = (cos(-motor_high[2].leg_angle*PI/180) - 0.5*L*sin(-motor_high[2].leg_angle*PI/180))/2;
-    motor_high[2].C(1,1) = motor_high[3].C(1,1) = (-sin(-motor_high[2].leg_angle*PI/180) - 0.5*L*cos(-motor_high[2].leg_angle*PI/180))/2;
-
-	wheel_low0 = motor_low[0].C*vc_low0/r;
-    wheel_low2 = motor_low[2].C*vc_low2/r;
-    wheel_high0 = motor_high[0].C*vc_high0/r;
-    wheel_high2 = motor_high[2].C*vc_high2/r;
-
-    motor_low[0].targetVelocity = wheel_low0(0,0)*19;
-    motor_low[1].targetVelocity = -wheel_low0(1,0)*19;
-    motor_low[2].targetVelocity = wheel_low2(0,0)*19;
-    motor_low[3].targetVelocity = -wheel_low2(1,0)*19;
-
-    motor_high[0].targetVelocity = wheel_high0(0,0)*19;
-    motor_high[1].targetVelocity = -wheel_high0(1,0)*19;
-    motor_high[2].targetVelocity = wheel_high2(0,0)*19;
-    motor_high[3].targetVelocity = -wheel_high2(1,0)*19;
-}
 
 
 void txThread_low(int s)
@@ -748,11 +625,11 @@ void txThread_low(int s)
         if (nbytes_low == -1 ) {
 			printf("send error\n");
         }
-        
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
     }
-
 }
+
+
 void txThread_high(int s)
 {
     struct can_frame frame_high;
@@ -835,6 +712,7 @@ void txThread_high(int s)
 
 }
 
+
 int main(int argc, char** argv) {
 	flag = 0;
 
@@ -857,7 +735,6 @@ int main(int argc, char** argv) {
         
 		motor_high[i].Kp = 13;
 		motor_high[i].Ki = 6;
-
         motor_high[i].K_encoder = 10;
 		motor_high[i].targetPosition = 0;
         motor_high[i].Kp_encoder = 22;

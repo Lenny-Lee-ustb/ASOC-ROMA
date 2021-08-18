@@ -45,6 +45,7 @@ private:
   double controller_freq, baseSpeed;
   double  goalRadius, goal_pose_err;
   double lateral_dist, forward_dist;
+  double rot_angle;
   double P_Yaw, I_Yaw, D_Yaw;
   double P_Lateral, I_Lateral, D_Lateral;
   double P_Long, I_Long, D_Long;

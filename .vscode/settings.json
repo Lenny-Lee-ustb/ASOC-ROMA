@@ -17,7 +17,13 @@
         "hash_set": "cpp",
         "initializer_list": "cpp",
         "regex": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp",
+        "chrono": "cpp",
+        "thread": "cpp",
+        "fstream": "cpp",
+        "iostream": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

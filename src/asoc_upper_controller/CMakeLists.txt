@@ -30,9 +30,9 @@ target_link_libraries(upper_controller_iit
   ${catkin_LIBRARIES}
 )
 
-add_executable(upper_controller_front 
-src/upper_controller_front.cpp
+add_executable(upper_controller_angle 
+src/upper_controller_angle.cpp
 src/upper_controller.hpp)
-target_link_libraries(upper_controller_front
+target_link_libraries(upper_controller_angle
   ${catkin_LIBRARIES}
 )
