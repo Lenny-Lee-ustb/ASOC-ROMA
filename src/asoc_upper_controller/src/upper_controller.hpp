@@ -20,6 +20,8 @@ public:
     void initMarker();
     bool isForwardWayPt(const geometry_msgs::Point &wayPt,
                                                   const geometry_msgs::Pose &carPose);
+    double getRollFromPose(const geometry_msgs::Pose &carPose);
+    double getPitchFromPose(const geometry_msgs::Pose &carPose);
     double getYawFromPose(const geometry_msgs::Pose &carPose);
     double getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt);
     double getCar2GoalDist();
@@ -127,6 +129,37 @@ void UpperController::goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg
   }
 }
 
+
+double UpperController::getRollFromPose(const geometry_msgs::Pose &carPose) {
+  float x = carPose.orientation.x;
+  float y = carPose.orientation.y;
+  float z = carPose.orientation.z;
+  float w = carPose.orientation.w;
+
+  double tmp, roll;
+  tf::Quaternion q(x, y, z, w);
+  tf::Matrix3x3 quaternion(q);
+  quaternion.getRPY(roll, tmp, tmp);
+
+  return roll;
+}
+
+
+double UpperController::getPitchFromPose(const geometry_msgs::Pose &carPose) {
+  float x = carPose.orientation.x;
+  float y = carPose.orientation.y;
+  float z = carPose.orientation.z;
+  float w = carPose.orientation.w;
+
+  double tmp, pitch;
+  tf::Quaternion q(x, y, z, w);
+  tf::Matrix3x3 quaternion(q);
+  quaternion.getRPY(tmp, pitch, tmp);
+
+  return pitch;
+}
+
+
 double UpperController::getYawFromPose(const geometry_msgs::Pose &carPose) {
   float x = carPose.orientation.x;
   float y = carPose.orientation.y;
@@ -141,6 +174,7 @@ double UpperController::getYawFromPose(const geometry_msgs::Pose &carPose) {
   return yaw;
 }
 
+
 double UpperController::getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt){
 
   double car2pt_x = ForwardPt.position.x - carPose.position.x;
@@ -149,6 +183,7 @@ double UpperController::getLateralDist(const geometry_msgs::Pose &carPose,const 
   
   return dist;
 }
+
 
 double UpperController::getCar2GoalDist() {
   geometry_msgs::Point car_pose = odom.pose.pose.position;
@@ -159,6 +194,7 @@ double UpperController::getCar2GoalDist() {
 
   return dist2goal;
 }
+
 
 void UpperController::goalReachingCB(const ros::TimerEvent &) {
 
@@ -172,6 +208,7 @@ void UpperController::goalReachingCB(const ros::TimerEvent &) {
     }
   }
 }
+
 
 bool UpperController::isForwardWayPt(const geometry_msgs::Point &wayPt,
                                   const geometry_msgs::Pose &carPose) {
@@ -190,6 +227,7 @@ bool UpperController::isForwardWayPt(const geometry_msgs::Point &wayPt,
     return false;
 }
 
+
 double UpperController::isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose){
   float car2wayPt_x = wayPt.x - carPose.position.x;
   float car2wayPt_y = wayPt.y - carPose.position.y;
@@ -206,6 +244,7 @@ double UpperController::isRightorLeft(const geometry_msgs::Point &wayPt, const g
   else
       return -1;
 }
+
 
 double UpperController::GetLateralDir(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPose){
   double ForwardPose_yaw = getYawFromPose(ForwardPose);

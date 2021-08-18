@@ -196,10 +196,10 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-    judge_forward = joy->buttons[3];
-	judge_backward = joy->buttons[0];
-	judge_left = joy->buttons[2];
-	judge_right = joy->buttons[1];
+    // judge_forward = joy->buttons[3];
+	// judge_backward = joy->buttons[0];
+	// judge_left = joy->buttons[2];
+	// judge_right = joy->buttons[1];
     stick_forward = joy->axes[1];
     stick_right = joy->axes[0];
 	stick_yaw = joy->axes[3];
@@ -207,63 +207,11 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     if(power>power_last){
         on_off = -on_off;
     }
-    power_last = power;
-	
-    for (int i=0; i<4; i++){    
-		if(judge_forward==1){
-			if(i%2==0)
-			{
-				motor_low[i].targetVelocity = 700;
-            	motor_high[i].targetVelocity = 700;
-			}
-			else
-			{
-				motor_low[i].targetVelocity = -700;
-            	motor_high[i].targetVelocity = -700;
-			}
-		}
-		else if(judge_backward==1){
-			if(i%2==0)
-			{
-				motor_low[i].targetVelocity = -700;
-            	motor_high[i].targetVelocity = -700;
-			}
-			else
-			{
-				motor_low[i].targetVelocity = 700;
-            	motor_high[i].targetVelocity = 700;
-			}
-		}
-		else if(judge_left==1){
-			if(i%2==0)
-			{
-				motor_low[i].targetVelocity = 1000;
-            	motor_high[i].targetVelocity = 700;
-			}
-			else
-			{
-				motor_low[i].targetVelocity = 1000;
-            	motor_high[i].targetVelocity = 700;
-			}
-		}
-		else if(judge_right==1){
-			if(i%2==0)
-			{
-				motor_low[i].targetVelocity = -700;
-            	motor_high[i].targetVelocity = -1000;
-			}
-			else
-			{
-				motor_low[i].targetVelocity = -700;
-            	motor_high[i].targetVelocity = -1000;
-			}
-		}
-		else{
-            frame_vt = 30*stick_forward;
-            frame_vn = -30*stick_right;
-			frame_w =  -40*stick_yaw;
-		}
-	}
+    power_last = power;  
+
+	frame_vt = 15*stick_forward;
+	frame_vn = -15*stick_right;
+	frame_w =  -30*stick_yaw;
 }
 
 
@@ -713,6 +661,8 @@ void txThread_high(int s)
 }
 
 
+
+
 int main(int argc, char** argv) {
 	flag = 0;
 
@@ -751,14 +701,6 @@ int main(int argc, char** argv) {
 	ros::param::get("ori0",motor_high[2].ori_encoder);
 	ros::param::get("ori0",motor_high[3].ori_encoder);
 
-    // motor_low[0].ori_encoder = 42;
-	// motor_low[1].ori_encoder = 42;
-	// motor_low[2].ori_encoder = 227;
-	// motor_low[3].ori_encoder = 227;
-	// motor_high[0].ori_encoder = 77;
-	// motor_high[1].ori_encoder = 77;
-	// motor_high[2].ori_encoder = 55;
-	// motor_high[3].ori_encoder = 55;
     
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
@@ -828,6 +770,7 @@ int main(int argc, char** argv) {
     {
 
 		ros::spinOnce();
+
 		loop_rate.sleep();
 	}
 

@@ -233,29 +233,6 @@ float uint_to_float(int x_int, float x_min, float x_max, int bits)
 	return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
 }
 
-float fminf(float a, float b)
-{
-	if (a > b)
-	{
-		return b;
-	}
-	else
-	{
-		return a;
-	}
-}
-
-float fmaxf(float a, float b)
-{
-	if (a > b)
-	{
-		return a;
-	}
-	else
-	{
-		return b;
-	}
-}
 
 void rxThread(int s)
 {
@@ -529,7 +506,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname = "can0";
+	const char *ifname = "can2";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
