@@ -92,6 +92,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   if (goal_received) {
     double thetar = getYawFromPose(carPose);
     double theta = getYawFromPose(ForwardPose);
+    double roll = getRollFromPose(carPose);
+    double pitch =  getPitchFromPose(carPose);
+
     double d_theta = theta - thetar;
     double slow_factor = 1.0- fabs(pow(d_theta/3.14,3));
     if (foundForwardPt) {
@@ -113,7 +116,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
 
           ROS_INFO("----------");
-          ROS_INFO("d_yaw:%.2f, slow_factor:%.2f",d_theta,slow_factor);
+          ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f",roll,pitch,thetar);
+          // ROS_INFO("d_yaw:%.2f, slow_factor:%.2f",d_theta,slow_factor);
           // ROS_INFO("pos:(%.2f,%.2f)",ForwardPose.position.x,ForwardPose.position.y);
           ROS_INFO("lateral_dist:%.2f, long_vel:%.2f",lateral_dist,carVel.linear.x);
           ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",w,vt,vn);

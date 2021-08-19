@@ -1,38 +1,7 @@
-#include "ros/ros.h"
-
-#include <chrono>
-#include <thread>
-#include <net/if.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <linux/can.h>
-#include <linux/can/raw.h>
-#include <signal.h>
-
-#include <sensor_msgs/Joy.h>
-#include <std_msgs/Float32MultiArray.h>
-#include <std_msgs/Float32.h>
-
-#define P_MIN -12.5f //-12.5f —— 12.5f rad
-#define P_MAX 12.5f
-#define V_MIN -38.2f //-30.0f——30.0f rad/s
-#define V_MAX 38.2f
-#define T_MIN -18.0f //-18.0f——18.0f N*m
-#define T_MAX 18.0f
-
-#define KP_MIN 0.0f
-#define KP_MAX 500.0f
-#define KD_MIN 0.0f
-#define KD_MAX 5.0f
+#include "include/tmotor_common.hpp"
 
 ros::Publisher Tmotor_pos;
-
 ros::Subscriber joy_sub;
-
-int rxCounter = 0;
-int txCounter = 0;
 
 //判断是否开启手柄模式 xbox_mode_on>0: 开启；<0关闭
 int xbox_mode_on = -1;
@@ -41,45 +10,79 @@ int xbox_power_last = 0;
 
 std_msgs::Float32MultiArray tmotor_pos_msgs;
 
-struct Tmotor
-{
-	int id;
-
-	float pos_zero = 0;	   //相对零点
-	float pos_abszero = 0; //绝对零点
-
-	float pos_now;		//当前位置
-	float pos_des = 0;	//目标（前馈）位置
-	float vel_now;		//当前速度
-	float vel_des = -1; //目标速度
-	float t_now;		//当前力矩（电流？）
-	float t_des = 0;	//前馈力矩（电流？）
-	float kp = 0;
-	float kd = 2;
-
-	int zeroPointSet = 0; //设过零点为1，未设过零点为0
-	int flag = 0;
-	// 0:调绝对零点 ；1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
-};
 Tmotor tmotor[4];
 
-void flagTest(int id);
-void flagTest2(int id);
-
-void signalCallback(int signum)
+//监测调零后电机状态
+void flagTest2(int id)
 {
-	exit(1);
+	if (tmotor[id].flag == 5)
+	{
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
+		{
+			tmotor[id].flag = 3;
+		}
+		else
+		{
+			tmotor[id].flag = 4;
+		}
+	}
 }
+
+
+//监测电机状态
+void flagTest(int id)
+{
+	if (tmotor[id].flag == 0)
+	{
+		//如果电流增大超过阈值->碰到机械限位->设当前位置为绝对零点->确定相对零点->进入flag1
+		if (abs(tmotor[id].t_now) > 2)
+		{
+			tmotor[id].pos_abszero = tmotor[id].pos_now;
+			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero + 2;
+			tmotor[id].flag = 1;
+		}
+	}
+
+	//快速调相对零点；接近时进入flag2
+	if (tmotor[id].flag == 1)
+	{
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 1)
+		{
+			tmotor[id].flag = 2;
+		}
+	}
+	//慢速调相对零点；十分接近时进入flag3；调零完毕，可以进入手柄控制模式
+	if (tmotor[id].flag == 2)
+	{
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
+		{
+			tmotor[id].zeroPointSet = 1;
+			tmotor[id].flag = 3;
+		}
+	}
+
+	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
+	{
+		tmotor[id].flag = 3;
+	}
+	else if ((tmotor[id].flag == 3) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
+	{
+		tmotor[id].flag = 4;
+	}
+}
+
 
 //joy按键回调函数
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
 	//只有四个电机都调零完毕才能手柄控制
-	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
+	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) 
+	 && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
 	{
 		xbox_power = joy->buttons[7];
 		float move_up = -(joy->axes[2]) + 1;
 		float move_down = -(joy->axes[5]) + 1;
+
 
 		if (xbox_power > xbox_power_last)
 		{
@@ -217,22 +220,6 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 	}
 }
 
-int float_to_uint(float x, float x_min, float x_max, int bits)
-{
-	// Converts a float to an unsigned int, given range and number of bits ///
-	float span = x_max - x_min;
-	float offset = x_min;
-	return (int)((x - offset) * ((float)((1 << bits) - 1)) / span);
-}
-
-float uint_to_float(int x_int, float x_min, float x_max, int bits)
-{
-	/// converts unsigned int to float, given range and number of bits ///
-	float span = x_max - x_min;
-	float offset = x_min;
-	return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
-}
-
 
 void rxThread(int s)
 {
@@ -271,63 +258,6 @@ void rxThread(int s)
 	}
 }
 
-//监测调零后电机状态
-void flagTest2(int id)
-{
-	if (tmotor[id].flag == 5)
-	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
-		{
-			tmotor[id].flag = 3;
-		}
-		else
-		{
-			tmotor[id].flag = 4;
-		}
-	}
-}
-
-//监测电机状态
-void flagTest(int id)
-{
-	if (tmotor[id].flag == 0)
-	{
-		//如果电流增大超过阈值->碰到机械限位->设当前位置为绝对零点->确定相对零点->进入flag1
-		if (abs(tmotor[id].t_now) > 2)
-		{
-			tmotor[id].pos_abszero = tmotor[id].pos_now;
-			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero + 2;
-			tmotor[id].flag = 1;
-		}
-	}
-
-	//快速调相对零点；接近时进入flag2
-	if (tmotor[id].flag == 1)
-	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 1)
-		{
-			tmotor[id].flag = 2;
-		}
-	}
-	//慢速调相对零点；十分接近时进入flag3；调零完毕，可以进入手柄控制模式
-	if (tmotor[id].flag == 2)
-	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
-		{
-			tmotor[id].zeroPointSet = 1;
-			tmotor[id].flag = 3;
-		}
-	}
-
-	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
-	{
-		tmotor[id].flag = 3;
-	}
-	else if ((tmotor[id].flag == 3) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
-	{
-		tmotor[id].flag = 4;
-	}
-}
 
 void motorParaSet(int id)
 {
@@ -398,13 +328,7 @@ void motorParaSet(int id)
 	}
 }
 
-//打印信息
-void printTmotorInfo(int id)
-{
-	ROS_INFO("tmotor ID is  %d         flag is %d \n", tmotor[id].id, tmotor[id].flag);
-	ROS_INFO("vel_des is %f,       vel_now is %f,     t_now is %f       ,Zeropointset is %d,       xbox_mode: %d\n", tmotor[id].vel_des, tmotor[id].vel_now, tmotor[id].t_now, tmotor[id].zeroPointSet, xbox_mode_on);
-}
-
+//init CAN_Frame member data
 void frameDataSet(struct can_frame &frame, int id)
 {
 	float f_p, f_v, f_kp, f_kd, f_t;
@@ -437,6 +361,15 @@ void frameDataSet(struct can_frame &frame, int id)
 	frame.data[7] = t & 0xff;
 }
 
+//打印信息
+void printTmotorInfo(int id)
+{
+	ROS_INFO("tmotor ID is  %d         flag is %d \n", tmotor[id].id, tmotor[id].flag);
+	ROS_INFO("vel_des is %f,       vel_now is %f,     t_now is %f       ,Zeropointset is %d,       xbox_mode: %d\n", tmotor[id].vel_des, tmotor[id].vel_now, tmotor[id].t_now, tmotor[id].zeroPointSet, xbox_mode_on);
+}
+
+
+
 void txThread(int s)
 {
 	struct can_frame frame;
@@ -458,6 +391,13 @@ void txThread(int s)
 		{
 			frame.can_id = 0x00 + id + 1;
 			frameDataSet(frame, id);
+			if (Stop_flag == 1)
+			{
+				tmotor[id].t_des = 0;
+				tmotor[id].vel_des = 0;
+				frameDataSet(frame, id);
+			}
+			
 			nbytes = write(s, &frame, sizeof(struct can_frame));
 			if (nbytes == -1)
 			{
@@ -477,6 +417,7 @@ void txThread(int s)
 	}
 }
 
+
 void canCheck(can_frame &frame, int s, int id)
 {
 	int nbytes;
@@ -495,6 +436,7 @@ void canCheck(can_frame &frame, int s, int id)
 	}
 }
 
+
 int main(int argc, char **argv)
 {
 
@@ -506,7 +448,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname = "can2";
+	const char *ifname = "can0";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{

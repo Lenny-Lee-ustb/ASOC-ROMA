@@ -661,8 +661,6 @@ void txThread_high(int s)
 }
 
 
-
-
 int main(int argc, char** argv) {
 	flag = 0;
 

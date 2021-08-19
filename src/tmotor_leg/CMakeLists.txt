@@ -204,6 +204,12 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+add_executable(tmotortest 
+src/tmotor_test.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotortest ${catkin_LIBRARIES})
 
-add_executable(tmotortest3 src/tmotortest3.cpp)
-target_link_libraries(tmotortest3 ${catkin_LIBRARIES})
+add_executable(tmotor_controller 
+src/tmotor_controller.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor_controller ${catkin_LIBRARIES})

@@ -36,3 +36,10 @@ src/upper_controller.hpp)
 target_link_libraries(upper_controller_angle
   ${catkin_LIBRARIES}
 )
+
+add_executable(upper_controller_anti 
+src/upper_controller_anti.cpp
+src/upper_controller.hpp)
+target_link_libraries(upper_controller_anti
+  ${catkin_LIBRARIES}
+)
