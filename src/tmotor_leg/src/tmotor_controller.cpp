@@ -2,6 +2,7 @@
 
 ros::Publisher Tmotor_pos;
 ros::Subscriber joy_sub;
+ros::Subscriber Control_sub;
 
 //判断是否开启手柄模式 xbox_mode_on>0: 开启；<0关闭
 int xbox_mode_on = -1;
@@ -35,10 +36,10 @@ void flagTest(int id)
 	if (tmotor[id].flag == 0)
 	{
 		//如果电流增大超过阈值->碰到机械限位->设当前位置为绝对零点->确定相对零点->进入flag1
-		if (abs(tmotor[id].t_now) > 2)
+		if (abs(tmotor[id].t_now) > 8)
 		{
 			tmotor[id].pos_abszero = tmotor[id].pos_now;
-			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero + 2;
+			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero-3.5;
 			tmotor[id].flag = 1;
 		}
 	}
@@ -46,7 +47,7 @@ void flagTest(int id)
 	//快速调相对零点；接近时进入flag2
 	if (tmotor[id].flag == 1)
 	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 1)
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.5)
 		{
 			tmotor[id].flag = 2;
 		}
@@ -68,6 +69,17 @@ void flagTest(int id)
 	else if ((tmotor[id].flag == 3) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
 	{
 		tmotor[id].flag = 4;
+	}
+}
+
+// upper_controller_callback
+void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
+{
+	for (int id = 0; id < 4; id++)
+	{
+		tmotor[id].pos_des = ctrl_cmd.data[id*3];
+		tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
+		tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
 	}
 }
 
@@ -265,21 +277,21 @@ void motorParaSet(int id)
 	{
 	case 0:
 		tmotor[id].t_des = 0;
-		tmotor[id].vel_des = -1;
+		tmotor[id].vel_des = 2;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
-		tmotor[id].kd = 2;
+		tmotor[id].kd = 4;
 		break;
 	case 1:
-		tmotor[id].t_des = 5;
-		tmotor[id].vel_des = 0.5;
+		tmotor[id].t_des = 0;
+		tmotor[id].vel_des = -2.5;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
 		tmotor[id].kd = 5;
 		break;
 	case 2:
-		tmotor[id].t_des = 5;
-		tmotor[id].vel_des = 0.1;
+		tmotor[id].t_des = 0;
+		tmotor[id].vel_des = -0.4;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
 		tmotor[id].kp = 0;
 		tmotor[id].kd = 5;
@@ -383,12 +395,6 @@ void txThread(int s)
 	struct can_frame frame;
 	frame.can_id = 0x01;
 	frame.can_dlc = 8;
-	for (int j = 0; j < 8; j++)
-	{
-		frame.data[j] = 0xff;
-	}
-	frame.data[7] = 0xfc;
-	//进入电机控制模式
 
 	int nbytes;
 
@@ -405,7 +411,7 @@ void txThread(int s)
 				{
 					frame.data[j] = 0xff;
 				}
-				frame.data[7] = 0xfd;
+				frame.data[7] = 0xfd;// exit T-motor control mode!
 			}
 			
 			nbytes = write(s, &frame, sizeof(struct can_frame));
@@ -428,25 +434,6 @@ void txThread(int s)
 }
 
 
-void canCheck(can_frame &frame, int s, int id)
-{
-	int nbytes;
-	frame.can_dlc = 8;
-	frame.can_id = 0x000 + id;
-	for (int i = 0; i < 8; i++)
-	{
-		frame.data[i] = 0xff;
-	}
-	frame.data[7] = 0xfc;
-	nbytes = write(s, &frame, sizeof(struct can_frame));
-	// printf("Wrote %d bytes\n", nbytes);
-	if (nbytes == -1)
-	{
-		printf("send error\n");
-	}
-}
-
-
 int main(int argc, char **argv)
 {
 
@@ -458,7 +445,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname = "can0";
+	const char *ifname ="can0";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
@@ -493,7 +480,9 @@ int main(int argc, char **argv)
 	//检查can通讯连接
 
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
+	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
 	Tmotor_pos = n.advertise<std_msgs::Float32MultiArray>("Tmotor_pos", 100);
+
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);

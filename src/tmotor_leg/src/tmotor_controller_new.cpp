@@ -1,10 +1,13 @@
 #include "include/tmotor_common.hpp"
 
 ros::Publisher Tmotor_pos;
-ros::Subscriber joy_sub;
+ros::Subscriber Joy_sub;
+ros::Subscriber Control_sub;
 
 //判断是否开启手柄模式 xbox_mode_on>0: 开启；<0关闭
 int xbox_mode_on = -1;
+
+
 
 std_msgs::Float32MultiArray tmotor_pos_msgs;
 
@@ -14,6 +17,46 @@ Tmotor tmotor[4];
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
 
+}
+
+
+void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
+{
+	for (int id = 0; id < 4; id++)
+	{
+		tmotor[id].pos_des = ctrl_cmd.data[id*3];
+		tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
+		tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
+	}
+}
+
+
+//Set CAN_Frame member data
+void frameDataSet(struct can_frame &frame, int id)
+{
+	float f_p, f_v, f_kp, f_kd, f_t;
+	uint16_t p, v, kp, kd, t;
+
+	f_p = tmotor[id].pos_des;
+	f_v = tmotor[id].vel_des;
+	f_t = tmotor[id].t_des;
+	f_kp = tmotor[id].kp;
+	f_kd = tmotor[id].kd;
+
+	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
+	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
+	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
+	kd = float_to_uint(f_kd, KD_MIN, KD_MAX, 12);
+	t = float_to_uint(f_t, T_MIN, T_MAX, 12);
+
+	frame.data[0] = p >> 8;
+	frame.data[1] = p & 0xFF;
+	frame.data[2] = v >> 4;
+	frame.data[3] = ((v & 0xF) << 4) | (kp >> 8);
+	frame.data[4] = kp & 0xFF;
+	frame.data[5] = kd >> 4;
+	frame.data[6] = ((kd & 0xF) << 4) | (t >> 8);
+	frame.data[7] = t & 0xff;
 }
 
 
@@ -125,7 +168,6 @@ void motorParaSet(int id)
 }
 
 
-
 //打印信息
 void printTmotorInfo(int id)
 {
@@ -141,8 +183,7 @@ void printTmotorInfo(int id)
 	 );
 }
 
-
-
+ 
 void txThread(int s)
 {
 	struct can_frame frame;
@@ -166,23 +207,24 @@ void txThread(int s)
 			frameDataSet(frame, id);
 			if (Stop_flag == 1)
 			{
-				tmotor[id].t_des = 0;
-				tmotor[id].vel_des = 0;
-				tmotor[id].pos_des = 0;
-				tmotor[id].kp = 0;
-				tmotor[id].kd = 0;
-				frameDataSet(frame, id);
+				for (int j = 0; j < 8; j++)
+				{
+					frame.data[j] = 0xff;
+				}
+				frame.data[7] = 0xfd;// exit T-motor control mode!
 			}
 			
 			nbytes = write(s, &frame, sizeof(struct can_frame));
+			
 			if (nbytes == -1)
 			{
 				printf("send error\n");
-				printf("please check battary!!\n");
+				printf("please check battary and CAN port!!\n");
 				exit(1);
 			}
+			
 			txCounter++;
-			//printf("tx is %d;",txCounter);
+
 			printTmotorInfo(id);
 
 			tmotor_pos_msgs.data[id] = tmotor[id].pos_now;
@@ -194,29 +236,10 @@ void txThread(int s)
 }
 
 
-void canCheck(can_frame &frame, int s, int id)
-{
-	int nbytes;
-	frame.can_dlc = 8;
-	frame.can_id = 0x000 + id;
-	for (int i = 0; i < 8; i++)
-	{
-		frame.data[i] = 0xff;
-	}
-	frame.data[7] = 0xfc;
-	nbytes = write(s, &frame, sizeof(struct can_frame));
-	// printf("Wrote %d bytes\n", nbytes);
-	if (nbytes == -1)
-	{
-		printf("send error\n");
-	}
-}
-
-
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "tmotorTest2");
+	ros::init(argc, argv, "tmotor_controller");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
 	signal(SIGINT, signalCallback);
@@ -237,7 +260,6 @@ int main(int argc, char **argv)
 
 	addr.can_family = AF_CAN;
 	addr.can_ifindex = ifr.ifr_ifindex;
-	//printf("%s at index %d\n", ifr.ifr_name, ifr.ifr_ifindex);
 	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		perror("Error in socket bind");
@@ -258,7 +280,8 @@ int main(int argc, char **argv)
 	}
 	//检查can通讯连接
 
-	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
+	Joy_sub = n.subscribe("joy", 10, buttonCallback);
+	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
 	Tmotor_pos = n.advertise<std_msgs::Float32MultiArray>("Tmotor_pos", 100);
 	//发布及订阅节点
 
