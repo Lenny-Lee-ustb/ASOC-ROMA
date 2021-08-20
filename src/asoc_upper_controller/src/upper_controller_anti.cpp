@@ -113,8 +113,6 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.y = vn * cos(rot_rad) - vt * sin(rot_rad);//vn'
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
-
-
           ROS_INFO("----------");
           ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f",roll,pitch,thetar);
           // ROS_INFO("d_yaw:%.2f, slow_factor:%.2f",d_theta,slow_factor);

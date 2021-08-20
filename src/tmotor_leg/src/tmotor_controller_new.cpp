@@ -5,219 +5,15 @@ ros::Subscriber joy_sub;
 
 //判断是否开启手柄模式 xbox_mode_on>0: 开启；<0关闭
 int xbox_mode_on = -1;
-int xbox_power = 0;
-int xbox_power_last = 0;
 
 std_msgs::Float32MultiArray tmotor_pos_msgs;
 
 Tmotor tmotor[4];
 
-//监测调零后电机状态
-void flagTest2(int id)
-{
-	if (tmotor[id].flag == 5)
-	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
-		{
-			tmotor[id].flag = 3;
-		}
-		else
-		{
-			tmotor[id].flag = 4;
-		}
-	}
-}
-
-
-//监测电机状态
-void flagTest(int id)
-{
-	if (tmotor[id].flag == 0)
-	{
-		//如果电流增大超过阈值->碰到机械限位->设当前位置为绝对零点->确定相对零点->进入flag1
-		if (abs(tmotor[id].t_now) > 2)
-		{
-			tmotor[id].pos_abszero = tmotor[id].pos_now;
-			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero + 2;
-			tmotor[id].flag = 1;
-		}
-	}
-
-	//快速调相对零点；接近时进入flag2
-	if (tmotor[id].flag == 1)
-	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 1)
-		{
-			tmotor[id].flag = 2;
-		}
-	}
-	//慢速调相对零点；十分接近时进入flag3；调零完毕，可以进入手柄控制模式
-	if (tmotor[id].flag == 2)
-	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
-		{
-			tmotor[id].zeroPointSet = 1;
-			tmotor[id].flag = 3;
-		}
-	}
-
-	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
-	{
-		tmotor[id].flag = 3;
-	}
-	else if ((tmotor[id].flag == 3) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
-	{
-		tmotor[id].flag = 4;
-	}
-}
-
-
 //joy按键回调函数
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
-	//只有四个电机都调零完毕才能手柄控制
-	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) 
-	 && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
-	{
-		xbox_power = joy->buttons[7];
-		float move_up = -(joy->axes[2]) + 1;
-		float move_down = -(joy->axes[5]) + 1;
 
-
-		if (xbox_power > xbox_power_last)
-		{
-			xbox_mode_on = -xbox_mode_on;
-		}
-		xbox_power_last = xbox_power;
-
-		if (move_up != 0)
-		{
-			for (int id = 0; id < 4; id++)
-			{
-				tmotor[id].flag = 5;
-				tmotor[id].vel_des = 4 * move_up;
-				tmotor[id].pos_des = 0;
-				tmotor[id].t_des = 0;
-				tmotor[id].kd = 2;
-				tmotor[id].kp = 0;
-			}
-		}
-
-		if (move_down != 0)
-		{
-			for (int id = 0; id < 4; id++)
-			{
-				tmotor[id].flag = 5;
-				tmotor[id].vel_des = -(4 * move_down);
-				tmotor[id].pos_des = 0;
-				tmotor[id].t_des = 0;
-				tmotor[id].kd = 2;
-				tmotor[id].kp = 0;
-			}
-		}
-
-		if (joy->buttons[3] == 1)
-		{
-			tmotor[0].flag = 5;
-			tmotor[0].vel_des = 6;
-			tmotor[0].pos_des = 0;
-			tmotor[0].t_des = 0;
-			tmotor[0].kd = 5;
-			tmotor[0].kp = 0;
-		}
-
-		if (joy->buttons[2] == 1)
-		{
-			tmotor[1].flag = 5;
-			tmotor[1].vel_des = 6;
-			tmotor[1].pos_des = 0;
-			tmotor[1].t_des = 0;
-			tmotor[1].kd = 5;
-			tmotor[1].kp = 0;
-		}
-
-		if (joy->buttons[1] == 1)
-		{
-			tmotor[3].flag = 5;
-			tmotor[3].vel_des = 6;
-			tmotor[3].pos_des = 0;
-			tmotor[3].t_des = 0;
-			tmotor[3].kd = 5;
-			tmotor[3].kp = 0;
-		}
-
-		if (joy->buttons[0] == 1)
-		{
-			tmotor[2].flag = 5;
-			tmotor[2].vel_des = 6;
-			tmotor[2].pos_des = 0;
-			tmotor[2].t_des = 0;
-			tmotor[2].kd = 5;
-			tmotor[2].kp = 0;
-		}
-
-		if (joy->axes[7] == 1)
-		{
-			tmotor[0].flag = 5;
-			tmotor[0].vel_des = -4;
-			tmotor[0].pos_des = 0;
-			tmotor[0].t_des = 0;
-			tmotor[0].kd = 5;
-			tmotor[0].kp = 0;
-		}
-
-		if (joy->axes[6] == 1)
-		{
-			tmotor[1].flag = 5;
-			tmotor[1].vel_des = -4;
-			tmotor[1].pos_des = 0;
-			tmotor[1].t_des = 0;
-			tmotor[1].kd = 5;
-			tmotor[1].kp = 0;
-		}
-
-		if (joy->axes[7] == -1)
-		{
-			tmotor[2].flag = 5;
-			tmotor[2].vel_des = -4;
-			tmotor[2].pos_des = 0;
-			tmotor[2].t_des = 0;
-			tmotor[2].kd = 5;
-			tmotor[2].kp = 0;
-		}
-
-		if (joy->axes[6] == -1)
-		{
-			tmotor[3].flag = 5;
-			tmotor[3].vel_des = -4;
-			tmotor[3].pos_des = 0;
-			tmotor[3].t_des = 0;
-			tmotor[3].kd = 5;
-			tmotor[3].kp = 0;
-		}
-
-		if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
-		{
-			if (xbox_mode_on > 0)
-			{
-				for (int id = 0; id < 4; id++)
-				{
-					tmotor[id].pos_des = tmotor[id].pos_now;
-					tmotor[id].vel_des = 0;
-					tmotor[id].t_des = 0;
-					tmotor[id].kp = 20;
-					tmotor[id].kd = 0;
-				}
-			}
-			else
-			{
-				for (int id = 0; id < 4; id++)
-				{
-					flagTest2(id);
-				}
-			}
-		}
-	}
 }
 
 
@@ -328,38 +124,7 @@ void motorParaSet(int id)
 	}
 }
 
-//init CAN_Frame member data
-void frameDataSet(struct can_frame &frame, int id)
-{
-	float f_p, f_v, f_kp, f_kd, f_t;
-	uint16_t p, v, kp, kd, t;
 
-	if (tmotor[id].flag != 5)
-	{
-		flagTest(id);
-		motorParaSet(id);
-	}
-
-	f_p = tmotor[id].pos_des;
-	f_v = tmotor[id].vel_des;
-	f_t = tmotor[id].t_des;
-	f_kp = tmotor[id].kp;
-	f_kd = tmotor[id].kd;
-
-	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
-	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
-	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
-	kd = float_to_uint(f_kd, KD_MIN, KD_MAX, 12);
-	t = float_to_uint(f_t, T_MIN, T_MAX, 12);
-	frame.data[0] = p >> 8;
-	frame.data[1] = p & 0xFF;
-	frame.data[2] = v >> 4;
-	frame.data[3] = ((v & 0xF) << 4) | (kp >> 8);
-	frame.data[4] = kp & 0xFF;
-	frame.data[5] = kd >> 4;
-	frame.data[6] = ((kd & 0xF) << 4) | (t >> 8);
-	frame.data[7] = t & 0xff;
-}
 
 //打印信息
 void printTmotorInfo(int id)
@@ -401,11 +166,12 @@ void txThread(int s)
 			frameDataSet(frame, id);
 			if (Stop_flag == 1)
 			{
-				for (int j = 0; j < 8; j++)
-				{
-					frame.data[j] = 0xff;
-				}
-				frame.data[7] = 0xfd;
+				tmotor[id].t_des = 0;
+				tmotor[id].vel_des = 0;
+				tmotor[id].pos_des = 0;
+				tmotor[id].kp = 0;
+				tmotor[id].kd = 0;
+				frameDataSet(frame, id);
 			}
 			
 			nbytes = write(s, &frame, sizeof(struct can_frame));

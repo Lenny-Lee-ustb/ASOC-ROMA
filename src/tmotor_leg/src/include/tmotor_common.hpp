@@ -70,7 +70,11 @@ float uint_to_float(int x_int, float x_min, float x_max, int bits)
 
 void signalCallback(int signum)
 {	
+	double startt,endt;
+	startt = clock();
 	Stop_flag = 1;
-	ROS_INFO("shutdown!!!!");
+	ros::Duration(1.0).sleep();
+	endt = clock();
+	// ROS_INFO("shutdown in !!!!!!!");
 	exit(1);
 }

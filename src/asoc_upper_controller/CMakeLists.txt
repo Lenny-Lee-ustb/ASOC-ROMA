@@ -25,21 +25,21 @@ include_directories(
 
 add_executable(upper_controller_iit
 src/upper_controller_iit.cpp
-src/upper_controller.hpp)
+src/include/upper_controller.hpp)
 target_link_libraries(upper_controller_iit
   ${catkin_LIBRARIES}
 )
 
 add_executable(upper_controller_angle 
 src/upper_controller_angle.cpp
-src/upper_controller.hpp)
+src/include/upper_controller.hpp)
 target_link_libraries(upper_controller_angle
   ${catkin_LIBRARIES}
 )
 
 add_executable(upper_controller_anti 
 src/upper_controller_anti.cpp
-src/upper_controller.hpp)
+src/include/upper_controller.hpp)
 target_link_libraries(upper_controller_anti
   ${catkin_LIBRARIES}
 )
