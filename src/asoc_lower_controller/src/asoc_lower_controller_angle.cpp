@@ -88,7 +88,7 @@ ros::Publisher leg_angle_sum_Pub_high;
 ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
 ros::Subscriber upper_controller;
-//ros::Subsriber  Tmotor_angle;
+ros::Subscriber  Tmotor_angle;
 
 std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
 std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
@@ -197,7 +197,21 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 	}
 }
 
-
+void Tmotor_angle_callback(std_msgs::Float32MultiArray MultiTmotorAngle){
+	for(int i = 0; i < 4; i++){
+		//D[0,1,2,3] responds to T-motor[0,1,2,3], T-motor[0,1,2,3] responds to MultiTmotor[0,1,2,3]
+        //Pass the angle of Tmotor[i] to linkTheta[i]
+		//degree = 15.52 * MultiTmotorAngle + 73
+			linkTheta[i] = (15.52 * MultiTmotorAngle.data[i] + 73 ) * PI / 180;
+			D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
+		}
+		//D[0,1,2,3] responds to T-motor[0,1,2,3]
+	   //D[0] responds to vc_low0(chaiss X axis positive), 
+	   //D[1] responds to vc_high0(chassis Y axis positive), 
+	   //D[2] responds to vc_low2(chassis X axis negative),
+	   //D[3] responds to vc_high2(chassis Y axis negative)
+	   
+}
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     // judge_forward = joy->buttons[3];
@@ -282,21 +296,14 @@ void body_to_wheel(float vt, float vn, float w){
         motor_high[i].vcn = vn;
     }
 //Adjust the length D according to the change theta
-   for(int i = 0; i < 4; i++){
-        //Pass the angle of Tmotor[i] to linkTheta[i]
- 	    linkTheta[i] = 	PI / 2;   
-	   D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
-	   //D[0,1,2,3] responds to T-motor[0,1,2,3]
+// Corresponding each length to the ASOC module, e.x, D[0] is the distance of vc_low0.
+
+	//D[0,1,2,3] responds to T-motor[0,1,2,3]
 	   //D[0] responds to vc_low0(chaiss X axis positive), 
 	   //D[1] responds to vc_high0(chassis Y axis positive), 
 	   //D[2] responds to vc_low2(chassis X axis negative),
 	   //D[3] responds to vc_high2(chassis Y axis negative)
 	   
-	   //D[3]   
-    }
-   // Corresponding each length to the ASOC module, e.x, D[0] is the distance of vc_low0.
-
-	
     vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
     vc_low0(0,0) = motor_low[0].vct;
     vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D[2];
@@ -783,6 +790,7 @@ int main(int argc, char** argv) {
     joy_sub = n.subscribe<sensor_msgs::Joy>("joy",10,buttonCallback);
     encoder_angle_sum = n.subscribe("MultiAngleSum",10,encoder_angle_sum_callback);
 	upper_controller = n.subscribe("cmd_vel",10,upper_controller_callback);
+	Tmotor_angle  = n.subscribe("Tmotor_pos", 10, Tmotor_angle_callback);
 	while (ros::ok())
     {
 
