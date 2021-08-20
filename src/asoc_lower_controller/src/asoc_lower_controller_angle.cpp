@@ -55,9 +55,9 @@ float stick_right = 0.0;
 float stick_yaw = 0.0;
 float L = 2;   //  ratio of offset/split
 float r = 0.09; //radii of the wheel
-float D = 0.32; //length of the virtual rod linking the pivot rod and the center of ASOC
-//float linkTheta[4]; // the angle between four-parallel link and horizontal ground, variable, so need to be passed by Encoder
-//float D[4]; 
+// float D = 0.32; //length of the virtual rod linking the pivot rod and the center of ASOC
+float linkTheta[4]; // the angle between four-parallel link and horizontal ground, variable, so need to be passed by Encoder
+float D[4]; 
 //D = 0.178  + 0.14 * sin(linkTheta); //length of the virtual rod linking the pivot rod and the center of ASOC
 
 float frame_vt;
@@ -88,6 +88,7 @@ ros::Publisher leg_angle_sum_Pub_high;
 ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
 ros::Subscriber upper_controller;
+//ros::Subsriber  Tmotor_angle;
 
 std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
 std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
@@ -281,12 +282,18 @@ void body_to_wheel(float vt, float vn, float w){
         motor_high[i].vcn = vn;
     }
 //Adjust the length D according to the change theta
-//    for(int i = 0; i < 4; i++){
-//         //Pass the angle of Tmotor[i] to linkTheta[i]
-// 	   // linkTheta[i] = 
+   for(int i = 0; i < 4; i++){
+        //Pass the angle of Tmotor[i] to linkTheta[i]
+ 	    linkTheta[i] = 	PI / 2;   
+	   D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
+	   //D[0,1,2,3] responds to T-motor[0,1,2,3]
+	   //D[0] responds to vc_low0(chaiss X axis positive), 
+	   //D[1] responds to vc_high0(chassis Y axis positive), 
+	   //D[2] responds to vc_low2(chassis X axis negative),
+	   //D[3] responds to vc_high2(chassis Y axis negative)
 	   
-// 	   D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
-//    }
+	   //D[3]   
+    }
    // Corresponding each length to the ASOC module, e.x, D[0] is the distance of vc_low0.
     // vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
     // vc_low0(0,0) = motor_low[0].vct;
@@ -297,14 +304,14 @@ void body_to_wheel(float vt, float vn, float w){
     // vc_high2(1,0) = motor_high[2].vcn;
     // vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D[3];
 	
-    vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D;
+    vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
     vc_low0(0,0) = motor_low[0].vct;
-    vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D;
+    vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D[2];
     vc_low2(0,0) = motor_low[2].vct;
     vc_high0(1,0) = motor_high[0].vcn;
-    vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D;
+    vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D[0];
     vc_high2(1,0) = motor_high[2].vcn;
-    vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D;
+    vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D[2];
 
 	motor_low[0].C(0,0) = motor_low[1].C(0,0) = (cos(-motor_low[0].leg_angle*PI/180) + 0.5*L*sin(-motor_low[0].leg_angle*PI/180))/2;
     motor_low[0].C(0,1) = motor_low[1].C(0,1) = (-sin(-motor_low[0].leg_angle*PI/180) + 0.5*L*cos(-motor_low[0].leg_angle*PI/180))/2;
