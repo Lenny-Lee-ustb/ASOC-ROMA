@@ -309,9 +309,9 @@ void body_to_wheel(float vt, float vn, float w){
     vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D[2];
     vc_low2(0,0) = motor_low[2].vct;
     vc_high0(1,0) = motor_high[0].vcn;
-    vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D[0];
+    vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D[1];
     vc_high2(1,0) = motor_high[2].vcn;
-    vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D[2];
+    vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D[3];
 
 	motor_low[0].C(0,0) = motor_low[1].C(0,0) = (cos(-motor_low[0].leg_angle*PI/180) + 0.5*L*sin(-motor_low[0].leg_angle*PI/180))/2;
     motor_low[0].C(0,1) = motor_low[1].C(0,1) = (-sin(-motor_low[0].leg_angle*PI/180) + 0.5*L*cos(-motor_low[0].leg_angle*PI/180))/2;
