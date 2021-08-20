@@ -295,14 +295,7 @@ void body_to_wheel(float vt, float vn, float w){
 	   //D[3]   
     }
    // Corresponding each length to the ASOC module, e.x, D[0] is the distance of vc_low0.
-    // vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
-    // vc_low0(0,0) = motor_low[0].vct;
-    // vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D[1];
-    // vc_low2(0,0) = motor_low[2].vct;
-    // vc_high0(1,0) = motor_high[0].vcn;
-    // vc_high0(0,0) = motor_high[0].vct = motor_high[1].vct = vt + w * D[2];
-    // vc_high2(1,0) = motor_high[2].vcn;
-    // vc_high2(0,0) = motor_high[2].vct = motor_high[3].vct = vt - w * D[3];
+
 	
     vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
     vc_low0(0,0) = motor_low[0].vct;
