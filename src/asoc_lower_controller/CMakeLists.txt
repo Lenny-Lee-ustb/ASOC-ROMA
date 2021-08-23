@@ -19,3 +19,7 @@ include_directories(
 
 add_executable(asoc_lower_controller src/asoc_lower_controller.cpp)
 target_link_libraries(asoc_lower_controller ${catkin_LIBRARIES})
+
+
+add_executable(asoc_lower_controller_angle src/asoc_lower_controller_angle.cpp)
+target_link_libraries(asoc_lower_controller_angle ${catkin_LIBRARIES})

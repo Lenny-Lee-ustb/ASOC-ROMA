@@ -29,7 +29,8 @@
         "list": "cpp",
         "string": "cpp",
         "vector": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "random": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

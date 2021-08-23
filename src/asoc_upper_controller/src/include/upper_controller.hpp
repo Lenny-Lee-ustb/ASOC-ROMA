@@ -7,6 +7,7 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <ctime>
 
 #define PI 3.14159265358979
@@ -34,7 +35,7 @@ public:
 private:
   ros::NodeHandle n_;
   ros::Subscriber odom_sub, path_sub, goal_sub;
-  ros::Publisher pub_, marker_pub;
+  ros::Publisher pub_, marker_pub, pub_suspension;
   ros::Timer timer1, timer2;
   tf::TransformListener tf_listener;
 
@@ -51,6 +52,7 @@ private:
   double P_Yaw, I_Yaw, D_Yaw;
   double P_Lateral, I_Lateral, D_Lateral;
   double P_Long, I_Long, D_Long;
+  double Kp, Kd;
 
   bool foundForwardPt,goal_received, goal_reached;
 

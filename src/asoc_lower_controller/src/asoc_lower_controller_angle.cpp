@@ -30,8 +30,8 @@ using namespace Eigen;
 
 int flag;
 
-float frame_vt_max = 30;
-float frame_vt_min = -30;
+float frame_vt_max = 50;
+float frame_vt_min = -50;
 float frame_vn_max = 30;
 float frame_vn_min = -30;
 float frame_w_max = 100; // 100 = 320 degree/s
@@ -57,7 +57,7 @@ float L = 2;   //  ratio of offset/split
 float r = 0.09; //radii of the wheel
 // float D = 0.32; //length of the virtual rod linking the pivot rod and the center of ASOC
 float linkTheta[4]; // the angle between four-parallel link and horizontal ground, variable, so need to be passed by Encoder
-float D[4]; 
+float D[4]={0.178,0.178,0.178,0.178};
 //D = 0.178  + 0.14 * sin(linkTheta); //length of the virtual rod linking the pivot rod and the center of ASOC
 
 float frame_vt;

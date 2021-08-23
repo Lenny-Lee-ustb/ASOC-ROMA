@@ -24,6 +24,9 @@ UpperController::UpperController() {
   pn.param("P_Long", P_Long, 1.0);
   pn.param("I_Long", I_Long, 1.0);
   pn.param("D_Long", D_Long, 1.0);
+  pn.param("Kp", Kp, 1.0);
+  pn.param("Kd", Kd, 0.0);
+
 
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);
@@ -36,6 +39,8 @@ UpperController::UpperController() {
   marker_pub = n_.advertise<visualization_msgs::Marker>("/car_path", 10);
 
   pub_ = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+
+  pub_suspension = n_.advertise<std_msgs::Float32MultiArray>("/suspension_cmd", 1);
 
   // Timer
   timer1 = n_.createTimer(ros::Duration((1.0) / controller_freq),
@@ -68,7 +73,9 @@ UpperController::UpperController() {
   ROS_INFO("[param] P_Long: %.2f", P_Long);
   ROS_INFO("[param] I_Long: %.2f", I_Long);
   ROS_INFO("[param] D_Long: %.2f", D_Long);
-
+  ROS_INFO("[param] Kp: %.2f", Kp);
+  ROS_INFO("[param] Kd: %.2f", Kd);
+  
   // Visualization Marker Settings
   initMarker();
 }
@@ -122,6 +129,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
         }
     }
     pub_.publish(cmd_vel);
+    // pub_suspension.publish();
   }else{
     cmd_vel.angular.z = 0;
     cmd_vel.linear.y = 0;

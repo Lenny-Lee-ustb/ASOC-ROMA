@@ -14,8 +14,8 @@
 
         <param name = "P_Yaw" type="double" value = "60.0"/>
         <param name = "I_Yaw" type="double" value = "0.0"/>
-        <param name = "D_Yaw" type="double" value = "0.1"/>
-        <param name = "forward_dist" type="double" value = "1.3"/>
+        <param name = "D_Yaw" type="double" value = "3.0"/>
+        <param name = "forward_dist" type="double" value = "1.0"/>
         
 
         <param name = "P_Lateral" type="double" value = "45.0"/>

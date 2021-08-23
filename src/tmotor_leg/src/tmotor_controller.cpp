@@ -39,7 +39,7 @@ void flagTest(int id)
 		if (abs(tmotor[id].t_now) > 8)
 		{
 			tmotor[id].pos_abszero = tmotor[id].pos_now;
-			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero-3.5;
+			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero-2.5;
 			tmotor[id].flag = 1;
 		}
 	}
@@ -445,7 +445,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname ="can0";
+	const char *ifname ="can2";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
@@ -482,7 +482,6 @@ int main(int argc, char **argv)
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
 	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
 	Tmotor_pos = n.advertise<std_msgs::Float32MultiArray>("Tmotor_pos", 100);
-
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);
