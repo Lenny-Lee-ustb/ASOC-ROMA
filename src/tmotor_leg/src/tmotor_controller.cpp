@@ -77,9 +77,10 @@ void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
 {
 	for (int id = 0; id < 4; id++)
 	{
-		tmotor[id].pos_des = ctrl_cmd.data[id*3];
-		tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
-		tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
+		// tmotor[id].pos_des = ctrl_cmd.data[id*3];
+		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
+		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
+		tmotor[id].pos_zero   = ctrl_cmd.data[id];
 	}
 }
 

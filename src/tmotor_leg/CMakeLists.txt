@@ -29,8 +29,3 @@ add_executable(tmotor_controller
 src/tmotor_controller.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_controller ${catkin_LIBRARIES})
-
-add_executable(tmotor_controller_new 
-src/tmotor_controller_new.cpp
-src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_controller_new ${catkin_LIBRARIES})

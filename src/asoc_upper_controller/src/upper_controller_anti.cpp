@@ -10,22 +10,29 @@ UpperController::UpperController() {
 
   // Controller parameter
   pn.param("controller_freq", controller_freq, 20.0);
-  pn.param("baseSpeed", baseSpeed, 0.0);
   pn.param("goalRadius", goalRadius, 1.0);
   pn.param("goal_pose_err", goal_pose_err, 1.0);
-  pn.param("forward_dist", forward_dist, 1.0);
+
+  pn.param("baseSpeed", baseSpeed, 0.0);
   pn.param("rot_angle", rot_angle, 0.0);
-  pn.param("P_Yaw", P_Yaw, 1.0);
-  pn.param("I_Yaw", I_Yaw, 0.0);
-  pn.param("D_Yaw", D_Yaw, 1.0);
-  pn.param("P_Lateral", P_Lateral, 1.0);
-  pn.param("I_Lateral", I_Lateral, 1.0);
-  pn.param("D_Lateral", D_Lateral, 1.0);
   pn.param("P_Long", P_Long, 1.0);
   pn.param("I_Long", I_Long, 1.0);
   pn.param("D_Long", D_Long, 1.0);
+
+  pn.param("P_Yaw", P_Yaw, 1.0);
+  pn.param("I_Yaw", I_Yaw, 0.0);
+  pn.param("D_Yaw", D_Yaw, 1.0);
+  pn.param("forward_dist", forward_dist, 1.0);
+
+
+  pn.param("P_Lateral", P_Lateral, 1.0);
+  pn.param("I_Lateral", I_Lateral, 1.0);
+  pn.param("D_Lateral", D_Lateral, 1.0);
+
   pn.param("Kp", Kp, 1.0);
   pn.param("Kd", Kd, 0.0);
+  pn.param("zero_pos", zero_pos, 1.0);
+  pn.param("roll_factor", roll_factor, 1.0);
 
 
   // Publishers and Subscribers
@@ -75,6 +82,8 @@ UpperController::UpperController() {
   ROS_INFO("[param] D_Long: %.2f", D_Long);
   ROS_INFO("[param] Kp: %.2f", Kp);
   ROS_INFO("[param] Kd: %.2f", Kd);
+  ROS_INFO("[param] zero_pos: %.2f", zero_pos);
+  ROS_INFO("[param] roll_factor: %.2f", roll_factor);
   
   // Visualization Marker Settings
   initMarker();
@@ -89,18 +98,19 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   double LateralDir = GetLateralDir(carPose, LateralPose);
   double rot_rad = rot_angle / 180.0 * PI;
   double vt,vn,w;
-  // double LeftorRight = isRightorLeft(LateralPose.position, carPose);
   lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
 
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
+  susp_cmd.data={float(zero_pos),float(zero_pos),
+                 float(zero_pos),float(zero_pos)};
 
   if (goal_received) {
-    double thetar = getYawFromPose(carPose);
-    double theta = getYawFromPose(ForwardPose);
-    double roll = getRollFromPose(carPose);
-    double pitch =  getPitchFromPose(carPose);
+    double thetar = getYawFromPose(carPose); // ego yaw
+    double theta = getYawFromPose(ForwardPose);// yaw on path
+    double roll = getRollFromPose(carPose); // ego roll
+    double pitch =  getPitchFromPose(carPose); // ego pitch
 
     double d_theta = theta - thetar;
     double slow_factor = 1.0- fabs(pow(d_theta/3.14,3));
@@ -120,21 +130,33 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.y = vn * cos(rot_rad) - vt * sin(rot_rad);//vn'
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
+          // body control
+          if(d_theta > PI/3.0 || d_theta < -PI/4.0){
+            susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + d_theta * roll_factor; // right of the body up (d_theta<0)
+            susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - d_theta * roll_factor; // left  of the body up (d_theta>0)
+          };
+          // limit max values
+          for(int i=0; i<4; i++){
+            susp_cmd.data[i] = fmin(fmax(susp_cmd.data[i],0.0),4.0);
+          }
+
+
           ROS_INFO("----------");
           ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f",roll,pitch,thetar);
-          // ROS_INFO("d_yaw:%.2f, slow_factor:%.2f",d_theta,slow_factor);
+          ROS_INFO("d_yaw:%.2f, slow_factor:%.2f",d_theta,slow_factor);
           // ROS_INFO("pos:(%.2f,%.2f)",ForwardPose.position.x,ForwardPose.position.y);
           ROS_INFO("lateral_dist:%.2f, long_vel:%.2f",lateral_dist,carVel.linear.x);
           ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",w,vt,vn);
         }
     }
     pub_.publish(cmd_vel);
-    // pub_suspension.publish();
+    pub_suspension.publish(susp_cmd);
   }else{
     cmd_vel.angular.z = 0;
     cmd_vel.linear.y = 0;
     cmd_vel.linear.x = 0;
     pub_.publish(cmd_vel);
+    pub_suspension.publish(susp_cmd);
   }
 }
 

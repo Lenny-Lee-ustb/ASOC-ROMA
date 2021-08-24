@@ -42,6 +42,7 @@ private:
   visualization_msgs::Marker points, line_strip, goal_circle;
   geometry_msgs::Twist cmd_vel;
   geometry_msgs::Point odom_goal_pos;
+  std_msgs::Float32MultiArray susp_cmd;
   nav_msgs::Odometry odom;
   nav_msgs::Path map_path;
 
@@ -53,6 +54,7 @@ private:
   double P_Lateral, I_Lateral, D_Lateral;
   double P_Long, I_Long, D_Long;
   double Kp, Kd;
+  double zero_pos,roll_factor;
 
   bool foundForwardPt,goal_received, goal_reached;
 
