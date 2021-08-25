@@ -9,6 +9,10 @@ int xbox_mode_on = -1;
 int xbox_power = 0;
 int xbox_power_last = 0;
 
+double K_S = 4.0;
+double D_S = 0.3;
+
+
 std_msgs::Float32MultiArray tmotor_pos_msgs;
 
 Tmotor tmotor[4];
@@ -210,7 +214,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 		}
 
 		if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
-		{
+		{	
+			
 			if (xbox_mode_on > 0)
 			{
 				for (int id = 0; id < 4; id++)
@@ -311,22 +316,22 @@ void motorParaSet(int id)
 		{
 			if (tmotor[id].vel_now > 0)
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * 4 - 0.3 - 0.3 * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S - 0.6 - D_S * abs(tmotor[id].vel_now);
 			}
 			else
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * 4 - 0.3 + 0.3 * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S - 0.6 + D_S * abs(tmotor[id].vel_now);
 			}
 		}
 		else
 		{
 			if (tmotor[id].vel_now > 0)
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * 4 + 0.3 - 0.3 * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S + 0.6 - D_S * abs(tmotor[id].vel_now);
 			}
 			else
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * 4 + 0.3 + 0.3 * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S + 0.6 + D_S * abs(tmotor[id].vel_now);
 			}
 		}
 
@@ -377,13 +382,13 @@ void frameDataSet(struct can_frame &frame, int id)
 //打印信息
 void printTmotorInfo(int id)
 {
-	ROS_INFO("\n-----\nID[%d]\nflag[%d] \nvel_des is %.2f\npos_des is %.2f \nt_now is %.2f \nZeropointset is %d \nxbox_mode: %d\nstop_flag:%d\n",
+	ROS_INFO("\n-----\nID[%d]\nflag[%d] \npos_now is %.2f\npos_des is %.2f \nt_now is %.2f \npos_zero is %.2f \nxbox_mode: %d\nstop_flag:%d\n",
 	 tmotor[id].id, 
 	 tmotor[id].flag,
-	 tmotor[id].vel_des, 
+	 tmotor[id].pos_now, 
 	 tmotor[id].pos_des, 
 	 tmotor[id].t_now, 
-	 tmotor[id].zeroPointSet, 
+	 tmotor[id].pos_zero, 
 	 xbox_mode_on,
 	 Stop_flag
 	 );

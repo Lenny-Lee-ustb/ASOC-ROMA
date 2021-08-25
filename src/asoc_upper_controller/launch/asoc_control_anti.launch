@@ -8,13 +8,13 @@
 
         <param name = "baseSpeed" type="double" value = "1.5"/>
         <param name = "rot_angle" type="double" value = "45.0"/>
-        <param name = "P_Long" type="double" value = "30.0"/>
+        <param name = "P_Long" type="double" value = "35.0"/>
         <param name = "I_Long" type="double" value = "0.0"/>
         <param name = "D_Long" type="double" value = "2.0"/>
 
         <param name = "P_Yaw" type="double" value = "60.0"/>
         <param name = "I_Yaw" type="double" value = "0.0"/>
-        <param name = "D_Yaw" type="double" value = "3.0"/>
+        <param name = "D_Yaw" type="double" value = "1.0"/>
         <param name = "forward_dist" type="double" value = "1.0"/>
         
 
@@ -25,7 +25,8 @@
         <param name = "Kp" type="double" value = "1.0"/>
         <param name = "Kd" type="double" value = "0.0"/>
         <param name = "zero_pos" type="double" value = "1.0"/>
-        <param name = "roll_factor" type="double" value = "0.8"/>
+        <param name = "roll_rot_factor" type="double" value = "0.8"/>        
+        <param name = "roll_lat_factor" type="double" value = "1.5"/>
     </node>
 </launch>
 

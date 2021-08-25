@@ -54,7 +54,7 @@ private:
   double P_Lateral, I_Lateral, D_Lateral;
   double P_Long, I_Long, D_Long;
   double Kp, Kd;
-  double zero_pos,roll_factor;
+  double zero_pos,roll_rot_factor,roll_lat_factor;
 
   bool foundForwardPt,goal_received, goal_reached;
 

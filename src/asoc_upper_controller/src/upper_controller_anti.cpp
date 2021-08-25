@@ -32,8 +32,8 @@ UpperController::UpperController() {
   pn.param("Kp", Kp, 1.0);
   pn.param("Kd", Kd, 0.0);
   pn.param("zero_pos", zero_pos, 1.0);
-  pn.param("roll_factor", roll_factor, 1.0);
-
+  pn.param("roll_rot_factor", roll_rot_factor, 1.0);
+  pn.param("roll_lat_factor", roll_lat_factor, 1.0);
 
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);
@@ -83,7 +83,8 @@ UpperController::UpperController() {
   ROS_INFO("[param] Kp: %.2f", Kp);
   ROS_INFO("[param] Kd: %.2f", Kd);
   ROS_INFO("[param] zero_pos: %.2f", zero_pos);
-  ROS_INFO("[param] roll_factor: %.2f", roll_factor);
+  ROS_INFO("[param] roll_rot_factor: %.2f", roll_rot_factor);  
+  ROS_INFO("[param] roll_lat_factor: %.2f", roll_lat_factor);
   
   // Visualization Marker Settings
   initMarker();
@@ -131,10 +132,15 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
           // body control
-          if(d_theta > PI/3.0 || d_theta < -PI/4.0){
-            susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + d_theta * roll_factor; // right of the body up (d_theta<0)
-            susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - d_theta * roll_factor; // left  of the body up (d_theta>0)
+          if(d_theta > PI/12.0 || d_theta < -PI/12.0){
+            susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + d_theta * roll_rot_factor + lateral_dist * roll_lat_factor; // right of the body up (d_theta<0)
+            susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - d_theta * roll_rot_factor - lateral_dist * roll_lat_factor; // left  of the body up (d_theta>0)
           };
+          
+            // susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + lateral_dist * roll_factor; // right of the body up (d_theta<0)
+            // susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - lateral_dist * roll_factor; // left  of the body up (d_theta>0)
+
+
           // limit max values
           for(int i=0; i<4; i++){
             susp_cmd.data[i] = fmin(fmax(susp_cmd.data[i],0.0),4.0);
