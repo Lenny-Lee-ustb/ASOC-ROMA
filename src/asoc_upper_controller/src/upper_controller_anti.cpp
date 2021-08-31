@@ -40,8 +40,8 @@ UpperController::UpperController() {
 
   path_sub = n_.subscribe("/fix_path", 1,
                           &UpperController::pathCB, this);
-  goal_sub =
-      n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
+  goal_sub = 
+             n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
 
   marker_pub = n_.advertise<visualization_msgs::Marker>("/car_path", 10);
 

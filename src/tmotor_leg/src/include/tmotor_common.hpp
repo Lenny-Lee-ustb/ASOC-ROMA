@@ -36,21 +36,22 @@ struct Tmotor
 {
 	int id;
 
-	float pos_zero = 0;	   //相对零点
+	float pos_zero = 1;	   //相对零点
 	float pos_abszero = 0; //绝对零点
 
 	float pos_now;		//当前位置
-	float pos_des = 0;	//目标（前馈）位置
+	float pos_des;	//目标（前馈）位置
 	float vel_now;		//当前速度
-	float vel_des = -1; //目标速度
+	float vel_des; //目标速度
 	float t_now;		//当前力矩（电流？）
-	float t_des = 0;	//前馈力矩（电流？）
-	float kp = 0;
-	float kd = 2;
+	float t_des;	//前馈力矩（电流？）
+	float kp;
+	float kd;
 
 	int zeroPointSet = 0; //设过零点为1，未设过零点为0
-	int flag = 0;
-	// 0:调绝对零点 ；1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
+	int flag = 1;
+	//旧版本： 0:调绝对零点 ；1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
+	//新版本：（上电位置为绝对零点）1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
 };
 
 
@@ -83,9 +84,11 @@ void canCheck(can_frame &frame, int s, int id)
 	}
 	frame.data[7] = 0xfc;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
+    //enter Tmotor control mode
 
 	frame.data[7] = 0xfe;
-	nbytes = write(s, &frame, sizeof(struct can_frame));	
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+	//set Tmotor zero point	
 
 	// printf("Wrote %d bytes\n", nbytes);
 	if (nbytes == -1)

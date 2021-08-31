@@ -231,7 +231,7 @@ bool UpperController::isForwardWayPt(const geometry_msgs::Point &wayPt,
     return false;
 }
 
-
+//判断横向方向
 double UpperController::isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose){
   float car2wayPt_x = wayPt.x - carPose.position.x;
   float car2wayPt_y = wayPt.y - carPose.position.y;
@@ -249,7 +249,7 @@ double UpperController::isRightorLeft(const geometry_msgs::Point &wayPt, const g
       return -1;
 }
 
-
+//判断横向方向
 double UpperController::GetLateralDir(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPose){
   double ForwardPose_yaw = getYawFromPose(ForwardPose);
   double ForwardPose_x,ForwardPose_y;
