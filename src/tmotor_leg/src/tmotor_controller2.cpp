@@ -11,6 +11,7 @@ int xbox_power_last = 0;
 
 double K_S = 4.0;
 double D_S = 0.3;
+//电弹簧模式参数
 
 
 std_msgs::Float32MultiArray tmotor_pos_msgs;
@@ -251,7 +252,6 @@ void rxThread(int s)
 		pos = ((uint16_t)frame.data[1] << 8) | frame.data[2];
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
-		rxCounter++;
 
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
@@ -261,6 +261,12 @@ void rxThread(int s)
 		tmotor[ID].vel_now = f_vel;
 		tmotor[ID].t_now = f_t;
 
+        if(rxCounter<4){
+			tmotor[rxCounter].pos_abszero=tmotor[rxCounter].pos_now;
+			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+1;
+		}
+
+        rxCounter++;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 	}
 }

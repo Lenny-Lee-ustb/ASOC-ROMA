@@ -11,7 +11,7 @@ int xbox_power_last = 0;
 
 double K_S = 4.0;
 double D_S = 0.3;
-
+//电弹簧模式参数
 
 std_msgs::Float32MultiArray tmotor_pos_msgs;
 

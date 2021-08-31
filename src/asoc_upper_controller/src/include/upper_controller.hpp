@@ -9,6 +9,7 @@
 #include <visualization_msgs/Marker.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <ctime>
+#include <math.h>
 
 #define PI 3.14159265358979
 
@@ -54,7 +55,7 @@ private:
   double P_Lateral, I_Lateral, D_Lateral;
   double P_Long, I_Long, D_Long;
   double Kp, Kd;
-  double zero_pos,roll_rot_factor,roll_lat_factor;
+  double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor;
 
   bool foundForwardPt,goal_received, goal_reached;
 
