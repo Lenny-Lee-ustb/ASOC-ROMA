@@ -214,7 +214,7 @@ void Tmotor_angle_callback(std_msgs::Float32MultiArray MultiTmotorAngle){
 }
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-    // judge_forward = joy->buttons[3];
+    //judge_forward = joy->buttons[3];
 	// judge_backward = joy->buttons[0];
 	// judge_left = joy->buttons[2];
 	// judge_right = joy->buttons[1];
@@ -227,9 +227,9 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     }
     power_last = power;  
 
-	frame_vt = 15*stick_forward;
-	frame_vn = -15*stick_right;
-	frame_w =  -30*stick_yaw;
+	frame_vt = 30*stick_forward;
+	frame_vn = -30*stick_right;
+	frame_w =  -50*stick_yaw;
 }
 
 

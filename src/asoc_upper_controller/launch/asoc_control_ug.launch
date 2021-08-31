@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- spawn Upper controller  !! -->
+    <node pkg="asoc_upper_controller" type="upper_controller_anti" name="upper_controller" clear_params="true" output="screen">
+        <param name = "controller_freq" type="double" value = "40.0"/>
+        <param name = "goalRadius" type="double" value = "0.5"/>
+        <param name = "goal_pose_err" type="double" value = "1.0"/>
+
+        <param name = "baseSpeed" type="double" value = "1.5"/>
+        <param name = "rot_angle" type="double" value = "45.0"/>
+        <param name = "P_Long" type="double" value = "32.0"/>
+        <param name = "I_Long" type="double" value = "0.0"/>
+        <param name = "D_Long" type="double" value = "2.0"/>
+
+        <param name = "P_Yaw" type="double" value = "50.0"/>
+        <param name = "I_Yaw" type="double" value = "0.0"/>
+        <param name = "D_Yaw" type="double" value = "1.0"/>
+        <param name = "forward_dist" type="double" value = "0.7"/>
+        
+
+        <param name = "P_Lateral" type="double" value = "30.0"/>
+        <param name = "I_Lateral" type="double" value = "0.0"/>
+        <param name = "D_Lateral" type="double" value = "3.0"/>
+
+        <param name = "Kp" type="double" value = "1.0"/>
+        <param name = "Kd" type="double" value = "0.0"/>
+        <param name = "zero_pos" type="double" value = "1.0"/>
+        <param name = "roll_rot_factor" type="double" value = "0.2"/>        
+        <param name = "roll_lat_factor" type="double" value = "0.0"/>
+    </node>
+</launch>
+
