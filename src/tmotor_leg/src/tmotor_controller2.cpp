@@ -49,7 +49,7 @@ void flagTest(int id)
 	//慢速调相对零点；十分接近时进入flag3；调零完毕，可以进入手柄控制模式
 	if (tmotor[id].flag == 2)
 	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.15)
 		{
 			tmotor[id].zeroPointSet = 1;
 			tmotor[id].flag = 3;
@@ -284,9 +284,9 @@ void motorParaSet(int id)
 		tmotor[id].kd = 5;
 		break;
 	case 2:
-		tmotor[id].t_des = 0;
+		tmotor[id].t_des = 10;
 		tmotor[id].vel_des = 0.4;
-		tmotor[id].pos_des = tmotor[id].pos_zero;
+		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
 		tmotor[id].kd = 5;
 		break;
