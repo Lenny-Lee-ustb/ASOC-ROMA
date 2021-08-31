@@ -34,7 +34,7 @@ UpperController::UpperController() {
   pn.param("zero_pos", zero_pos, 1.0);
   pn.param("roll_rot_factor", roll_rot_factor, 1.0);
   pn.param("roll_lat_factor", roll_lat_factor, 1.0);
-  pn.param("velocity_factor",velocity_factor,0.1)
+  pn.param("velocity_factor",velocity_factor,0.1);
 
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);

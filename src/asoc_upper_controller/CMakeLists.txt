@@ -43,9 +43,3 @@ src/include/upper_controller.hpp)
 target_link_libraries(upper_controller_anti
   ${catkin_LIBRARIES}
 )
-  add_executable(upper_controller_anti_Tmotor 
-src/upper_controller_anti_Tmotor.cpp
-src/include/upper_controller.hpp)
-target_link_libraries(upper_controller_anti_Tmotor
-  ${catkin_LIBRARIES}
-)
