@@ -383,7 +383,6 @@ void printTmotorInfo(int id)
 }
 
 
-
 void txThread(int s)
 {
 	struct can_frame frame;
