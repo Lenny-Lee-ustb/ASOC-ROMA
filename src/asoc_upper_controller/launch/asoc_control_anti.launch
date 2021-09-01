@@ -26,8 +26,10 @@
         <param name = "Kd" type="double" value = "0.0"/>
         <param name = "zero_pos" type="double" value = "1.0"/>
         <param name = "roll_rot_factor" type="double" value = "0.8"/>        
-        <param name = "roll_lat_factor" type="double" value = "1.5"/>
+        <param name = "roll_lat_factor" type="double" value = "1.0"/>
         <param name = "velocity_factor" type="double" value = "0"/>
-    </node>
+        <param name = "pitch_rot_factor" type="double" value = "0.0"/>
+        <param name = "roll_fac_factor" type="double" value = "0.0"/>
+            </node>
 </launch>
 

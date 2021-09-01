@@ -472,7 +472,7 @@ int main(int argc, char **argv)
 		canCheck(frame, s, id);
 	}
 	//检查can通讯连接
-
+	
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
 	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
 	Tmotor_pos = n.advertise<std_msgs::Float32MultiArray>("Tmotor_pos", 100);

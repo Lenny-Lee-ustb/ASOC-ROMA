@@ -13,6 +13,7 @@ double K_S = 4.0;
 double D_S = 0.3;
 //电弹簧模式参数
 
+
 std_msgs::Float32MultiArray tmotor_pos_msgs;
 
 Tmotor tmotor[4];
@@ -37,17 +38,6 @@ void flagTest2(int id)
 //监测电机状态
 void flagTest(int id)
 {
-	if (tmotor[id].flag == 0)
-	{
-		//如果电流增大超过阈值->碰到机械限位->设当前位置为绝对零点->确定相对零点->进入flag1
-		if (abs(tmotor[id].t_now) > 8)
-		{
-			tmotor[id].pos_abszero = tmotor[id].pos_now;
-			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero-2.5;
-			tmotor[id].flag = 1;
-		}
-	}
-
 	//快速调相对零点；接近时进入flag2
 	if (tmotor[id].flag == 1)
 	{
@@ -59,7 +49,7 @@ void flagTest(int id)
 	//慢速调相对零点；十分接近时进入flag3；调零完毕，可以进入手柄控制模式
 	if (tmotor[id].flag == 2)
 	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.15)
 		{
 			tmotor[id].zeroPointSet = 1;
 			tmotor[id].flag = 3;
@@ -85,6 +75,13 @@ void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
 		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
 		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
 		tmotor[id].pos_zero   = ctrl_cmd.data[id];
+    //     if(ctrl_cmd.data[id]!=0){
+    //         tmotor[id].vel_des = ctrl_cmd.data[id];
+    //         tmotor[id].flag = 6;
+    //     }
+    //     else{
+    //         tmotor[id].flag = 3;
+    //     }
 	}
 }
 
@@ -97,10 +94,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 	 && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
 	{
 		xbox_power = joy->buttons[7];
-		float move_up = -(joy->axes[2]) + 1;    //now is used as pitch input
-		float move_down = -(joy->axes[5]) + 1;     //now is used as roll input
-        // float stick_forward = joy->axes[1];
-        // float stick_right = joy->axes[0];
+		float move_up = -(joy->axes[2]) + 1;
+		float move_down = -(joy->axes[5]) + 1;
 
 
 		if (xbox_power > xbox_power_last)
@@ -264,7 +259,6 @@ void rxThread(int s)
 		pos = ((uint16_t)frame.data[1] << 8) | frame.data[2];
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
-		rxCounter++;
 
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
@@ -274,6 +268,12 @@ void rxThread(int s)
 		tmotor[ID].vel_now = f_vel;
 		tmotor[ID].t_now = f_t;
 
+        if(rxCounter<4){
+			tmotor[rxCounter].pos_abszero=tmotor[rxCounter].pos_now;
+			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+1;
+		}
+
+        rxCounter++;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 	}
 }
@@ -283,26 +283,19 @@ void motorParaSet(int id)
 {
 	switch (tmotor[id].flag)
 	{
-	case 0:
-		tmotor[id].t_des = 0;
-		tmotor[id].vel_des = 2;
-		tmotor[id].pos_des = 0;
-		tmotor[id].kp = 0;
-		tmotor[id].kd = 4;
-		break;
 	case 1:
 		tmotor[id].t_des = 0;
-		tmotor[id].vel_des = -2.5;
+		tmotor[id].vel_des = 2.5;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
-		tmotor[id].kd = 5;
+		tmotor[id].kd = 2;
 		break;
 	case 2:
-		tmotor[id].t_des = 0;
-		tmotor[id].vel_des = -0.4;
-		tmotor[id].pos_des = tmotor[id].pos_zero;
+		tmotor[id].t_des = 10;
+		tmotor[id].vel_des = 0.4;
+		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
-		tmotor[id].kd = 5;
+		tmotor[id].kd = 2;
 		break;
 	case 3:
 		tmotor[id].t_des = 0;
@@ -342,7 +335,13 @@ void motorParaSet(int id)
 		tmotor[id].kd = 0;
 		tmotor[id].kp = 0;
 		break;
-
+    case 6: 
+        tmotor[id].t_des = 0;
+		tmotor[id].vel_des = tmotor[id].vel_des;
+		tmotor[id].pos_des = 0;
+		tmotor[id].kp = 0;
+		tmotor[id].kd = 6;
+		break;
 	default:
 		break;
 	}
@@ -354,11 +353,14 @@ void frameDataSet(struct can_frame &frame, int id)
 	float f_p, f_v, f_kp, f_kd, f_t;
 	uint16_t p, v, kp, kd, t;
 
-	if (tmotor[id].flag != 5)
+	if (tmotor[id].flag != 5 && tmotor[id].flag!=6)
 	{
 		flagTest(id);
 		motorParaSet(id);
 	}
+    if(tmotor[id].flag == 6){
+        motorParaSet(id);
+    }
 
 	f_p = tmotor[id].pos_des;
 	f_v = tmotor[id].vel_des;
@@ -382,15 +384,15 @@ void frameDataSet(struct can_frame &frame, int id)
 }
 
 //打印信息
-void printTmotorInfo(int id)
+void printTmotorInfo()
 {
-	ROS_INFO("\n-----\nID[%d]\nflag[%d] \npos_now is %.2f\npos_des is %.2f \nt_now is %.2f \npos_zero is %.2f \nxbox_mode: %d\nstop_flag:%d\n",
-	 tmotor[id].id, 
-	 tmotor[id].flag,
-	 tmotor[id].pos_now, 
-	 tmotor[id].pos_des, 
-	 tmotor[id].t_now, 
-	 tmotor[id].pos_zero, 
+	ROS_INFO("\n-----\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nxbox_mode: %d\nstop_flag:%d\n",
+	 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
+	 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now, 
+	 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
+     tmotor[0].vel_des, tmotor[1].vel_des, tmotor[2].vel_des, tmotor[3].vel_des,
+	 tmotor[0].t_now, tmotor[1].t_now, tmotor[2].t_now, tmotor[3].t_now, 
+	 tmotor[0].pos_zero, tmotor[1].pos_zero, tmotor[2].pos_zero, tmotor[3].pos_zero, 
 	 xbox_mode_on,
 	 Stop_flag
 	 );
@@ -431,13 +433,14 @@ void txThread(int s)
 			}
 			txCounter++;
 			//printf("tx is %d;",txCounter);
-			printTmotorInfo(id);
+			
 
 			tmotor_pos_msgs.data[id] = tmotor[id].pos_now;
 
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 		}
 		Tmotor_pos.publish(tmotor_pos_msgs);
+		printTmotorInfo();
 	}
 }
 
@@ -486,7 +489,7 @@ int main(int argc, char **argv)
 		canCheck(frame, s, id);
 	}
 	//检查can通讯连接
-
+	
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
 	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
 	Tmotor_pos = n.advertise<std_msgs::Float32MultiArray>("Tmotor_pos", 100);
