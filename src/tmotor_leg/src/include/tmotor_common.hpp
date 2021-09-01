@@ -14,6 +14,9 @@
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float32.h>
+#include <geometry_msgs/PolygonStamped.h>
+#include <geometry_msgs/Polygon.h>
+#include <geometry_msgs/Point32.h>
 
 #define P_MIN -12.5f //-12.5f —— 12.5f rad
 #define P_MAX 12.5f
