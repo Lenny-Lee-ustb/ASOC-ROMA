@@ -14,7 +14,8 @@ double D_S = 0.3;
 //电弹簧模式参数
 
 
-std_msgs::Float32MultiArray tmotor_pos_msgs;
+//std_msgs::Float32MultiArray tmotor_pos_msgs;
+geometry_msgs::PolygonStamped tmotor_pos_msgs;
 
 Tmotor tmotor[4];
 
@@ -393,7 +394,8 @@ void txThread(int s)
 
 	for (int i = 0;; i++)
 	{
-		tmotor_pos_msgs.data.resize(4);
+		//tmotor_pos_msgs.data.resize(4);
+		tmotor_pos_msgs.polygon.points.resize(4);
 		for (int id = 0; id < 4; id++)
 		{
 			frame.can_id = 0x00 + id + 1;
@@ -418,10 +420,12 @@ void txThread(int s)
 			//printf("tx is %d;",txCounter);
 			printTmotorInfo(id);
 
-			tmotor_pos_msgs.data[id] = tmotor[id].pos_now;
+			//tmotor_pos_msgs.data[id] = tmotor[id].pos_now;
+			tmotor_pos_msgs.polygon.points[id].x=tmotor[id].pos_now;
 
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 		}
+		tmotor_pos_msgs.header.stamp=ros::Time::now();
 		Tmotor_pos.publish(tmotor_pos_msgs);
 	}
 }
@@ -434,6 +438,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
 	signal(SIGINT, signalCallback);
+	
 
 	int s;
 	struct sockaddr_can addr;
@@ -475,6 +480,7 @@ int main(int argc, char **argv)
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
 	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
 	Tmotor_pos = n.advertise<std_msgs::Float32MultiArray>("Tmotor_pos", 100);
+	Tmotor_pos = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_pos",100);
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);

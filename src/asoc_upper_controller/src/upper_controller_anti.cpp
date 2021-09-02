@@ -168,9 +168,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
             susp_cmd.data[i] = fmin(fmax(susp_cmd.data[i],-8.0),8.0);
           }
 
-          cmd_vel.linear.x = fmax(cmd_vel.linear.x,0);
-          cmd_vel.linear.y = fmin(fmax(cmd_vel.linear.y,-100),100);
-          cmd_vel.linear.z = fmin(fmax(cmd_vel.linear.z,-100),100);
+          cmd_vel.linear.x=fmax(cmd_vel.linear.x,0);
+          cmd_vel.linear.y=fmin(fmax(cmd_vel.linear.y,-100.0),100.0);
+          cmd_vel.linear.z=fmin(fmax(cmd_vel.linear.z,-100.0),100.0);
 
           ROS_INFO("----------");
           ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f",roll,pitch,thetar);
