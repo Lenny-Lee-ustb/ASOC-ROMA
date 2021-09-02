@@ -9,7 +9,7 @@ int xbox_mode_on = -1;
 int xbox_power = 0;
 int xbox_power_last = 0;
 
-double K_S = 4.0;
+double K_S = 7.0;
 double D_S = 0.3;
 //电弹簧模式参数
 
@@ -74,14 +74,14 @@ void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
 		// tmotor[id].pos_des = ctrl_cmd.data[id*3];
 		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
 		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
-		tmotor[id].pos_zero   = ctrl_cmd.data[id];
-    //     if(ctrl_cmd.data[id]!=0){
-    //         tmotor[id].vel_des = ctrl_cmd.data[id];
-    //         tmotor[id].flag = 6;
-    //     }
-    //     else{
-    //         tmotor[id].flag = 3;
-    //     }
+		// tmotor[id].pos_zero   = ctrl_cmd.data[id];
+        if(ctrl_cmd.data[id]!=0){
+            tmotor[id].vel_des = ctrl_cmd.data[id];
+            tmotor[id].flag = 6;
+        }
+        // else{
+        //     tmotor[id].flag = 3;
+        // }
 	}
 }
 
@@ -301,7 +301,7 @@ void motorParaSet(int id)
 		tmotor[id].t_des = 0;
 		tmotor[id].vel_des = 0;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
-		tmotor[id].kp = 5;
+		tmotor[id].kp = K_S;
 		tmotor[id].kd = 0;
 		break;
 	case 4:
@@ -336,11 +336,11 @@ void motorParaSet(int id)
 		tmotor[id].kp = 0;
 		break;
     case 6: 
-        tmotor[id].t_des = 0;
+        tmotor[id].t_des = 2;
 		tmotor[id].vel_des = tmotor[id].vel_des;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
-		tmotor[id].kd = 6;
+		tmotor[id].kd = 3;
 		break;
 	default:
 		break;

@@ -37,10 +37,10 @@ UpperController::UpperController() {
   pn.param("roll_rot_factor", roll_rot_factor, 1.0);
   pn.param("roll_lat_factor", roll_lat_factor, 1.0);
   pn.param("velocity_factor",velocity_factor,0.1);
-  pn.param("P_pit", P_pit, 20.0);
-  pn.param("D_pit", D_pit, 2.0);
-  pn.param("P_rol", P_rol, 20.0);
-  pn.param("D_rol", D_rol, 2.0);
+  pn.param("P_pit", P_pit, 150.0);
+  pn.param("D_pit", D_pit, 1.0);
+  pn.param("P_rol", P_rol, 150.0);
+  pn.param("D_rol", D_rol, 1.0);
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);
 
@@ -128,7 +128,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double d_theta = theta - thetar;
     double d_roll = rollForward - roll;
     double d_pitch = pitchForward - pitch;
-    double slow_factor = 1.0- fabs(pow(d_theta/3.14,3));
+    double slow_factor = 1.0- 1.5 * fabs(pow(d_theta/3.14,3));
     if (foundForwardPt) {
         if (!goal_reached) {
           // PID control
@@ -146,18 +146,18 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
           // body control
-          susp_cmd.data[0] = P_pit * pitch + D_pit * (last_pitch - pitch) + P_rol * roll + D_rol * (last_roll - roll);
-          susp_cmd.data[1] = P_pit * pitch + D_pit * (last_pitch - pitch) - (P_rol * roll + D_rol * (last_roll - roll));
-          susp_cmd.data[2] = -(P_pit * pitch + D_pit * (last_pitch - pitch)) - (P_rol * roll + D_rol * (last_roll - roll));
-          susp_cmd.data[3] = -(P_pit * pitch + D_pit * (last_pitch - pitch)) + P_rol * roll + D_rol * (last_roll - roll);
+          susp_cmd.data[0] = P_pit * pitch + D_pit * (pitch - last_pitch) + P_rol * roll + D_rol * (roll - last_roll);
+          susp_cmd.data[1] = P_pit * pitch + D_pit * (pitch - last_pitch) - (P_rol * roll + D_rol * (roll - last_roll));
+          susp_cmd.data[2] = -(P_pit * pitch + D_pit * (pitch - last_pitch)) - (P_rol * roll + D_rol * (roll - last_roll));
+          susp_cmd.data[3] = -(P_pit * pitch + D_pit * (pitch - last_pitch)) + P_rol * roll + D_rol * (roll - last_roll);
 
           last_pitch = pitch;
           last_roll = roll;
 /****************************************************************************************/
-          if(d_theta > PI/12.0 || d_theta < -PI/12.0){
-            susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + d_theta * roll_rot_factor + lateral_dist * roll_lat_factor + sqrt(carVel.linear.x*carVel.linear.x+carVel.linear.y*carVel.linear.y)*velocity_factor; // add velocity factor
-            susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - d_theta * roll_rot_factor - lateral_dist * roll_lat_factor - sqrt(carVel.linear.x*carVel.linear.x+carVel.linear.y*carVel.linear.y)*velocity_factor; 
-          };
+          // if(d_theta > PI/12.0 || d_theta < -PI/12.0){
+          //   susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + d_theta * roll_rot_factor + lateral_dist * roll_lat_factor + sqrt(carVel.linear.x*carVel.linear.x+carVel.linear.y*carVel.linear.y)*velocity_factor; // add velocity factor
+          //   susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - d_theta * roll_rot_factor - lateral_dist * roll_lat_factor - sqrt(carVel.linear.x*carVel.linear.x+carVel.linear.y*carVel.linear.y)*velocity_factor; 
+          // };
           
             // susp_cmd.data[0] = susp_cmd.data[3] = zero_pos + lateral_dist * roll_factor; // right of the body up (d_theta<0)
             // susp_cmd.data[1] = susp_cmd.data[2] = zero_pos - lateral_dist * roll_factor; // left  of the body up (d_theta>0)
@@ -168,6 +168,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
             susp_cmd.data[i] = fmin(fmax(susp_cmd.data[i],-8.0),8.0);
           }
 
+          cmd_vel.linear.x = fmax(cmd_vel.linear.x,0);
+          cmd_vel.linear.y = fmin(fmax(cmd_vel.linear.y,-100),100);
+          cmd_vel.linear.z = fmin(fmax(cmd_vel.linear.z,-100),100);
 
           ROS_INFO("----------");
           ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f",roll,pitch,thetar);
