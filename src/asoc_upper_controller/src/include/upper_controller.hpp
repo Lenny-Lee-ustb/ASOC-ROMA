@@ -43,6 +43,7 @@ private:
   visualization_msgs::Marker points, line_strip, goal_circle;
   geometry_msgs::Twist cmd_vel;
   geometry_msgs::Point odom_goal_pos;
+  //geometry_msgs::PolygonStamped susp_cmd;
   std_msgs::Float32MultiArray susp_cmd;
   nav_msgs::Odometry odom;
   nav_msgs::Path map_path;
