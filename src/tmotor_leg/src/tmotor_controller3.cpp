@@ -9,7 +9,7 @@ int xbox_mode_on = -1;
 int xbox_power = 0;
 int xbox_power_last = 0;
 
-double K_S = 4.0;
+double K_S = 7.0;
 double D_S = 0.3;
 //电弹簧模式参数
 
@@ -66,15 +66,20 @@ void flagTest(int id)
 }
 
 // upper_controller_callback
-void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
+void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 {
 	for (int id = 0; id < 4; id++)
 	{
 		// tmotor[id].pos_des = ctrl_cmd.data[id*3];
 		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
 		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
-		tmotor[id].pos_zero   = ctrl_cmd.data[id];
+		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
 		//！！待加
+
+		 if(ctrl_cmd.polygon.points[id].x!=0){
+            tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
+            tmotor[id].flag = 6;
+        }
 	}
 }
 
@@ -328,7 +333,14 @@ void motorParaSet(int id)
 		tmotor[id].kd = 0;
 		tmotor[id].kp = 0;
 		break;
-
+     case 6: 
+        tmotor[id].t_des = 2;
+		tmotor[id].vel_des = tmotor[id].vel_des;
+		tmotor[id].pos_des = 0;
+		tmotor[id].kp = 0;
+		tmotor[id].kd = 3;
+		break;
+	
 	default:
 		break;
 	}
