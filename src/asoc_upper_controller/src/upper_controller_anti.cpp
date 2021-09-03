@@ -53,7 +53,8 @@ UpperController::UpperController() {
 
   pub_ = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
-  pub_suspension = n_.advertise<std_msgs::Float32MultiArray>("/suspension_cmd", 1);
+  //pub_suspension = n_.advertise<std_msgs::Float32MultiArray>("/suspension_cmd", 1);
+  pub_suspension = n_.advertise<geometry_msgs::PolygonStamped>("/suspension_cmd", 1);
 
   // Timer
   timer1 = n_.createTimer(ros::Duration((1.0) / controller_freq),
@@ -114,8 +115,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   cmd_vel.angular.z = 0;
   // susp_cmd.data={float(zero_pos),float(zero_pos),
   //                float(zero_pos),float(zero_pos)};
-  susp_cmd.data={0,0,
-                 0,0};
+  //susp_cmd.data={0,0,0,0};
+  susp_cmd.polygon.points.resize(4);
 
   if (goal_received) {
     double thetar = getYawFromPose(carPose); // ego yaw
@@ -146,10 +147,10 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
           // body control
-          susp_cmd.data[0] = P_pit * pitch + D_pit * (pitch - last_pitch) + P_rol * roll + D_rol * (roll - last_roll);
-          susp_cmd.data[1] = P_pit * pitch + D_pit * (pitch - last_pitch) - (P_rol * roll + D_rol * (roll - last_roll));
-          susp_cmd.data[2] = -(P_pit * pitch + D_pit * (pitch - last_pitch)) - (P_rol * roll + D_rol * (roll - last_roll));
-          susp_cmd.data[3] = -(P_pit * pitch + D_pit * (pitch - last_pitch)) + P_rol * roll + D_rol * (roll - last_roll);
+          susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch) + P_rol * roll + D_rol * (roll - last_roll);
+          susp_cmd.polygon.points[1].x = P_pit * pitch + D_pit * (pitch - last_pitch) - (P_rol * roll + D_rol * (roll - last_roll));
+          susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) - (P_rol * roll + D_rol * (roll - last_roll));
+          susp_cmd.polygon.points[3].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) + P_rol * roll + D_rol * (roll - last_roll);
 
           last_pitch = pitch;
           last_roll = roll;
@@ -165,7 +166,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
 
           // limit max values
           for(int i=0; i<4; i++){
-            susp_cmd.data[i] = fmin(fmax(susp_cmd.data[i],-8.0),8.0);
+            susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x,-8.0),8.0);
           }
 
           cmd_vel.linear.x=fmax(cmd_vel.linear.x,0);
@@ -180,12 +181,14 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",w,vt,vn);
         }
     }
+    susp_cmd.header.stamp=ros::Time::now();
     pub_.publish(cmd_vel);
     pub_suspension.publish(susp_cmd);
   }else{
     cmd_vel.angular.z = 0;
     cmd_vel.linear.y = 0;
     cmd_vel.linear.x = 0;
+    susp_cmd.header.stamp=ros::Time::now();
     pub_.publish(cmd_vel);
     pub_suspension.publish(susp_cmd);
   }

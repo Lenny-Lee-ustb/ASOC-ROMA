@@ -23,6 +23,10 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <geometry_msgs/PolygonStamped.h>
+#include <geometry_msgs/Polygon.h>
+#include <geometry_msgs/Point32.h>
+
 #define PI 3.14159265
 
 using namespace std;
@@ -82,8 +86,8 @@ ros::Publisher sendIPub_low;
 ros::Publisher sendIPub_high;
 ros::Publisher leg_angle_Pub_high;
 ros::Publisher leg_angle_Pub_low;
-ros::Publisher leg_angle_sum_Pub_low;
-ros::Publisher leg_angle_sum_Pub_high;
+//ros::Publisher leg_angle_sum_Pub_low;
+//ros::Publisher leg_angle_sum_Pub_high;
 
 ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
@@ -91,7 +95,8 @@ ros::Subscriber upper_controller;
 ros::Subscriber  Tmotor_angle;
 
 std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
-std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
+//std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
+geometry_msgs::PolygonStamped leg_angle_Message_low, leg_angle_Message_high;
 
 struct Motor{
     int rows = 2;
@@ -197,12 +202,12 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 	}
 }
 
-void Tmotor_angle_callback(std_msgs::Float32MultiArray MultiTmotorAngle){
+void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
 	for(int i = 0; i < 4; i++){
 		//D[0,1,2,3] responds to T-motor[0,1,2,3], T-motor[0,1,2,3] responds to MultiTmotor[0,1,2,3]
         //Pass the angle of Tmotor[i] to linkTheta[i]
 		//degree = 15.52 * MultiTmotorAngle + 73
-			linkTheta[i] = (15.52 * MultiTmotorAngle.data[i] + 73 ) * PI / 180;
+			linkTheta[i] = (15.52 * MultiTmotorAngle.polygon.points[i].x + 73 ) * PI / 180;
 			D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
 		}
 		//D[0,1,2,3] responds to T-motor[0,1,2,3]
@@ -538,8 +543,9 @@ void txThread_low(int s)
 	int j;
 
     sendIMessage_low.data.resize(4);
-    leg_angle_Message_low.data.resize(4);
-	leg_angle_sum_Message_low.data.resize(4);
+    //leg_angle_Message_low.data.resize(4);
+	//leg_angle_sum_Message_low.data.resize(4);
+	leg_angle_Message_low.polygon.points.resize(4);
   
     for (j = 0; j < 4; j++)
 	{
@@ -577,22 +583,28 @@ void txThread_low(int s)
 			    frame_low.data[2*j+1] = motor_low[j].sendI>>0;
 
                 sendIMessage_low.data[j] = motor_low[j].sendI;
-                leg_angle_Message_low.data[j] = motor_low[j].leg_angle;
-				leg_angle_sum_Message_low.data[j] = motor_low[j].leg_angle_with_turn;
+                //leg_angle_Message_low.data[j] = motor_low[j].leg_angle;
+				//leg_angle_sum_Message_low.data[j] = motor_low[j].leg_angle_with_turn;
+				leg_angle_Message_low.polygon.points[j].x=motor_low[j].leg_angle;
+				leg_angle_Message_low.polygon.points[j].y=motor_low[j].leg_angle_with_turn;
+				//x表示leg_angle y表示leg_angle_sum
             }
             else{
                 frame_low.data[2*j] = 0;
 			    frame_low.data[2*j+1] = 0;
 
                 sendIMessage_low.data[j] = 0;
-                leg_angle_Message_low.data[j] = motor_low[j].leg_angle;
-				leg_angle_sum_Message_low.data[j] = motor_low[j].leg_angle_with_turn;
+                // leg_angle_Message_low.data[j] = motor_low[j].leg_angle;
+				// leg_angle_sum_Message_low.data[j] = motor_low[j].leg_angle_with_turn;
+				leg_angle_Message_low.polygon.points[j].x=motor_low[j].leg_angle;
+				leg_angle_Message_low.polygon.points[j].y=motor_low[j].leg_angle_with_turn;
             }
 		}
-
+        
+		leg_angle_Message_low.header.stamp=ros::Time::now();
         sendIPub_low.publish(sendIMessage_low);
         leg_angle_Pub_low.publish(leg_angle_Message_low);
-		leg_angle_sum_Pub_low.publish(leg_angle_sum_Message_low);
+		//leg_angle_sum_Pub_low.publish(leg_angle_sum_Message_low);
         
         nbytes_low = write(s, &frame_low, sizeof(struct can_frame));
         
@@ -615,8 +627,9 @@ void txThread_high(int s)
 	int j;
 
     sendIMessage_high.data.resize(4);
-    leg_angle_Message_high.data.resize(4);
-	leg_angle_sum_Message_high.data.resize(4);
+   // leg_angle_Message_high.data.resize(4);
+	//leg_angle_sum_Message_high.data.resize(4);
+	leg_angle_Message_high.polygon.points.resize(4);
     
 	for(j=0; j<4; j++){
         motor_high[j].sendI = 0;
@@ -659,21 +672,27 @@ void txThread_high(int s)
 			    frame_high.data[2*j+1] = motor_high[j].sendI>>0;
 
                 sendIMessage_high.data[j] = motor_high[j].sendI;
-                leg_angle_Message_high.data[j] = motor_high[j].leg_angle;
-				leg_angle_sum_Message_high.data[j] = motor_high[j].leg_angle_with_turn;
+               // leg_angle_Message_high.data[j] = motor_high[j].leg_angle;
+			   //leg_angle_sum_Message_high.data[j] = motor_high[j].leg_angle_with_turn;
+			   leg_angle_Message_high.polygon.points[j].x=motor_high[j].leg_angle;
+			   leg_angle_Message_high.polygon.points[j].y=motor_high[j].leg_angle_with_turn;
             }
             else{
                 frame_high.data[2*j] = 0;
 			    frame_high.data[2*j+1] = 0;
 
                 sendIMessage_high.data[j] = 0;
-                leg_angle_Message_high.data[j] = motor_high[j].leg_angle;
-				leg_angle_sum_Message_high.data[j] = motor_high[j].leg_angle_with_turn;
+                // leg_angle_Message_high.data[j] = motor_high[j].leg_angle;
+				//leg_angle_sum_Message_high.data[j] = motor_high[j].leg_angle_with_turn;
+				leg_angle_Message_high.polygon.points[j].x=motor_high[j].leg_angle;
+			    leg_angle_Message_high.polygon.points[j].y=motor_high[j].leg_angle_with_turn;
             }
 		}
+		
+		leg_angle_Message_high.header.stamp=ros::Time::now();
         sendIPub_high.publish(sendIMessage_high);
         leg_angle_Pub_high.publish(leg_angle_Message_high);
-		leg_angle_sum_Pub_high.publish(leg_angle_sum_Message_high);
+		//leg_angle_sum_Pub_high.publish(leg_angle_sum_Message_high);
         
         nbytes_high = write(s, &frame_high, sizeof(struct can_frame));
         
@@ -729,13 +748,19 @@ int main(int argc, char** argv) {
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
 	sendIPub_low = n.advertise<std_msgs::Int32MultiArray>("sendI_low",100);
-    velocityPub_high = n.advertise<std_msgs::Int32MultiArray>("velocity_high",100);
+    
+	velocityPub_high = n.advertise<std_msgs::Int32MultiArray>("velocity_high",100);
     IPub_high = n.advertise<std_msgs::Int32MultiArray>("I_high",100);
 	sendIPub_high = n.advertise<std_msgs::Int32MultiArray>("sendI_high",100);
-    leg_angle_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_low",100);
-    leg_angle_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_high",100);
-    leg_angle_sum_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_low",100);
-	leg_angle_sum_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_high",100);
+    
+	//leg_angle_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_low",100);
+    //leg_angle_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_high",100);
+    leg_angle_Pub_low = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_low",100);
+	leg_angle_Pub_high = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_high",100);
+    
+	// leg_angle_sum_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_low",100);
+	// leg_angle_sum_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_high",100);
+	
 
 	int s_low;
 	int s_high;
@@ -790,7 +815,7 @@ int main(int argc, char** argv) {
     joy_sub = n.subscribe<sensor_msgs::Joy>("joy",10,buttonCallback);
     encoder_angle_sum = n.subscribe("MultiAngleSum",10,encoder_angle_sum_callback);
 	upper_controller = n.subscribe("cmd_vel",10,upper_controller_callback);
-	Tmotor_angle  = n.subscribe("Tmotor_pos", 10, Tmotor_angle_callback);
+	Tmotor_angle  = n.subscribe("Tmotor_Info", 10, Tmotor_angle_callback);
 	while (ros::ok())
     {
 

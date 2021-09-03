@@ -11,6 +11,10 @@
 #include <ctime>
 #include <math.h>
 
+#include <geometry_msgs/PolygonStamped.h>
+#include <geometry_msgs/Polygon.h>
+#include <geometry_msgs/Point32.h>
+
 #define PI 3.14159265358979
 
 /********************/
@@ -43,8 +47,8 @@ private:
   visualization_msgs::Marker points, line_strip, goal_circle;
   geometry_msgs::Twist cmd_vel;
   geometry_msgs::Point odom_goal_pos;
-  //geometry_msgs::PolygonStamped susp_cmd;
-  std_msgs::Float32MultiArray susp_cmd;
+  geometry_msgs::PolygonStamped susp_cmd;
+  //std_msgs::Float32MultiArray susp_cmd;
   nav_msgs::Odometry odom;
   nav_msgs::Path map_path;
 
