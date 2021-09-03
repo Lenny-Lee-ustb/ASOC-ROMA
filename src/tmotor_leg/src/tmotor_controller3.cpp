@@ -76,9 +76,12 @@ void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
 		//！！待加
 
-		 if(ctrl_cmd.polygon.points[id].x!=0){
+		 if(fabs(ctrl_cmd.polygon.points[id].x)>=0.01){
             tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
             tmotor[id].flag = 6;
+        }
+		else{
+            tmotor[id].flag = 3;
         }
 	}
 }
