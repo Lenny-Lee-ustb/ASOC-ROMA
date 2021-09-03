@@ -8,6 +8,8 @@
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <dynamic_reconfigure/server.h>
+#include <asoc_upper_controller/controller_Config.h>
 #include <ctime>
 #include <math.h>
 

@@ -14,6 +14,10 @@ std_msgs
 tf
 )
 
+generate_dynamic_reconfigure_options(
+  cfg/upper_controller.cfg
+)
+
 catkin_package(
   CATKIN_DEPENDS visualization_msgs
 )
