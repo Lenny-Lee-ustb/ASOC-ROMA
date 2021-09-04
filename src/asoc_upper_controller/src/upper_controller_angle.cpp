@@ -3,6 +3,11 @@
 double last_d_theta = 0;
 double last_lateral_dist = 0;
 double last_speed = 0;
+double P_Yaw, I_Yaw, D_Yaw;
+double P_Lateral, I_Lateral, D_Lateral;
+double P_Long, I_Long, D_Long,forward_dist;
+double Kp, Kd;
+double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
 
 UpperController::UpperController() {
   // Private parameters handler

@@ -5,6 +5,11 @@ double last_lateral_dist = 0;
 double last_speed = 0;
 float last_roll = 0;
 float last_pitch = 0;
+double P_Yaw, I_Yaw, D_Yaw;
+double P_Lateral, I_Lateral, D_Lateral,forward_dist;
+double P_Long, I_Long, D_Long;
+double Kp, Kd;
+double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
 
 UpperController::UpperController() {
   // Private parameters handler

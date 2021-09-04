@@ -47,3 +47,10 @@ src/include/upper_controller.hpp)
 target_link_libraries(upper_controller_anti
   ${catkin_LIBRARIES}
 )
+
+add_executable(upper_controller_anti_rec 
+src/upper_controller_anti_rec.cpp
+src/include/upper_controller.hpp)
+target_link_libraries(upper_controller_anti_rec
+  ${catkin_LIBRARIES}
+)

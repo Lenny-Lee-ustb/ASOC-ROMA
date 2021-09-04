@@ -5,6 +5,11 @@ double last_lateral_dist = 0;
 double last_speed = 0;
 float last_roll = 0;
 float last_pitch = 0;
+double P_Yaw, I_Yaw, D_Yaw;
+double P_Lateral, I_Lateral, D_Lateral;
+double P_Long, I_Long, D_Long,forward_dist;
+double Kp, Kd;
+double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
 
 UpperController::UpperController() {
   // Private parameters handler
@@ -109,6 +114,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   double rot_rad = rot_angle / 180.0 * PI;
   double vt,vn,w;
   lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
+  double lateral_dist_sum=0;
 
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
@@ -129,14 +135,15 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double d_theta = theta - thetar;
     double d_roll = rollForward - roll;
     double d_pitch = pitchForward - pitch;
-    double slow_factor = 1.0- 1.5 * fabs(pow(d_theta/3.14,3));
+    double slow_factor = 1.0- fabs(pow(d_theta/3.14,3));
     if (foundForwardPt) {
         if (!goal_reached) {
           // PID control
           w = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));
           vt = slow_factor * P_Long;
-          vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
+          vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist)+I_Lateral*lateral_dist_sum);
           
+          lateral_dist_sum+=lateral_dist;
           last_speed = baseSpeed - carVel.linear.x;
           last_d_theta = d_theta;
           last_lateral_dist = lateral_dist;

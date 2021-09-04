@@ -56,13 +56,13 @@ private:
 
   double controller_freq, baseSpeed;
   double  goalRadius, goal_pose_err;
-  double lateral_dist, forward_dist;
+  double lateral_dist,lateral_dist_sum;
   double rot_angle;
-  double P_Yaw, I_Yaw, D_Yaw;
-  double P_Lateral, I_Lateral, D_Lateral;
-  double P_Long, I_Long, D_Long;
-  double Kp, Kd;
-  double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
+  // double P_Yaw, I_Yaw, D_Yaw;
+  // double P_Lateral, I_Lateral, D_Lateral;
+  // double P_Long, I_Long, D_Long;
+  // double Kp, Kd;
+  // double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
 
   bool foundForwardPt,goal_received, goal_reached;
 
