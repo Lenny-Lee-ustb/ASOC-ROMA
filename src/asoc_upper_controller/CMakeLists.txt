@@ -54,3 +54,10 @@ src/include/upper_controller.hpp)
 target_link_libraries(upper_controller_anti_rec
   ${catkin_LIBRARIES}
 )
+
+add_executable(upper_controller_xbox 
+src/upper_controller_xbox.cpp
+src/include/upper_controller.hpp)
+target_link_libraries(upper_controller_xbox
+  ${catkin_LIBRARIES}
+)
