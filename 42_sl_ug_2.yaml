@@ -1,0 +1,39 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  D_Lateral: 2.0
+  D_Yaw: 7.0
+  D_pit: 5.0
+  D_rol: 5.0
+  P_Lateral: 38.0
+  P_Long: 42.0
+  P_Yaw: 50.0
+  P_pit: 100.0
+  P_rol: 100.0
+  forward_dist: 0.3
+  forward_dist2: 1.2
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      D_Lateral: 2.0
+      D_Yaw: 7.0
+      D_pit: 5.0
+      D_rol: 5.0
+      P_Lateral: 38.0
+      P_Long: 42.0
+      P_Yaw: 50.0
+      P_pit: 100.0
+      P_rol: 100.0
+      forward_dist: 0.3
+      forward_dist2: 1.2
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      slow_ff: 0.75
+      state: true
+      type: ''
+    state: []
+  slow_ff: 0.75
+state: []

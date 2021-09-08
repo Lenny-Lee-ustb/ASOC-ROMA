@@ -16,9 +16,10 @@
         <param name = "I_Yaw" type="double" value = "0.0"/>
         <param name = "D_Yaw" type="double" value = "25.0"/>
         <param name = "forward_dist" type="double" value = "0.1"/>
+        <param name = "forward_dist2" type="double" value = "0.4"/>
         
 
-        <param name = "P_Lateral" type="double" value = "10.0"/>
+        <param name = "P_Lateral" type="double" value = "20.0"/>
         <param name = "I_Lateral" type="double" value = "1.0"/>
         <param name = "D_Lateral" type="double" value = "20.0"/>
 
@@ -28,8 +29,11 @@
         <param name = "roll_rot_factor" type="double" value = "0.8"/>        
         <param name = "roll_lat_factor" type="double" value = "1.0"/>
         <param name = "velocity_factor" type="double" value = "0"/>
-        <param name = "pitch_rot_factor" type="double" value = "0.0"/>
-        <param name = "roll_fac_factor" type="double" value = "0.0"/>
+        <param name = "P_pit" type="double" value = "200.0"/>
+        <param name = "P_rol" type="double" value = "200.0"/>
+        <param name = "D_pit" type="double" value = "1.0"/>
+        <param name = "D_rol" type="double" value = "1.0"/>
+        <param name = "slow_ff" type="double" value = "1.0"/>
             </node>
 </launch>
 

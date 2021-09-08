@@ -38,8 +38,8 @@ float frame_vt_max = 50;
 float frame_vt_min = -50;
 float frame_vn_max = 30;
 float frame_vn_min = -30;
-float frame_w_max = 100; // 100 = 320 degree/s
-float frame_w_min = -100;
+float frame_w_max = 300; // 100 = 320 degree/s
+float frame_w_min = -300;
 
 int rxCounter_low;
 int rxCounter_high;
