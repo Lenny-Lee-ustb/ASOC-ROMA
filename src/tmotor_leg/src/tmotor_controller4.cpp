@@ -11,6 +11,7 @@ int xbox_power_last = 0;
 
 double K_S = 7.0;
 double D_S = 0.3;
+double zero_length=1.0;
 //电弹簧模式参数
 
 geometry_msgs::PolygonStamped tmotor_info_msgs;
@@ -22,15 +23,9 @@ void flagTest2(int id)
 {
 	if (tmotor[id].flag == 5)
 	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
-		{
-			tmotor[id].flag = 3;
-		}
-		else
-		{
-			tmotor[id].flag = 4;
-		}
+		tmotor[id].flag = 3;
 	}
+
 }
 
 
@@ -55,14 +50,6 @@ void flagTest(int id)
 		}
 	}
 
-	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
-	{
-		tmotor[id].flag = 3;
-	}
-	else if ((tmotor[id].flag == 3) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
-	{
-		tmotor[id].flag = 4;
-	}
 }
 
 // upper_controller_callback
@@ -76,13 +63,16 @@ void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
 		//！！待加
 
-		 if(fabs(ctrl_cmd.polygon.points[id].x)>=0.01){
-            tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
-            tmotor[id].flag = 6;
-        }
-		else{
-            tmotor[id].flag = 3;
-        }
+		// if(fabs(ctrl_cmd.polygon.points[id].x)>=0.03){
+        //     tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
+        //     tmotor[id].flag = 6;
+        // }
+		// else{
+        //     // tmotor[id].flag = 3;
+		// 	flagTest(id);
+        // }
+
+		tmotor[id].pos_zero=ctrl_cmd.polygon.points[id].y;
 	}
 }
 
@@ -90,150 +80,150 @@ void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 //joy按键回调函数
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
-	//只有四个电机都调零完毕才能手柄控制
-	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) 
-	 && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
-	{
-		xbox_power = joy->buttons[7];
-		float move_up = -(joy->axes[2]) + 1;
-		float move_down = -(joy->axes[5]) + 1;
+	// //只有四个电机都调零完毕才能手柄控制
+	// if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) 
+	//  && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
+	// {
+	// 	xbox_power = joy->buttons[7];
+	// 	float move_up = -(joy->axes[2]) + 1;
+	// 	float move_down = -(joy->axes[5]) + 1;
 
 
-		if (xbox_power > xbox_power_last)
-		{
-			xbox_mode_on = -xbox_mode_on;
-		}
-		xbox_power_last = xbox_power;
+	// 	if (xbox_power > xbox_power_last)
+	// 	{
+	// 		xbox_mode_on = -xbox_mode_on;
+	// 	}
+	// 	xbox_power_last = xbox_power;
 
-		if (move_up != 0)
-		{
-			for (int id = 0; id < 4; id++)
-			{
-				tmotor[id].flag = 5;
-				tmotor[id].vel_des = 4 * move_up;
-				tmotor[id].pos_des = 0;
-				tmotor[id].t_des = 0;
-				tmotor[id].kd = 2;
-				tmotor[id].kp = 0;
-			}
-		}
+	// 	if (move_up != 0)
+	// 	{
+	// 		for (int id = 0; id < 4; id++)
+	// 		{
+	// 			tmotor[id].flag = 5;
+	// 			tmotor[id].vel_des = 4 * move_up;
+	// 			tmotor[id].pos_des = 0;
+	// 			tmotor[id].t_des = 0;
+	// 			tmotor[id].kd = 2;
+	// 			tmotor[id].kp = 0;
+	// 		}
+	// 	}
 
-		if (move_down != 0)
-		{
-			for (int id = 0; id < 4; id++)
-			{
-				tmotor[id].flag = 5;
-				tmotor[id].vel_des = -(4 * move_down);
-				tmotor[id].pos_des = 0;
-				tmotor[id].t_des = 0;
-				tmotor[id].kd = 2;
-				tmotor[id].kp = 0;
-			}
-		}
+	// 	if (move_down != 0)
+	// 	{
+	// 		for (int id = 0; id < 4; id++)
+	// 		{
+	// 			tmotor[id].flag = 5;
+	// 			tmotor[id].vel_des = -(4 * move_down);
+	// 			tmotor[id].pos_des = 0;
+	// 			tmotor[id].t_des = 0;
+	// 			tmotor[id].kd = 2;
+	// 			tmotor[id].kp = 0;
+	// 		}
+	// 	}
 
-		if (joy->buttons[3] == 1)
-		{
-			tmotor[0].flag = 5;
-			tmotor[0].vel_des = 6;
-			tmotor[0].pos_des = 0;
-			tmotor[0].t_des = 0;
-			tmotor[0].kd = 5;
-			tmotor[0].kp = 0;
-		}
+	// 	if (joy->buttons[3] == 1)
+	// 	{
+	// 		tmotor[0].flag = 5;
+	// 		tmotor[0].vel_des = 6;
+	// 		tmotor[0].pos_des = 0;
+	// 		tmotor[0].t_des = 0;
+	// 		tmotor[0].kd = 5;
+	// 		tmotor[0].kp = 0;
+	// 	}
 
-		if (joy->buttons[2] == 1)
-		{
-			tmotor[1].flag = 5;
-			tmotor[1].vel_des = 6;
-			tmotor[1].pos_des = 0;
-			tmotor[1].t_des = 0;
-			tmotor[1].kd = 5;
-			tmotor[1].kp = 0;
-		}
+	// 	if (joy->buttons[2] == 1)
+	// 	{
+	// 		tmotor[1].flag = 5;
+	// 		tmotor[1].vel_des = 6;
+	// 		tmotor[1].pos_des = 0;
+	// 		tmotor[1].t_des = 0;
+	// 		tmotor[1].kd = 5;
+	// 		tmotor[1].kp = 0;
+	// 	}
 
-		if (joy->buttons[1] == 1)
-		{
-			tmotor[3].flag = 5;
-			tmotor[3].vel_des = 6;
-			tmotor[3].pos_des = 0;
-			tmotor[3].t_des = 0;
-			tmotor[3].kd = 5;
-			tmotor[3].kp = 0;
-		}
+	// 	if (joy->buttons[1] == 1)
+	// 	{
+	// 		tmotor[3].flag = 5;
+	// 		tmotor[3].vel_des = 6;
+	// 		tmotor[3].pos_des = 0;
+	// 		tmotor[3].t_des = 0;
+	// 		tmotor[3].kd = 5;
+	// 		tmotor[3].kp = 0;
+	// 	}
 
-		if (joy->buttons[0] == 1)
-		{
-			tmotor[2].flag = 5;
-			tmotor[2].vel_des = 6;
-			tmotor[2].pos_des = 0;
-			tmotor[2].t_des = 0;
-			tmotor[2].kd = 5;
-			tmotor[2].kp = 0;
-		}
+	// 	if (joy->buttons[0] == 1)
+	// 	{
+	// 		tmotor[2].flag = 5;
+	// 		tmotor[2].vel_des = 6;
+	// 		tmotor[2].pos_des = 0;
+	// 		tmotor[2].t_des = 0;
+	// 		tmotor[2].kd = 5;
+	// 		tmotor[2].kp = 0;
+	// 	}
 
-		if (joy->axes[7] == 1)
-		{
-			tmotor[0].flag = 5;
-			tmotor[0].vel_des = -4;
-			tmotor[0].pos_des = 0;
-			tmotor[0].t_des = 0;
-			tmotor[0].kd = 5;
-			tmotor[0].kp = 0;
-		}
+	// 	if (joy->axes[7] == 1)
+	// 	{
+	// 		tmotor[0].flag = 5;
+	// 		tmotor[0].vel_des = -4;
+	// 		tmotor[0].pos_des = 0;
+	// 		tmotor[0].t_des = 0;
+	// 		tmotor[0].kd = 5;
+	// 		tmotor[0].kp = 0;
+	// 	}
 
-		if (joy->axes[6] == 1)
-		{
-			tmotor[1].flag = 5;
-			tmotor[1].vel_des = -4;
-			tmotor[1].pos_des = 0;
-			tmotor[1].t_des = 0;
-			tmotor[1].kd = 5;
-			tmotor[1].kp = 0;
-		}
+	// 	if (joy->axes[6] == 1)
+	// 	{
+	// 		tmotor[1].flag = 5;
+	// 		tmotor[1].vel_des = -4;
+	// 		tmotor[1].pos_des = 0;
+	// 		tmotor[1].t_des = 0;
+	// 		tmotor[1].kd = 5;
+	// 		tmotor[1].kp = 0;
+	// 	}
 
-		if (joy->axes[7] == -1)
-		{
-			tmotor[2].flag = 5;
-			tmotor[2].vel_des = -4;
-			tmotor[2].pos_des = 0;
-			tmotor[2].t_des = 0;
-			tmotor[2].kd = 5;
-			tmotor[2].kp = 0;
-		}
+	// 	if (joy->axes[7] == -1)
+	// 	{
+	// 		tmotor[2].flag = 5;
+	// 		tmotor[2].vel_des = -4;
+	// 		tmotor[2].pos_des = 0;
+	// 		tmotor[2].t_des = 0;
+	// 		tmotor[2].kd = 5;
+	// 		tmotor[2].kp = 0;
+	// 	}
 
-		if (joy->axes[6] == -1)
-		{
-			tmotor[3].flag = 5;
-			tmotor[3].vel_des = -4;
-			tmotor[3].pos_des = 0;
-			tmotor[3].t_des = 0;
-			tmotor[3].kd = 5;
-			tmotor[3].kp = 0;
-		}
+	// 	if (joy->axes[6] == -1)
+	// 	{
+	// 		tmotor[3].flag = 5;
+	// 		tmotor[3].vel_des = -4;
+	// 		tmotor[3].pos_des = 0;
+	// 		tmotor[3].t_des = 0;
+	// 		tmotor[3].kd = 5;
+	// 		tmotor[3].kp = 0;
+	// 	}
 
-		if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
-		{	
+	// 	if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
+	// 	{	
 			
-			if (xbox_mode_on > 0)
-			{
-				for (int id = 0; id < 4; id++)
-				{
-					tmotor[id].pos_des = tmotor[id].pos_now;
-					tmotor[id].vel_des = 0;
-					tmotor[id].t_des = 0;
-					tmotor[id].kp = 20;
-					tmotor[id].kd = 0;
-				}
-			}
-			else
-			{
-				for (int id = 0; id < 4; id++)
-				{
-					flagTest2(id);
-				}
-			}
-		}
-	}
+	// 		if (xbox_mode_on > 0)
+	// 		{
+	// 			for (int id = 0; id < 4; id++)
+	// 			{
+	// 				tmotor[id].pos_des = tmotor[id].pos_now;
+	// 				tmotor[id].vel_des = 0;
+	// 				tmotor[id].t_des = 0;
+	// 				tmotor[id].kp = 20;
+	// 				tmotor[id].kd = 0;
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			for (int id = 0; id < 4; id++)
+	// 			{
+	// 				flagTest2(id);
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
 
 
@@ -271,7 +261,7 @@ void rxThread(int s)
 
         if(rxCounter<4){
 			tmotor[rxCounter].pos_abszero=tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+1;
+			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+zero_length;
 		}
 
         rxCounter++;
@@ -299,13 +289,6 @@ void motorParaSet(int id)
 		tmotor[id].kd = 5;
 		break;
 	case 3:
-		tmotor[id].t_des = 0;
-		tmotor[id].vel_des = 0;
-		tmotor[id].pos_des = tmotor[id].pos_zero;
-		tmotor[id].kp = 5;
-		tmotor[id].kd = 0;
-		break;
-	case 4:
 
 		//F=kx+电机自身阻尼补偿+速度阻尼
 		if (tmotor[id].pos_now - tmotor[id].pos_zero > 0)
@@ -331,13 +314,13 @@ void motorParaSet(int id)
 			}
 		}
 
-		tmotor[id].pos_des = 0;
+		tmotor[id].pos_des = tmotor[id].pos_zero;
 		tmotor[id].vel_des = 0;
 		tmotor[id].kd = 0;
 		tmotor[id].kp = 0;
 		break;
      case 6: 
-        tmotor[id].t_des = 2;
+        tmotor[id].t_des = 1.5;
 		tmotor[id].vel_des = tmotor[id].vel_des;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
@@ -491,14 +474,14 @@ int main(int argc, char **argv)
 		canCheck(frame, s, id);
 	}
 	//检查can通讯连接
-	
-	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
-	Control_sub = n.subscribe("suspension_cmd", 10, ControlCallback);
-	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info",100);
+		sleep(1.5);
+	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 1, buttonCallback);
+	Control_sub = n.subscribe("suspension_cmd", 1, ControlCallback);
+	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info",10);
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);
-	sleep(0.1);
+
 	std::thread canRx(rxThread, s);
 	//开启收报/发报线程
 

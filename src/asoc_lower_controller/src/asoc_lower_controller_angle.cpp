@@ -43,7 +43,7 @@ float frame_w_min = -300;
 
 int rxCounter_low;
 int rxCounter_high;
-float power;
+float power, forward_s;
 float power_last;
 int on_off = 1;
 
@@ -227,13 +227,14 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     stick_right = joy->axes[0];
 	stick_yaw = joy->axes[3];
     power = joy -> buttons[8];
+	forward_s = joy->buttons[5];
     if(power>power_last){
         on_off = -on_off;
     }
     power_last = power;  
 
-	frame_vt = 30*stick_forward;
-	frame_vn = -30*stick_right;
+	frame_vt = 7*stick_forward + forward_s * 9.5;
+	frame_vn = -7*stick_right;
 	frame_w =  -50*stick_yaw;
 }
 

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- spawn Upper controller  !! -->
+    <node pkg="asoc_upper_controller" type="upper_controller_xbox" name="upper_controller" clear_params="true" output="screen">
+        <param name = "controller_freq" type="double" value = "100.0"/>
+        <param name = "P_pit" type="double" value = "80.0"/>
+        <param name = "P_rol" type="double" value = "80.0"/>
+        <param name = "D_pit" type="double" value = "1.0"/>
+        <param name = "D_rol" type="double" value = "1.0"/>
+        <param name = "P_pit2" type="double" value = "18.0"/>
+        <param name = "P_rol2" type="double" value = "18.0"/>
+        <param name = "D_pit2" type="double" value = "1.0"/>
+        <param name = "D_rol2" type="double" value = "1.0"/>
+        <param name = "zero_length" type="double" value = "1.0"/>
+            </node>
+</launch>
+

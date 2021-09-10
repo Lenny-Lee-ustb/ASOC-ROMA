@@ -92,8 +92,8 @@ void canCheck(can_frame &frame, int s, int id)
 	frame.data[7] = 0xfe;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
-	sleep(0.1);
 	// printf("Wrote %d bytes\n", nbytes);
+	sleep(0.1);
 	if (nbytes == -1)
 	{
 		printf("send error\n");
