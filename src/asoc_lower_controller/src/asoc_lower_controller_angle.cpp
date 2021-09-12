@@ -233,8 +233,9 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     }
     power_last = power;  
 
-	frame_vt = 7*stick_forward + forward_s * 9.5;
-	frame_vn = -7*stick_right;
+	// frame_vt = 30*stick_forward;
+	frame_vt = 30*stick_forward + 19 * forward_s;
+	frame_vn = -30*stick_right;
 	frame_w =  -50*stick_yaw;
 }
 
@@ -364,7 +365,8 @@ void rxThread_low(int s)
 	struct can_frame frame_low;
 	int nbytes_low;
 
-    velocityMessage_low.data.resize(4);
+    // velocityMessage_low.data.resize(4);
+    velocityMessage_low.data.resize(5);
 	IMessage_low.data.resize(4);
 
     rxCounter_low= 0;
@@ -411,6 +413,7 @@ void rxThread_low(int s)
         motor_low[ID].angleLast = motor_low[ID].angle;
 
         velocityMessage_low.data[ID] = motor_low[ID].velocity;
+		velocityMessage_low.data[4] = frame_vt;
 		IMessage_low.data[ID] = motor_low[ID].I;
 
 		if(i%4==0)

@@ -2,12 +2,14 @@
 
 double last_d_theta = 0;
 double last_lateral_dist = 0;
+double last_dist_x = 0;
+double last_dist_y = 0;
 double last_speed = 0;
 float last_roll = 0;
 float last_pitch = 0;
 double P_Yaw, I_Yaw, D_Yaw;
 double P_Lateral, I_Lateral, D_Lateral,forward_dist,forward_dist2;
-double P_Long, I_Long, D_Long;
+double P_Long, I_Long, D_Long,para_vel;
 double Kp, Kd;
 double zero_pos,slow_ff,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
 
@@ -19,6 +21,7 @@ UpperController::UpperController() {
   pn.param("controller_freq", controller_freq, 20.0);
   pn.param("goalRadius", goalRadius, 1.0);
   pn.param("goal_pose_err", goal_pose_err, 1.0);
+  pn.param("para_vel", para_vel, 5.0);
 
   pn.param("baseSpeed", baseSpeed, 0.0);
   pn.param("rot_angle", rot_angle, 0.0);
@@ -102,6 +105,7 @@ UpperController::UpperController() {
   ROS_INFO("[param] velocity_factor: %.2f",velocity_factor);
   ROS_INFO("[param] P_pit, D_pit: %.2f, %.2f", P_pit, D_pit);  
   ROS_INFO("[param] P_rol, D_pit: %.2f, %.2f", P_rol, D_rol);
+  
   // Visualization Marker Settings
   initMarker();
 }
@@ -109,7 +113,9 @@ UpperController::UpperController() {
 void callback(const asoc_upper_controller::controller_Config &config, const uint32_t level)
 { //reconfigure配置动态参数
   ROS_INFO("param changed");
+  para_vel = config.para_vel;
   P_Long = config.P_Long;
+  D_Long = config.D_long;
   P_Yaw = config.P_Yaw;
   D_Yaw = config.D_Yaw;
   forward_dist = config.forward_dist;
@@ -132,7 +138,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   geometry_msgs::Pose ForwardPose2 = getTrackForwardPose(carPose,forward_dist2);
   double LateralDir = GetLateralDir(carPose, LateralPose);
   double rot_rad = rot_angle / 180.0 * PI;
-  double vt,vn,w;
+  double vt,vn,w,v_sum;
   lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
 
   cmd_vel.linear.x = 0;
@@ -152,6 +158,13 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double rollForward = getRollFromPose(ForwardPose);
     double pitchForward = getPitchFromPose(ForwardPose);
 
+    double dist_x = ForwardPose.position.x - carPose.position.x;
+    double dist_y = ForwardPose.position.y - carPose.position.y;
+
+    double const_vt = para_vel * cos(theta);
+    double const_vn = -para_vel * sin(theta);
+    double vari_vt = P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist);
+    double vari_vn = P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist);
 
     double d_theta = theta - thetar;
     double d_roll = rollForward - roll;
@@ -160,9 +173,20 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     if (foundForwardPt) {
         if (!goal_reached) {
           // PID control
-          w = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));
-          vt = slow_factor * P_Long;
-          vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
+          // w = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));
+          // vt = slow_factor * P_Long;
+          // vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
+          w = 0;
+          vt =  const_vt + vari_vt * cos(theta+PI*0.5);
+          vn =  const_vn - vari_vn * sin(theta+PI*0.5);
+          // vt = const_vt;
+          // vn = const_vn;
+          v_sum = sqrt(vt * vt + vn * vn);
+
+          // w = 25;               //forward spin
+          // vt = P_Long * cos(d_theta);
+          // vn = -(P_Long * sin(d_theta));
+          //v_sum = sqrt(vt * vt + vn * vn);
 
           // w = 0;
           // vt = 30;
@@ -171,6 +195,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           last_speed = baseSpeed - carVel.linear.x;
           last_d_theta = d_theta;
           last_lateral_dist = lateral_dist;
+          last_dist_x = dist_x;
+          last_dist_y = dist_y;
+
           
           // Rot_angle
           cmd_vel.angular.z = w;
@@ -178,14 +205,14 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
           // body control
-          susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch) + P_rol * roll + D_rol * (roll - last_roll);
-          susp_cmd.polygon.points[1].x = P_pit * pitch + D_pit * (pitch - last_pitch) - (P_rol * roll + D_rol * (roll - last_roll));
-          susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) - (P_rol * roll + D_rol * (roll - last_roll));
-          susp_cmd.polygon.points[3].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) + P_rol * roll + D_rol * (roll - last_roll);
-          // susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch);
-          // susp_cmd.polygon.points[1].x = -(P_rol * roll + D_rol * (roll - last_roll));
-          // susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
-          // susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
+          // susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch) + P_rol * roll + D_rol * (roll - last_roll);
+          // susp_cmd.polygon.points[1].x = P_pit * pitch + D_pit * (pitch - last_pitch) - (P_rol * roll + D_rol * (roll - last_roll));
+          // susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) - (P_rol * roll + D_rol * (roll - last_roll));
+          // susp_cmd.polygon.points[3].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) + P_rol * roll + D_rol * (roll - last_roll);
+          susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch);
+          susp_cmd.polygon.points[1].x = -(P_rol * roll + D_rol * (roll - last_roll));
+          susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
+          susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
 
           last_pitch = pitch;
           last_roll = roll;
@@ -204,7 +231,11 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
             susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x,-8.0),8.0);
           }
 
-          cmd_vel.linear.x=fmax(cmd_vel.linear.x,0);
+          // cmd_vel.linear.x=fmax(cmd_vel.linear.x,0);
+          // cmd_vel.linear.y=fmin(fmax(cmd_vel.linear.y,-100.0),100.0);
+          // cmd_vel.linear.z=fmin(fmax(cmd_vel.linear.z,-100.0),100.0);
+
+          cmd_vel.linear.x=fmin(fmax(cmd_vel.linear.x,-100.0),100.0);
           cmd_vel.linear.y=fmin(fmax(cmd_vel.linear.y,-100.0),100.0);
           cmd_vel.linear.z=fmin(fmax(cmd_vel.linear.z,-100.0),100.0);
 
@@ -213,7 +244,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           ROS_INFO("d_yaw:%.2f, slow_factor:%.2f",d_theta,slow_factor);
           // ROS_INFO("pos:(%.2f,%.2f)",ForwardPose.position.x,ForwardPose.position.y);
           ROS_INFO("lateral_dist:%.2f, long_vel:%.2f",lateral_dist,carVel.linear.x);
-          ROS_INFO("Vyaw:%.2f, Vt:%.2f, Vn:%.2f",w,vt,vn);
+          ROS_INFO("para_vel:%.2f, Vyaw:%.2f, Vt:%.2f, Vn:%.2f, V_sum:%.2f",para_vel, w,vt,vn,v_sum);
         }
     }
     susp_cmd.header.stamp=ros::Time::now();

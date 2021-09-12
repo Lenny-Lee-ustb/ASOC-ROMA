@@ -1,4 +1,5 @@
 #include "include/tmotor_common.hpp"
+//delete flag 3 state
 
 ros::Publisher Tmotor_Info;
 ros::Subscriber joy_sub;
