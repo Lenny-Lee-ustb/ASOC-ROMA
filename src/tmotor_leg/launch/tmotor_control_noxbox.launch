@@ -1,0 +1,5 @@
+<launch>
+    <!-- <node pkg="joy" type="joy_node" name="joy_node" /> -->
+    <node pkg="tmotor_leg" type="tmotor_controller4" name="tmotor_control" required="true" output="screen" />
+    <!--<node pkg="tmotor_leg" type="tmotor_controller2" name="tmotor_control" required="true" output="screen" />-->
+</launch>
