@@ -1,5 +1,5 @@
 #include "include/tmotor_common.hpp"
-//无手柄控制
+//无手柄控制~
 
 ros::Publisher Tmotor_Info;
 ros::Subscriber Control_sub;
