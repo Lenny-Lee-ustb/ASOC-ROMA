@@ -11,7 +11,7 @@ int xbox_power_last = 0;
 
 double K_S = 7.0;
 double D_S = 0.3;
-double zero_length = 1.0;
+double zero_length = 2.0;
 //电弹簧模式参数
 
 geometry_msgs::PolygonStamped tmotor_info_msgs;
@@ -247,7 +247,7 @@ void rxThread(int s)
 		if (rxCounter < 4)
 		{
 			tmotor[rxCounter].pos_abszero = tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 1;
+			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 2.0;
 		}
 
 		rxCounter++;

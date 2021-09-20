@@ -8,6 +8,8 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <signal.h>
+
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -46,6 +48,7 @@ int rxCounter_high;
 float power, forward_s;
 float power_last;
 int on_off = 1;
+int Stop_flag = 0;
 
 int judge_forward=0;          //high[1],high[2] angle 1
 int judge_backward=0;         //high[3],high[4]   angle 0
@@ -234,9 +237,9 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     power_last = power;  
 
 	// frame_vt = 30*stick_forward;
-	frame_vt = 30*stick_forward + 19 * forward_s;
-	frame_vn = -30*stick_right;
-	frame_w =  -50*stick_yaw;
+	frame_vt = 15*stick_forward + 19 * forward_s;
+	frame_vn = -15*stick_right;
+	frame_w =  -60*stick_yaw;
 }
 
 
@@ -356,6 +359,17 @@ void body_to_wheel(float vt, float vn, float w){
     motor_high[3].targetVelocity = -wheel_high2(1,0)*19;
 }
 
+// A thread to deal with Ctrl-C command
+void signalCallback(int signum)
+{	
+	double startt,endt;
+	startt = clock();
+	Stop_flag = 1;
+	ros::Duration(1.0).sleep();
+	endt = clock();
+	ROS_INFO("shutdown!!!!!!!");
+	exit(1);
+}
 
 void rxThread_low(int s)
 {
@@ -575,7 +589,7 @@ void txThread_low(int s)
 		for (j = 0;j<4;j++)
 		{
 			//if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 || stick_yaw != 0){
-            if(on_off > 0){    
+            if(on_off > 0 && Stop_flag ==0){    
                 if (motor_low[j].sendI >15000) {
 				    motor_low[j].sendI = 15000;
 			    }
@@ -663,7 +677,7 @@ void txThread_high(int s)
 		for (j = 0;j<4;j++)
 		{
 			//if(judge_forward==1 || judge_backward==1 || judge_left==1 || judge_right==1 || stick_forward != 0 || stick_right != 0 || stick_yaw != 0){
-            if(on_off > 0){
+            if(on_off > 0 && Stop_flag==0){
                 if (motor_high[j].sendI >15000) {
 				    motor_high[j].sendI = 15000;
 			    }
@@ -716,6 +730,7 @@ int main(int argc, char** argv) {
 	ros::init(argc,argv,"asoc_lower_controller");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(100);
+	signal(SIGINT, signalCallback);
 
     ofstream fout("speed.txt");
 	fout<<"low[0]\tlow[1]\tlow[2]\tlow[3]\thigh[1]\thigh[2]\thigh[3]\thigh[4]\n\r";

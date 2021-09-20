@@ -67,15 +67,15 @@ void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
 		//！！待加
 
-		if (fabs(ctrl_cmd.polygon.points[id].x) >= 0.03)
-		{
-			tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
-			tmotor[id].flag = 6;
-		}
-		else
-		{
-			flagTest_position(id);
-		}
+		// if (fabs(ctrl_cmd.polygon.points[id].x) >= 0.03)
+		// {
+		// 	tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
+		// 	tmotor[id].flag = 6;
+		// }
+		// else
+		// {
+		// 	flagTest_position(id);
+		// }
 
 		tmotor[id].pos_zero = ctrl_cmd.polygon.points[id].y;
 	}
@@ -116,7 +116,7 @@ void rxThread(int s)
 		if (rxCounter < 4)
 		{
 			tmotor[rxCounter].pos_abszero = tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 1;
+			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 2.0;
 		}
 
 		rxCounter++;

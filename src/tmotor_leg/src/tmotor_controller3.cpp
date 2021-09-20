@@ -274,7 +274,7 @@ void rxThread(int s)
 
         if(rxCounter<4){
 			tmotor[rxCounter].pos_abszero=tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+1;
+			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+2.0;
 		}
 
         rxCounter++;

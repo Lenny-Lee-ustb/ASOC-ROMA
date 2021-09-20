@@ -1,4 +1,4 @@
-#include "include/upper_controller.hpp"
+#include "include/upper_controller_v2.hpp"
 
 double last_d_theta = 0;
 double last_lateral_dist = 0;
@@ -144,12 +144,10 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   double vt,vn,w,v_sum;
   lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
   double goal_dist=getCar2GoalDist();
+
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
-  // susp_cmd.data={float(zero_pos),float(zero_pos),
-  //                float(zero_pos),float(zero_pos)};
-  //susp_cmd.data={0,0,0,0};
   susp_cmd.polygon.points.resize(4);
 
   if (goal_received) {
@@ -167,11 +165,11 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double dist_y = ForwardPose.position.y - carPose.position.y;
 
     
-    double d_theta = theta - thetar;
-    //double d_theta = - thetar;
+    // double d_theta = theta - thetar;
+    double d_theta = - thetar;
     double d_roll = rollForward - roll;
     double d_pitch = pitchForward - pitch;
-    double slow_factor = 1.0- slow_ff  * fabs(pow( (d_theta) /3.14,1));
+    double slow_factor = 1.0- slow_ff  * fabs(pow( (theta_2 - theta_3) /3.14,1));
     double const_vt = slow_factor*para_vel * cos(theta);
     double const_vn = -slow_factor*para_vel * sin(theta);
     double vari_vt = P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist);
@@ -181,8 +179,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
         if (!goal_reached) {
           // PID control
           w = - (P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));
-          vt = slow_factor * P_Long;
-          vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
+          vt =  const_vt + vari_vt * cos(theta+PI*0.5);
+          vn =  const_vn - vari_vn * sin(theta+PI*0.5);
+          v_sum = sqrt(vt * vt + vn * vn);
           
           last_speed = baseSpeed - carVel.linear.x;
           last_d_theta = d_theta;
@@ -209,8 +208,6 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           for(int i=0; i<4; i++){
             susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x,-8.0),8.0);
           }
-
-          
 
           cmd_vel.linear.x=fmin(fmax(cmd_vel.linear.x,-100.0),100.0);
           cmd_vel.linear.y=fmin(fmax(cmd_vel.linear.y,-100.0),100.0);

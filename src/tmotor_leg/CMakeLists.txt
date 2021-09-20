@@ -49,3 +49,8 @@ add_executable(tmotor_controller4
 src/tmotor_controller4.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_controller4 ${catkin_LIBRARIES})
+
+add_executable(tmotor_controller5 
+src/tmotor_controller5.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor_controller5 ${catkin_LIBRARIES})
