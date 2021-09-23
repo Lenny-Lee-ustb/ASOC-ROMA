@@ -27,12 +27,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(upper_controller_iit
-src/upper_controller_iit.cpp
-src/include/upper_controller.hpp)
-target_link_libraries(upper_controller_iit
-  ${catkin_LIBRARIES}
-)
 
 add_executable(upper_controller_angle 
 src/upper_controller_angle.cpp
@@ -41,10 +35,10 @@ target_link_libraries(upper_controller_angle
   ${catkin_LIBRARIES}
 )
 
-add_executable(upper_controller_anti 
-src/upper_controller_anti.cpp
+add_executable(upper_controller_xbox 
+src/upper_controller_xbox.cpp
 src/include/upper_controller.hpp)
-target_link_libraries(upper_controller_anti
+target_link_libraries(upper_controller_xbox
   ${catkin_LIBRARIES}
 )
 
@@ -66,12 +60,5 @@ add_executable(upper_controller_turnstraight
 src/upper_controller_turnstraight.cpp
 src/include/upper_controller_v2.hpp)
 target_link_libraries(upper_controller_turnstraight
-  ${catkin_LIBRARIES}
-)
-
-add_executable(upper_controller_xbox 
-src/upper_controller_xbox.cpp
-src/include/upper_controller.hpp)
-target_link_libraries(upper_controller_xbox
   ${catkin_LIBRARIES}
 )
