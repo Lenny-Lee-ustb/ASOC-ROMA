@@ -1,0 +1,23 @@
+<launch>
+    <!-- <node pkg="joy" type="joy_node" name="joy_node" /> -->
+    <node pkg="asoc_lower_controller" type="encoder_can0" name="encoder_can0" required="true" output="screen">
+        <!-- <param name = "vt_max" type="float" value = "50.0"/> -->
+        <!-- <param name = "vn_max" type="float" value = "30.0"/> -->
+        <!-- <param name = "w_max" type="float" value = "300.0"/> -->
+    </node>
+
+</launch>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                 
