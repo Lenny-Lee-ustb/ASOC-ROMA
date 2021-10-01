@@ -2,38 +2,47 @@
 
 using namespace std;
 
+ros::Publisher encoder_low;
+ros::Publisher encoder_high;
 int flag;
+
+Motor motor_low[4];
 
 void rxThread_low(int s)
 {
 	int ID; // 7 bytes in a loop [0x07] [0x01](ID) [0x04] [0x88](low)[0x0D](high) [0x00] [0x00] 
 	int i;
 	float angle;
-	struct can_frame frame_encoder;
+	struct can_frame frame_low;
 	int nbytes_low;
 	
     for (i = 0;; i++)
     {
 		ros::spinOnce();
-		nbytes_low = read(s, &frame_encoder, sizeof(struct can_frame));
+		nbytes_low = read(s, &frame_low, sizeof(struct can_frame));
 		if (nbytes_low < 0)
 		{
 			ROS_ERROR("Read Error");
 			break;
 		};
+		// ROS_INFO("%d",int(frame_low.can_id));
+		if(int(frame_low.can_id) < 0x200){
+			ID = int(frame_low.data[1]-0x10); //encoder ID 0x11~0x14
+			angle = float(int(frame_low.data[4] << 8)+frame_low.data[3])/4096.0*120;
+			ROS_INFO("%d %.2f %ld",ID,angle,sizeof(frame_low));
+		}
+		else{
+			ID = int(frame_low.can_id-0x200)-1; // motor ID 0x200~0x204
+			motor_low[ID].angle = (frame_low.data[0] << 8)+ frame_low.data[1];
+			motor_low[ID].realAngle = motor_low[ID].angle*360/8191;
+			motor_low[ID].velocity = (frame_low.data[2] <<8) + frame_low.data[3];
+			motor_low[ID].I = (frame_low.data[4] <<8) + frame_low.data[5];
+			motor_low[ID].temperature = frame_low.data[6];
+			ROS_INFO("%.2d %.2f",ID,motor_low[ID].velocity);
+		}
 
-		ID = int(frame_encoder.data[1]);
-		angle = float(int(frame_encoder.data[4] << 8)+frame_encoder.data[3])/4096.0*360;
-		
-		ROS_INFO("%d %.2f ",ID,angle);
 
-        // motor_low[ID].angle = (frame_low.data[0] << 8)+ frame_low.data[1];
-		// motor_low[ID].realAngle = motor_low[ID].angle*360/8191;
-		// motor_low[ID].velocity = (frame_low.data[2] <<8) + frame_low.data[3];
-		// motor_low[ID].I = (frame_low.data[4] <<8) + frame_low.data[5];
-		// motor_low[ID].temperature = frame_low.data[6];
-
-		std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
     }
 
 }
