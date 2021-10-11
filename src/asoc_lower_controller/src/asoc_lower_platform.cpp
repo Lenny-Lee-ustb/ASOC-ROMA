@@ -1,35 +1,26 @@
 #include "include/asoc_lower_platform.hpp"
 
-
 int flag;
 
 float frame_vt_max = 50;
 float frame_vn_max = 30;
 float frame_w_max = 300; // 100 = 320 degree/s
 
-int rxCounter_low;
-int rxCounter_high;
 float power, forward_s;
 float power_last;
 int on_off = 1;
-
 
 int judge_forward=0;          //high[1],high[2] angle 1
 int judge_backward=0;         //high[3],high[4]   angle 0
 int judge_left=0;             //low[1],low[2]    angle 2
 int judge_right=0;            //low[3],low[4]   angle 3
-int co =0;
-int judge_angle1 = 0;
-int judge_angle2 = 0;
-float stick_forward = 0.0;
-float stick_right = 0.0;
-float stick_yaw = 0.0;
+float stick_forward = 0.0;    // forward command from joy
+float stick_right = 0.0;      // right(+) command from joy
+float stick_yaw = 0.0;        // yaw command from joy
 float L = 2;   //  ratio of offset/split
-float r = 0.09; //radii of the wheel
-// float D = 0.32; //length of the virtual rod linking the pivot rod and the center of ASOC
+float r = 0.09; //radius of the wheel
 float linkTheta[4]; // the angle between four-parallel link and horizontal ground, variable, so need to be passed by Encoder
 float D[4]={0.311,0.311,0.311,0.311};
-//D = 0.178  + 0.14 * sin(linkTheta); //length of the virtual rod linking the pivot rod and the center of ASOC
 
 float frame_vt;
 float frame_vn;
@@ -45,26 +36,20 @@ Matrix<float,2,1> vc_low2;
 Matrix<float,2,1> vc_high0;
 Matrix<float,2,1> vc_high2;
 
-ros::Publisher velocityPub_low;
-ros::Publisher velocityPub_high;
-ros::Publisher IPub_low;
-ros::Publisher IPub_high;
-ros::Publisher sendIPub_low;
-ros::Publisher sendIPub_high;
-ros::Publisher leg_angle_Pub_high;
-ros::Publisher leg_angle_Pub_low;
-//ros::Publisher leg_angle_sum_Pub_low;
-//ros::Publisher leg_angle_sum_Pub_high;
+ros::Publisher velocityPub_low, velocityPub_high; // pub velocity
+ros::Publisher IPub_low, IPub_high; // pub current
+ros::Publisher sendIPub_low, sendIPub_high; // pub cmd current
+ros::Publisher leg_angle_Pub_high, leg_angle_Pub_low; // pub yaw of module
+ros::Publisher RollPub_low, RollPub_high; // pub roll of module
 
 ros::Subscriber joy_sub;
 ros::Subscriber encoder_angle_sum;
 ros::Subscriber upper_controller;
-ros::Subscriber  Tmotor_angle;
+ros::Subscriber Tmotor_angle;
 
 std_msgs::Int32MultiArray velocityMessage_low,velocityMessage_high,IMessage_low,IMessage_high,sendIMessage_low,sendIMessage_high;
-//std_msgs::Float32MultiArray leg_angle_Message_low, leg_angle_Message_high, leg_angle_sum_Message_low, leg_angle_sum_Message_high;
 geometry_msgs::PolygonStamped leg_angle_Message_low, leg_angle_Message_high;
-
+geometry_msgs::PolygonStamped RollMsg_low, RollMsg_high;
 
 Motor motor_low[4];
 Motor motor_high[4];
@@ -99,12 +84,15 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 	}
 }
 
+
 void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
 	for(int i = 0; i < 4; i++){
 			linkTheta[i] = (15.52 * MultiTmotorAngle.polygon.points[i].x + 73 ) * PI / 180;
 			D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
 		}
 }
+
+
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     stick_forward = joy->axes[1];
@@ -117,7 +105,6 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     }
     power_last = power;  
 
-	// frame_vt = 30*stick_forward;
 	frame_vt = 15*stick_forward + 19 * forward_s;
 	frame_vn = -15*stick_right;
 	frame_w =  -60*stick_yaw;
@@ -206,19 +193,18 @@ void body_to_wheel(float vt, float vn, float w){
     motor_high[3].targetVelocity = -wheel_high2(1,0)*19;
 }
 
+
 void rxThread_low(int s)
 {
-	int ID;
-	int i;
-	int j;
+	int ID_m, ID_r; // ID_m for motor, ID_r for encoder
+	int i, j;
 	struct can_frame frame_low;
 	int nbytes_low;
 
-    // velocityMessage_low.data.resize(4);
-    velocityMessage_low.data.resize(5);
-	IMessage_low.data.resize(4);
+    velocityMessage_low.data.resize(5); // velocities of motors
+	IMessage_low.data.resize(4); // Currents of motors
+	RollMsg_low.polygon.points.resize(2); // Roll of two module  
 
-    rxCounter_low= 0;
 	for (j = 0;j<4;j++)
 	{
 		motor_low[j].angleDifference = 0;
@@ -231,45 +217,48 @@ void rxThread_low(int s)
 		nbytes_low = read(s, &frame_low, sizeof(struct can_frame));
 		if (nbytes_low < 0)
 		{
-			perror("Read");
+			perror("Read Error at low can");
 			break;
 		}
+		// receive can_frame
 
-		ID = int(frame_low.can_id-0x200)-1;
+		if(int(frame_low.can_id) < 0x200){
+			ID_r = int(frame_low.data[1]-0x10); //encoder ID 0x10-0x11
+			RollMsg_low.polygon.points[ID_r].x = float(int(frame_low.data[4] << 8)+frame_low.data[3])/4096.0*120;
+			// ROS_INFO("%d %.2f %ld",ID_r,angle,sizeof(frame_low));
+		}
+		else{
+			ID_m = int(frame_low.can_id-0x200)-1;
+			motor_low[ID_m].angle = (frame_low.data[0] << 8)+ frame_low.data[1];
+			motor_low[ID_m].realAngle = motor_low[ID_m].angle*360/8191;
+			motor_low[ID_m].velocity = (frame_low.data[2] <<8) + frame_low.data[3];
+			motor_low[ID_m].I = (frame_low.data[4] <<8) + frame_low.data[5];
+			motor_low[ID_m].temperature = frame_low.data[6];
+			
+			if (i>6){
+				motor_low[ID_m].angleDifference = motor_low[ID_m].angle - motor_low[ID_m].angleLast;
+			}
+			if(motor_low[ID_m].angleDifference<-4000)
+			{
+				motor_low[ID_m].NumOfTurns++;
+			}
+			if(motor_low[ID_m].angleDifference>4000)
+			{
+				motor_low[ID_m].NumOfTurns--;
+			}
 
-		rxCounter_low++;
+			motor_low[ID_m].position = 8192*motor_low[ID_m].NumOfTurns+motor_low[ID_m].angle;
+			motor_low[ID_m].angleLast = motor_low[ID_m].angle;
 
-        motor_low[ID].angle = (frame_low.data[0] << 8)+ frame_low.data[1];
-		motor_low[ID].realAngle = motor_low[ID].angle*360/8191;
-		motor_low[ID].velocity = (frame_low.data[2] <<8) + frame_low.data[3];
-		motor_low[ID].I = (frame_low.data[4] <<8) + frame_low.data[5];
-		motor_low[ID].temperature = frame_low.data[6];
+			velocityMessage_low.data[ID_m] = motor_low[ID_m].velocity;
+			IMessage_low.data[ID_m] = motor_low[ID_m].I;
+		}
 
-        if (i>4){
-            motor_low[ID].angleDifference = motor_low[ID].angle - motor_low[ID].angleLast;
-        }
-
-        if(motor_low[ID].angleDifference<-4000)
-        {
-            motor_low[ID].NumOfTurns++;
-        }
-        if(motor_low[ID].angleDifference>4000)
-        {
-            motor_low[ID].NumOfTurns--;
-        }
-
-        motor_low[ID].position = 8192*motor_low[ID].NumOfTurns+motor_low[ID].angle;
-        motor_low[ID].angleLast = motor_low[ID].angle;
-
-        velocityMessage_low.data[ID] = motor_low[ID].velocity;
-		velocityMessage_low.data[4] = frame_vt;
-		IMessage_low.data[ID] = motor_low[ID].I;
-
-		if(i%4==0)
+		if(i%6==0)
 		{
-			ROS_INFO("leg_angle is %f, %f, %f, %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);
-			ROS_INFO("ori is %f, %f, %f, %f\r\n",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);
-            ROS_INFO("target leg are %f, %f, %f, %f\r\n",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);
+			ROS_INFO("leg_angle is %f, %f, %f, %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);           
+			ROS_INFO("ori is %f, %f, %f, %f\r\n",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);		 
+            ROS_INFO("target leg are %f, %f, %f, %f\r\n",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);     
 			ROS_INFO("VT %f\r\n",frame_vt);
             ROS_INFO("VN %f\r\n",frame_vn);
             ROS_INFO("W is %f\r\n", frame_w);
@@ -277,18 +266,7 @@ void rxThread_low(int s)
 
             velocityPub_low.publish(velocityMessage_low);
 			IPub_low.publish(IMessage_low);
-
-            // std::ofstream fout;
-			// fout.open("speed.txt",ios::app);
-			// for(int i=0; i<4; i++){
-			// 	fout<<motor_low[i].leg_angle<<"\t";
-			// }
-			// for(int i=0; i<4; i++){
-			// 	fout<<motor_high[i].leg_angle<<"\t";
-			// }
-			// fout<<"\r\n";
-			// fout.close();
-
+			RollPub_low.publish(RollMsg_low);
 		}
         if(i == 16)
 		{
@@ -307,16 +285,16 @@ void rxThread_low(int s)
 
 void rxThread_high(int s)
 {
-	int ID;
+	int ID_m, ID_r; // ID_m for motor, ID_r for encoder
 	int i;
 	int j;
 	struct can_frame frame_high;
 	int nbytes_high;
 
-    velocityMessage_high.data.resize(4);
-	IMessage_high.data.resize(4);
+    velocityMessage_high.data.resize(5); // velocities of motors
+	IMessage_high.data.resize(4); // Currents of motors
+	RollMsg_high.polygon.points.resize(2); // Roll of two module  
 
-    rxCounter_high= 0;
 	for (j = 0;j<4;j++)
 	{
 		motor_high[j].angleDifference = 0;
@@ -329,38 +307,42 @@ void rxThread_high(int s)
 		nbytes_high = read(s, &frame_high, sizeof(struct can_frame));
 		if (nbytes_high < 0)
 		{
-			perror("Read");
+			perror("Read Error at high can");
 			break;
 		}
+		// receive can_frame
 
-		ID = int(frame_high.can_id-0x200)-1;
+		if(int(frame_high.can_id) < 0x200){
+			ID_r = int(frame_high.data[1]-0x10); //encoder ID 0x10-0x11
+			RollMsg_high.polygon.points[ID_r].x = float(int(frame_high.data[4] << 8)+frame_high.data[3])/4096.0*120;
+			// ROS_INFO("%d %.2f %ld",ID_r,angle,sizeof(frame_high));
+		}
+		else{
+			ID_m = int(frame_high.can_id-0x200)-1;
+			motor_high[ID_m].angle = (frame_high.data[0] << 8)+ frame_high.data[1];
+			motor_high[ID_m].realAngle = motor_high[ID_m].angle*360/8191;
+			motor_high[ID_m].velocity = (frame_high.data[2] <<8) + frame_high.data[3];
+			motor_high[ID_m].I = (frame_high.data[4] <<8) + frame_high.data[5];
+			motor_high[ID_m].temperature = frame_high.data[6];
+			
+			if (i>6){
+				motor_high[ID_m].angleDifference = motor_high[ID_m].angle - motor_high[ID_m].angleLast;
+			}
+			if(motor_high[ID_m].angleDifference<-4000)
+			{
+				motor_high[ID_m].NumOfTurns++;
+			}
+			if(motor_high[ID_m].angleDifference>4000)
+			{
+				motor_high[ID_m].NumOfTurns--;
+			}
 
-		rxCounter_high++;
+			motor_high[ID_m].position = 8192*motor_high[ID_m].NumOfTurns+motor_high[ID_m].angle;
+			motor_high[ID_m].angleLast = motor_high[ID_m].angle;
 
-        motor_high[ID].angle = (frame_high.data[0] << 8)+ frame_high.data[1];
-		motor_high[ID].realAngle = motor_high[ID].angle*360/8191;
-		motor_high[ID].velocity = (frame_high.data[2] <<8) + frame_high.data[3];
-		motor_high[ID].I = (frame_high.data[4] <<8) + frame_high.data[5];
-		motor_high[ID].temperature = frame_high.data[6];
-
-        if (i>4){
-            motor_high[ID].angleDifference = motor_high[ID].angle - motor_high[ID].angleLast;
-        }
-
-        if(motor_high[ID].angleDifference<-4000)
-        {
-            motor_high[ID].NumOfTurns++;
-        }
-        if(motor_high[ID].angleDifference>4000)
-        {
-            motor_high[ID].NumOfTurns--;
-        }
-
-        motor_high[ID].position = 8192*motor_high[ID].NumOfTurns+motor_high[ID].angle;
-        motor_high[ID].angleLast = motor_high[ID].angle;
-
-        velocityMessage_high.data[ID] = motor_high[ID].velocity;
-		IMessage_high.data[ID] = motor_high[ID].I;
+			velocityMessage_high.data[ID_m] = motor_high[ID_m].velocity;
+			IMessage_high.data[ID_m] = motor_high[ID_m].I;
+		}
 
         if(i%4==0)
 		{

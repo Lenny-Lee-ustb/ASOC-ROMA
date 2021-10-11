@@ -10,7 +10,7 @@
     <node pkg="nmea_navsat_driver" type="nmea_serial_driver" name="RTK_GPS" clear_params="true" output="screen">
        <param name = "port" type="string" value = "/dev/ttyXRUSB0"/> 
        <param name = "baud" type="int" value = "115200"/>
-       <param name = "frame_id" type="string" value = "RTK"/>
+       <!-- <param name = "frame_id" type="string" value = "RTK"/> -->
     </node>
 
     <!--Load fixed path !!  -->
