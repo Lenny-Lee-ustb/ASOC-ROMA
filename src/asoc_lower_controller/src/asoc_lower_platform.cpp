@@ -225,7 +225,6 @@ void rxThread_low(int s)
 		if(int(frame_low.can_id) < 0x200){
 			ID_r = int(frame_low.data[1]-0x10); //encoder ID 0x10-0x11
 			RollMsg_low.polygon.points[ID_r].x = float(int(frame_low.data[4] << 8)+frame_low.data[3])/4096.0*120;
-			// ROS_INFO("%d %.2f %ld",ID_r,angle,sizeof(frame_low));
 		}
 		else{
 			ID_m = int(frame_low.can_id-0x200)-1;
@@ -256,18 +255,12 @@ void rxThread_low(int s)
 
 		if(i%6==0)
 		{
-			ROS_INFO("leg_angle is %f, %f, %f, %f\r\n",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);           
-			ROS_INFO("ori is %f, %f, %f, %f\r\n",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);		 
-            ROS_INFO("target leg are %f, %f, %f, %f\r\n",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);     
-			ROS_INFO("VT %f\r\n",frame_vt);
-            ROS_INFO("VN %f\r\n",frame_vn);
-            ROS_INFO("W is %f\r\n", frame_w);
-            ROS_INFO("target V is %f, %f, %f, %f, %f, %f, %f, %f \r\n",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity,motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
-
-            velocityPub_low.publish(velocityMessage_low);
+			RollMsg_low.header.stamp=ros::Time::now();
+			velocityPub_low.publish(velocityMessage_low);
 			IPub_low.publish(IMessage_low);
 			RollPub_low.publish(RollMsg_low);
 		}
+
         if(i == 16)
 		{
 			flag = 1;
@@ -275,9 +268,8 @@ void rxThread_low(int s)
 			{
 				motor_low[j].targetPosition = motor_low[j].position;
 			}
-			
 		}
-		std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
     }
 
 }
@@ -286,8 +278,7 @@ void rxThread_low(int s)
 void rxThread_high(int s)
 {
 	int ID_m, ID_r; // ID_m for motor, ID_r for encoder
-	int i;
-	int j;
+	int i, j;
 	struct can_frame frame_high;
 	int nbytes_high;
 
@@ -315,7 +306,6 @@ void rxThread_high(int s)
 		if(int(frame_high.can_id) < 0x200){
 			ID_r = int(frame_high.data[1]-0x10); //encoder ID 0x10-0x11
 			RollMsg_high.polygon.points[ID_r].x = float(int(frame_high.data[4] << 8)+frame_high.data[3])/4096.0*120;
-			// ROS_INFO("%d %.2f %ld",ID_r,angle,sizeof(frame_high));
 		}
 		else{
 			ID_m = int(frame_high.can_id-0x200)-1;
@@ -344,10 +334,12 @@ void rxThread_high(int s)
 			IMessage_high.data[ID_m] = motor_high[ID_m].I;
 		}
 
-        if(i%4==0)
+        if(i%6==0)
 		{
+			RollMsg_low.header.stamp=ros::Time::now();
 			velocityPub_high.publish(velocityMessage_high);
 			IPub_high.publish(IMessage_high);
+			RollPub_high.publish(RollMsg_low);
 		}
         if(i == 16)
 		{
@@ -358,8 +350,18 @@ void rxThread_high(int s)
 			}
 			
 		}
+		if(i%600 == 0){
+			ROS_INFO("leg_angle [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);           
+			ROS_INFO("ori       [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);		 
+            ROS_INFO("target leg[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);     
+			ROS_INFO("Vt,Vn,w   [%.2f, %.2f, %.2f]\r", frame_vt, frame_vn, frame_w);
+            ROS_INFO("target_V_L[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity);
+			ROS_INFO("target_V_H[%.2f, %.2f, %.2f, %.2f]\r",motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
+			
+			std::cout << "----------------\n";
+		}
 
-		std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
     }
 
 }
@@ -368,7 +370,7 @@ void rxThread_high(int s)
 void txThread_low(int s)
 {
     struct can_frame frame_low;
-    
+     
 	frame_low.can_id = 0x200;
     
 	frame_low.can_dlc = 8;
@@ -442,9 +444,9 @@ void txThread_low(int s)
         nbytes_low = write(s, &frame_low, sizeof(struct can_frame));
         
         if (nbytes_low == -1 ) {
-			printf("send error\n");
+			printf("send error at low\n");
         }
-		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(2000000));
     }
 }
 
@@ -530,10 +532,10 @@ void txThread_high(int s)
         nbytes_high = write(s, &frame_high, sizeof(struct can_frame));
         
         if (nbytes_high == -1 ) {
-			printf("send error\n");
+			printf("send error at high\n");
         }
         
-		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(2000000));
     }
 
 }
@@ -578,23 +580,22 @@ int main(int argc, char** argv) {
 	ros::param::get("ori0",motor_high[2].ori_encoder);
 	ros::param::get("ori0",motor_high[3].ori_encoder);
 
-    
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
 	sendIPub_low = n.advertise<std_msgs::Int32MultiArray>("sendI_low",100);
-    
+	leg_angle_Pub_low = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_low",100);
+	RollPub_low = n.advertise<geometry_msgs::PolygonStamped>("Roll_low",100);;
+
 	velocityPub_high = n.advertise<std_msgs::Int32MultiArray>("velocity_high",100);
     IPub_high = n.advertise<std_msgs::Int32MultiArray>("I_high",100);
 	sendIPub_high = n.advertise<std_msgs::Int32MultiArray>("sendI_high",100);
-    
+	leg_angle_Pub_high = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_high",100);
+	RollPub_high = n.advertise<geometry_msgs::PolygonStamped>("Roll_high",100);
+
 	//leg_angle_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_low",100);
     //leg_angle_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_high",100);
-    leg_angle_Pub_low = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_low",100);
-	leg_angle_Pub_high = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_high",100);
-    
 	// leg_angle_sum_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_low",100);
 	// leg_angle_sum_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_high",100);
-	
 
 	int s_low;
 	int s_high;

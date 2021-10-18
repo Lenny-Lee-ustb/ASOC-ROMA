@@ -18,5 +18,8 @@ ASOC robot path tracking project
 
 #### 使用说明
 
+monitor 
+rostopic hz /Roll_low /Roll_high /velocity_low /velocity_high /sendI_low /sendI_high 
+
 
 
