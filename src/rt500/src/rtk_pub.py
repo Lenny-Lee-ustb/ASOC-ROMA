@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import String
-from learning_topic.msg import RTK
+from rt500.msg import RTK
 
 
 def callback(data):
@@ -12,16 +12,19 @@ def callback(data):
     global yaw
     
     str = data.split(',')
-    roll = float(str[18])
-    pitch = float(str[19])
-    yaw = float(str[20])
-    x = float(str[11])
-    y = float(str[12])
-    z = float(str[13])
+    while str[0] != '':
+        if str[0] != '#INSPVAXA':
+            continue
+        roll = float(str[18])
+        pitch = float(str[19])
+        yaw = float(str[20])
+        x = float(str[11])
+        y = float(str[12])
+        z = float(str[13])
 
 
 
- 
+
 if __name__ == '__main__':
     try:
         rospy.init_node('rtk_publisher', anonymous=True)
