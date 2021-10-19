@@ -205,6 +205,9 @@ void rxThread_low(int s)
 	IMessage_low.data.resize(4); // Currents of motors
 	RollMsg_low.polygon.points.resize(2); // Roll of two module  
 
+	sleep(0.5);
+	// wait for init
+
 	for (j = 0;j<4;j++)
 	{
 		motor_low[j].angleDifference = 0;
@@ -285,6 +288,9 @@ void rxThread_high(int s)
     velocityMessage_high.data.resize(5); // velocities of motors
 	IMessage_high.data.resize(4); // Currents of motors
 	RollMsg_high.polygon.points.resize(2); // Roll of two module  
+
+	sleep(0.5);
+	// wait for init
 
 	for (j = 0;j<4;j++)
 	{
@@ -382,6 +388,10 @@ void txThread_low(int s)
 	//leg_angle_sum_Message_low.data.resize(4);
 	leg_angle_Message_low.polygon.points.resize(4);
   
+
+	sleep(0.5);
+	// wait for init
+
     for (j = 0; j < 4; j++)
 	{
 		motor_low[j].sendI = 0;
@@ -465,7 +475,10 @@ void txThread_high(int s)
    // leg_angle_Message_high.data.resize(4);
 	//leg_angle_sum_Message_high.data.resize(4);
 	leg_angle_Message_high.polygon.points.resize(4);
-    
+	
+	sleep(0.5);
+	// wait for init
+	
 	for(j=0; j<4; j++){
         motor_high[j].sendI = 0;
     }
@@ -603,6 +616,7 @@ int main(int argc, char** argv) {
     struct sockaddr_can addr_high;
 	struct ifreq ifr_low;
     struct ifreq ifr_high;
+	struct can_frame frame;
 
 	if ((s_low = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
 		perror("Error while opening socket");
@@ -640,7 +654,9 @@ int main(int argc, char** argv) {
 		return -2;
 	}
 
-	
+	CanInit(frame, s_low);
+	CanInit(frame, s_high);
+
 	std::thread canRx_low(rxThread_low, s_low);
     std::thread canRX_high(rxThread_high, s_high);
 	sleep(0.5);

@@ -87,6 +87,30 @@ struct Motor{
     Matrix<float, 2,2> C;     
 };
 
+void CanInit(can_frame &frame, int s)
+{
+	int nbytes;
+	frame.can_id = 0x010;
+	frame.can_dlc = 4;
+	frame.data[0] = 0x04; 
+	frame.data[1] = 0x10; 
+	frame.data[2] = 0x06; 
+	frame.data[3] = 0x00; 
+    // send to 0x11 encoder
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+	sleep(0.1);
+
+	frame.can_id = 0x011;
+	frame.data[1] = 0x11; 
+	// send to 0x11 encoder
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+	
+	if (nbytes == -1)
+	{
+		printf("send error\n");
+	}
+}
+
 // A thread to deal with Ctrl-C command
 void signalCallback(int signum)
 {	

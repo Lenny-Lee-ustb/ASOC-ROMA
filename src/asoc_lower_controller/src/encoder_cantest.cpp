@@ -54,9 +54,9 @@ void txThread_low(int s)
 	frame_low.can_id = 0x001;
 	frame_low.can_dlc = 4;
 	frame_low.data[0] = 0x04; 
-	frame_low.data[1] = 0x01; 
-	frame_low.data[2] = 0x04; 
-	frame_low.data[3] = 0xAA; 
+	frame_low.data[1] = 0x11; 
+	frame_low.data[2] = 0x06; 
+	frame_low.data[3] = 0x00; 
 
 	int nbytes_low;
         
