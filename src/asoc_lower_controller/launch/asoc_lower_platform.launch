@@ -1,5 +1,5 @@
 <launch>
-    <!-- <node pkg="joy" type="joy_node" name="joy_node" /> -->
+    <node pkg="joy" type="joy_node" name="joy_node" />
     <node pkg="asoc_lower_controller" type="asoc_lower_platform" name="asoc_lower_platform" required="true" output="screen">
         <!-- <param name = "vt_max" type="float" value = "50.0"/> -->
         <!-- <param name = "vn_max" type="float" value = "30.0"/> -->

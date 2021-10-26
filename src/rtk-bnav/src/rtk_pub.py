@@ -19,16 +19,15 @@ import utm
 from nmea_msgs.msg import Sentence
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose, Twist, Quaternion
-from std_msgs.msg import Float64MultiArray
 from tf.transformations import quaternion_from_euler
 
 _angle2rad = pi/180.0
-_rad2angle = 180.0/pi
+# _rad2angle = 180.0/pi
 
-# tic = time.time()
+tic = time.time()
 
 def callback(data):
-    # global tic 
+    global tic 
     datahead = data.header
     datastr = data.sentence
     str = datastr.split(',')
@@ -61,12 +60,12 @@ def callback(data):
         Var_Pitch = float(str[28]) * _angle2rad
         Var_Yaw = float(str[29]) * _angle2rad
         # covariance of pose
-        pose_cov_rtk = [Var_Lat, 0, 0, 0, 0, 0,
-                        0, Var_Long, 0, 0, 0, 0,
-                        0, 0, Var_Height, 0, 0, 0,
-                        0, 0, 0, Var_Roll, 0, 0,
-                        0, 0, 0, 0, Var_Pitch, 0, 
-                        0, 0, 0, 0, 0, Var_Yaw] # 6x6 x, y, z, roll, pitch, yaw
+        pose_cov_rtk = [Var_Lat*Var_Lat, 0, 0, 0, 0, 0,
+                        0, Var_Long*Var_Long, 0, 0, 0, 0,
+                        0, 0, Var_Height*Var_Height, 0, 0, 0,
+                        0, 0, 0, Var_Roll*Var_Roll, 0, 0,
+                        0, 0, 0, 0, Var_Pitch*Var_Pitch, 0, 
+                        0, 0, 0, 0, 0, Var_Yaw*Var_Yaw] # 6x6 x, y, z, roll, pitch, yaw
 
         twist_rtk = Twist()
         # add linear velocity
@@ -78,16 +77,19 @@ def callback(data):
         Var_vy = float(str[25])
         Var_vz = float(str[26])
         # covariance of twist
-        twist_cov_rtk =[Var_vx, 0, 0, 0, 0, 0,
-                        0, Var_vy, 0, 0, 0, 0,
-                        0, 0, Var_vz, 0, 0, 0,
+        twist_cov_rtk =[Var_vx*Var_vx, 0, 0, 0, 0, 0,
+                        0, Var_vy*Var_vy, 0, 0, 0, 0,
+                        0, 0, Var_vz*Var_vz, 0, 0, 0,
                         0, 0, 0, 999, 0, 0,
                         0, 0, 0, 0, 999, 0, 
                         0, 0, 0, 0, 0, 999] # 6x6 vx(not sure), vy(not sure), vz, v_roll, v_pitch, v_yaw
 
         if str[10] == 'INS_RTKFIXED':
             pub_data(pose_rtk, pose_cov_rtk,twist_rtk, twist_cov_rtk, datahead)
-            print(data)
+            # toc = time.time() 
+            # rospy.loginfo("Hz:%.2f"%(1/(toc-tic))) # get frequency
+            # tic = toc
+            # print(data)
         else:
             rospy.logwarn("No RTK Signal !!")
 
@@ -115,6 +117,3 @@ if __name__ == '__main__':
 
     except rospy.ROSInterruptException:
         rospy.logerr('Could not start rtk node.')
-
-
-

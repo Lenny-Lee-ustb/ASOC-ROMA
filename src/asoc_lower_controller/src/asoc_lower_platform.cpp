@@ -20,7 +20,7 @@ float stick_yaw = 0.0;        // yaw command from joy
 float L = 2;   //  ratio of offset/split
 float r = 0.09; //radius of the wheel
 float linkTheta[4]; // the angle between four-parallel link and horizontal ground, variable, so need to be passed by Encoder
-float D[4]={0.311,0.311,0.311,0.311};
+float D[4]={0.35,0.35,0.35,0.35};
 
 float frame_vt;
 float frame_vn;
@@ -56,14 +56,22 @@ Motor motor_high[4];
 
 
 void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
-	motor_low[0].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
-	motor_low[1].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
-	motor_low[2].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
-	motor_low[3].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
-	motor_high[0].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
-	motor_high[1].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
-	motor_high[2].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
-	motor_high[3].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
+	// motor_low[0].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
+	// motor_low[1].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
+	// motor_low[2].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
+	// motor_low[3].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
+	// motor_high[0].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
+	// motor_high[1].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
+	// motor_high[2].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
+	// motor_high[3].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
+	motor_low[0].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
+	motor_low[1].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
+	motor_low[2].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
+	motor_low[3].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
+	motor_high[0].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
+	motor_high[1].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
+	motor_high[2].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
+	motor_high[3].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
 
 	for(int i=0; i<4; i++){
 		motor_low[i].leg_angle_with_turn = (motor_low[i].encoder_angle_with_turn-motor_low[i].ori_encoder)/3;
@@ -96,7 +104,7 @@ void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     stick_forward = joy->axes[1];
-    stick_right = joy->axes[0];
+    stick_right = -joy->axes[0];
 	stick_yaw = joy->axes[3];
     power = joy -> buttons[8];
 	forward_s = joy->buttons[5];
@@ -106,7 +114,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     power_last = power;  
 
 	frame_vt = 15*stick_forward + 19 * forward_s;
-	frame_vn = -15*stick_right;
+	frame_vn = 15*stick_right;
 	frame_w =  -60*stick_yaw;
 }
 
@@ -147,7 +155,7 @@ void body_to_wheel(float vt, float vn, float w){
         motor_low[i].vct = vt;
         motor_high[i].vcn = vn;
     }
-	   
+	// need explain!!!!
     vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
     vc_low0(0,0) = motor_low[0].vct;
     vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D[2];
@@ -200,6 +208,7 @@ void rxThread_low(int s)
 	int i, j;
 	struct can_frame frame_low;
 	int nbytes_low;
+	float roll_angle;
 
     velocityMessage_low.data.resize(5); // velocities of motors
 	IMessage_low.data.resize(4); // Currents of motors
@@ -227,7 +236,11 @@ void rxThread_low(int s)
 
 		if(int(frame_low.can_id) < 0x200){
 			ID_r = int(frame_low.data[1]-0x10); //encoder ID 0x10-0x11
-			RollMsg_low.polygon.points[ID_r].x = float(int(frame_low.data[4] << 8)+frame_low.data[3])/4096.0*120;
+			roll_angle = float(int(frame_low.data[4] << 8)+frame_low.data[3])/4096.0*120;
+			if(roll_angle > 60.0){
+				roll_angle = roll_angle - 120.0;
+			}
+			RollMsg_low.polygon.points[ID_r].x = roll_angle;
 		}
 		else{
 			ID_m = int(frame_low.can_id-0x200)-1;
@@ -284,6 +297,7 @@ void rxThread_high(int s)
 	int i, j;
 	struct can_frame frame_high;
 	int nbytes_high;
+	float roll_angle;
 
     velocityMessage_high.data.resize(5); // velocities of motors
 	IMessage_high.data.resize(4); // Currents of motors
@@ -311,7 +325,11 @@ void rxThread_high(int s)
 
 		if(int(frame_high.can_id) < 0x200){
 			ID_r = int(frame_high.data[1]-0x10); //encoder ID 0x10-0x11
-			RollMsg_high.polygon.points[ID_r].x = float(int(frame_high.data[4] << 8)+frame_high.data[3])/4096.0*120;
+			roll_angle = float(int(frame_high.data[4] << 8)+frame_high.data[3])/4096.0*120;
+			if(roll_angle > 60.0){
+				roll_angle = roll_angle - 120.0;
+			}
+			RollMsg_high.polygon.points[ID_r].x = roll_angle;
 		}
 		else{
 			ID_m = int(frame_high.can_id-0x200)-1;
@@ -342,10 +360,10 @@ void rxThread_high(int s)
 
         if(i%6==0)
 		{
-			RollMsg_low.header.stamp=ros::Time::now();
+			RollMsg_high.header.stamp=ros::Time::now();
 			velocityPub_high.publish(velocityMessage_high);
 			IPub_high.publish(IMessage_high);
-			RollPub_high.publish(RollMsg_low);
+			RollPub_high.publish(RollMsg_high);
 		}
         if(i == 16)
 		{
@@ -358,12 +376,12 @@ void rxThread_high(int s)
 		}
 		if(i%600 == 0){
 			ROS_INFO("leg_angle [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);           
-			ROS_INFO("ori       [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);		 
-            ROS_INFO("target leg[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].target_leg,motor_low[2].target_leg,motor_high[0].target_leg,motor_high[2].target_leg);     
+			ROS_INFO("ori       [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);	  
 			ROS_INFO("Vt,Vn,w   [%.2f, %.2f, %.2f]\r", frame_vt, frame_vn, frame_w);
             ROS_INFO("target_V_L[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity);
 			ROS_INFO("target_V_H[%.2f, %.2f, %.2f, %.2f]\r",motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
-			
+			ROS_INFO("Roll      [%.2f, %.2f, %.2f, %.2f]\r",RollMsg_low.polygon.points[0].x, RollMsg_low.polygon.points[1].x, RollMsg_high.polygon.points[0].x, RollMsg_high.polygon.points[1].x);
+
 			std::cout << "----------------\n";
 		}
 
@@ -584,14 +602,15 @@ int main(int argc, char** argv) {
         motor_high[i].Kd_encoder = 5;
 	}
 
-	ros::param::get("ori2",motor_low[0].ori_encoder);
-	ros::param::get("ori2",motor_low[1].ori_encoder);
-	ros::param::get("ori3",motor_low[2].ori_encoder);
-	ros::param::get("ori3",motor_low[3].ori_encoder);
-	ros::param::get("ori1",motor_high[0].ori_encoder);
-	ros::param::get("ori1",motor_high[1].ori_encoder);
-	ros::param::get("ori0",motor_high[2].ori_encoder);
-	ros::param::get("ori0",motor_high[3].ori_encoder);
+	// 
+	ros::param::get("ori1",motor_low[0].ori_encoder);
+	ros::param::get("ori1",motor_low[1].ori_encoder);
+	ros::param::get("ori2",motor_low[2].ori_encoder);
+	ros::param::get("ori2",motor_low[3].ori_encoder);
+	ros::param::get("ori0",motor_high[0].ori_encoder);
+	ros::param::get("ori0",motor_high[1].ori_encoder);
+	ros::param::get("ori3",motor_high[2].ori_encoder);
+	ros::param::get("ori3",motor_high[3].ori_encoder);
 
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);
