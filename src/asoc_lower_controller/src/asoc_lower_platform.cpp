@@ -56,14 +56,6 @@ Motor motor_high[4];
 
 
 void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
-	// motor_low[0].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
-	// motor_low[1].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
-	// motor_low[2].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
-	// motor_low[3].encoder_angle_with_turn = MultiAngleSumMsg.data[3];
-	// motor_high[0].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
-	// motor_high[1].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
-	// motor_high[2].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
-	// motor_high[3].encoder_angle_with_turn = MultiAngleSumMsg.data[0];
 	motor_low[0].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
 	motor_low[1].encoder_angle_with_turn = MultiAngleSumMsg.data[1];
 	motor_low[2].encoder_angle_with_turn = MultiAngleSumMsg.data[2];
@@ -96,7 +88,7 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
 	for(int i = 0; i < 4; i++){
 			linkTheta[i] = (15.52 * MultiTmotorAngle.polygon.points[i].x + 73 ) * PI / 180;
-			D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
+			D[i] = 0.178 + 0.17 * sin(linkTheta[i]);
 		}
 }
 
@@ -155,7 +147,11 @@ void body_to_wheel(float vt, float vn, float w){
         motor_low[i].vct = vt;
         motor_high[i].vcn = vn;
     }
-	// need explain!!!!
+	//D[0,1,2,3] responds to T-motor[0,1,2,3]
+	//D[0] responds to vc_low0(chaiss X axis positive), 
+	//D[1] responds to vc_high0(chassis Y axis positive), 
+	//D[2] responds to vc_low2(chassis X axis negative),
+	//D[3] responds to vc_high2(chassis Y axis negative)
     vc_low0(1,0) = motor_low[0].vcn = motor_low[1].vcn = vn + w * D[0];
     vc_low0(0,0) = motor_low[0].vct;
     vc_low2(1,0) = motor_low[2].vcn = motor_low[3].vcn = vn - w * D[2];
@@ -375,19 +371,17 @@ void rxThread_high(int s)
 			
 		}
 		if(i%600 == 0){
-			ROS_INFO("leg_angle [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);           
-			ROS_INFO("ori       [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);	  
 			ROS_INFO("Vt,Vn,w   [%.2f, %.2f, %.2f]\r", frame_vt, frame_vn, frame_w);
+			ROS_INFO("leg_angle [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);   
+			ROS_INFO("D[0-4]    [%.2f, %.2f, %.2f, %.2f]\r",D[0], D[1], D[2], D[3]);        
             ROS_INFO("target_V_L[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity);
 			ROS_INFO("target_V_H[%.2f, %.2f, %.2f, %.2f]\r",motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
 			ROS_INFO("Roll      [%.2f, %.2f, %.2f, %.2f]\r",RollMsg_low.polygon.points[0].x, RollMsg_low.polygon.points[1].x, RollMsg_high.polygon.points[0].x, RollMsg_high.polygon.points[1].x);
 
 			std::cout << "----------------\n";
 		}
-
 		std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
     }
-
 }
 
 
@@ -554,7 +548,6 @@ void txThread_high(int s)
 			    leg_angle_Message_high.polygon.points[j].y=motor_high[j].leg_angle_with_turn;
             }
 		}
-		
 		leg_angle_Message_high.header.stamp=ros::Time::now();
         sendIPub_high.publish(sendIMessage_high);
         leg_angle_Pub_high.publish(leg_angle_Message_high);
@@ -565,10 +558,8 @@ void txThread_high(int s)
         if (nbytes_high == -1 ) {
 			printf("send error at high\n");
         }
-        
 		std::this_thread::sleep_for(std::chrono::nanoseconds(2000000));
     }
-
 }
 
 
@@ -602,7 +593,7 @@ int main(int argc, char** argv) {
         motor_high[i].Kd_encoder = 5;
 	}
 
-	// 
+	// get initial leg_angle for each module
 	ros::param::get("ori1",motor_low[0].ori_encoder);
 	ros::param::get("ori1",motor_low[1].ori_encoder);
 	ros::param::get("ori2",motor_low[2].ori_encoder);
@@ -611,6 +602,7 @@ int main(int argc, char** argv) {
 	ros::param::get("ori0",motor_high[1].ori_encoder);
 	ros::param::get("ori3",motor_high[2].ori_encoder);
 	ros::param::get("ori3",motor_high[3].ori_encoder);
+	ROS_INFO("ori       [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].ori_encoder,motor_low[2].ori_encoder,motor_high[0].ori_encoder,motor_high[2].ori_encoder);	  
 
     velocityPub_low = n.advertise<std_msgs::Int32MultiArray>("velocity_low",100);
     IPub_low = n.advertise<std_msgs::Int32MultiArray>("I_low",100);

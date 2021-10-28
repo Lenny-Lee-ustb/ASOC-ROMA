@@ -58,7 +58,7 @@ struct Tmotor
 };
 
 
-// Converts a float to an unsigned int, given range and number of bits
+// Converts a float to an unsigned int
 int float_to_uint(float x, float x_min, float x_max, int bits)
 {
 	float span = x_max - x_min;
@@ -67,7 +67,7 @@ int float_to_uint(float x, float x_min, float x_max, int bits)
 }
 
 
-// converts unsigned int to float, given range and number of bits
+// converts unsigned int to float
 float uint_to_float(int x_int, float x_min, float x_max, int bits)
 {
 	float span = x_max - x_min;
@@ -93,7 +93,7 @@ void canCheck(can_frame &frame, int s, int id)
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
 	// printf("Wrote %d bytes\n", nbytes);
-	sleep(0.1);
+	sleep(0.01);
 	if (nbytes == -1)
 	{
 		printf("send error\n");

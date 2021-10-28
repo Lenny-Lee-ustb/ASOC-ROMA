@@ -211,7 +211,7 @@ void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
         //Pass the angle of Tmotor[i] to linkTheta[i]
 		//degree = 15.52 * MultiTmotorAngle + 73
 			linkTheta[i] = (15.52 * MultiTmotorAngle.polygon.points[i].x + 73 ) * PI / 180;
-			D[i] = 0.178 + 0.14 * sin(linkTheta[i]);
+			D[i] = 0.178 + 0.18 * sin(linkTheta[i]);
 		}
 		//D[0,1,2,3] responds to T-motor[0,1,2,3]
 	   //D[0] responds to vc_low0(chaiss X axis positive), 

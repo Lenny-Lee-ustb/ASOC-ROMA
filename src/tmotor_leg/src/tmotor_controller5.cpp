@@ -217,6 +217,7 @@ void rxThread(int s)
 	int i;
 	struct can_frame frame;
 	int nbytes;
+	sleep(0.5);
 	for (i = 0;; i++)
 	{
 		ros::spinOnce();
@@ -466,7 +467,6 @@ int main(int argc, char **argv)
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);
-	sleep(0.1);
 	std::thread canRx(rxThread, s);
 	//开启收报/发报线程
 
