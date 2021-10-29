@@ -9,7 +9,7 @@ int xbox_mode_on = -1;
 int xbox_power = 0;
 int xbox_power_last = 0;
 
-double K_S = 7.0;
+double K_S = 9.0;
 double D_S = 0.3;
 double zero_length = 2.0;
 //电弹簧模式参数
@@ -217,7 +217,7 @@ void rxThread(int s)
 	int i;
 	struct can_frame frame;
 	int nbytes;
-	sleep(0.5);
+	sleep(0.4);
 	for (i = 0;; i++)
 	{
 		ros::spinOnce();
@@ -248,7 +248,7 @@ void rxThread(int s)
 		if (rxCounter < 4)
 		{
 			tmotor[rxCounter].pos_abszero = tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 2.0;
+			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 0.5;
 		}
 
 		rxCounter++;
@@ -378,6 +378,7 @@ void txThread(int s)
 
 	int nbytes;
 
+	sleep(0.6);
 	for (int i = 0;; i++)
 	{
 		tmotor_info_msgs.polygon.points.resize(4);

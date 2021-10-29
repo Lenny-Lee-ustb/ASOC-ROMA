@@ -2,7 +2,8 @@
 <launch>
     <!-- Spawn RTK module !! -->
     <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen">
-       <param name = "port" type="string" value = "/dev/ttyXRUSB0"/> 
+       <!-- <param name = "port" type="string" value = "/dev/ttyXRUSB0"/>  -->
+       <param name = "port" type="string" value = "/dev/ttyUSB0"/> 
        <param name = "baud" type="int" value = "921600"/> -->
        <!-- <param name = "frame_id" type="string" value = "RTK"/> -->
     </node>
@@ -22,6 +23,11 @@
         <rosparam command="load" file="$(find localization)/params/ekf_params_encoder.yaml" />
     </node>
 
+<!-- 
+    <remap from="/camera/odom/sample" to="/camera/odometry"/>
+    <include file="$(find realsense2_camera)/launch/rs_t265.launch"/> -->
+
+
     <!-- rviz -->
     <!-- <node pkg="rviz" type="rviz" name="display" args="-d $(find localization)/rviz/navigation.rviz" required="true"/> -->
 
@@ -29,8 +35,8 @@
     <node pkg="tf2_ros" type="static_transform_publisher" 
         name="odom_static_transform_publisher" args="0 0 0 0 0 0 map odom " />
     <!-- Broadcast RTK tf -->
-    <node pkg="tf2_ros" type="static_transform_publisher" 
-            name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps " />
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" 
+            name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps " /> -->
     <!-- Broadcast imu tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="imu_static_transform_publisher" args="0 0 0 0 0 0 base_footprint imu_link " />

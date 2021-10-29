@@ -88,7 +88,6 @@ void canCheck(can_frame &frame, int s, int id)
 	frame.data[7] = 0xfc;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
-    sleep(0.1);
 	frame.data[7] = 0xfe;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	

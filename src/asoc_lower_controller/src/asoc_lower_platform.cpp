@@ -373,7 +373,7 @@ void rxThread_high(int s)
 		if(i%600 == 0){
 			ROS_INFO("Vt,Vn,w   [%.2f, %.2f, %.2f]\r", frame_vt, frame_vn, frame_w);
 			ROS_INFO("leg_angle [%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].leg_angle,motor_low[2].leg_angle,motor_high[0].leg_angle,motor_high[2].leg_angle);   
-			ROS_INFO("D[0-4]    [%.2f, %.2f, %.2f, %.2f]\r",D[0], D[1], D[2], D[3]);        
+			ROS_INFO("D[0,2,1,3][%.2f, %.2f, %.2f, %.2f]\r",D[0], D[2], D[1], D[3]);        
             ROS_INFO("target_V_L[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity);
 			ROS_INFO("target_V_H[%.2f, %.2f, %.2f, %.2f]\r",motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
 			ROS_INFO("Roll      [%.2f, %.2f, %.2f, %.2f]\r",RollMsg_low.polygon.points[0].x, RollMsg_low.polygon.points[1].x, RollMsg_high.polygon.points[0].x, RollMsg_high.polygon.points[1].x);

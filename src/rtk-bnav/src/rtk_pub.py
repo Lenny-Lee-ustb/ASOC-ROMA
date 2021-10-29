@@ -84,7 +84,7 @@ def callback(data):
                         0, 0, 0, 0, 999, 0, 
                         0, 0, 0, 0, 0, 999] # 6x6 vx(not sure), vy(not sure), vz, v_roll, v_pitch, v_yaw
 
-        if str[10] == 'INS_RTKFIXED':
+        if str[10] == 'INS_RTKFIXED' or 'INS_PSRSP':
             pub_data(pose_rtk, pose_cov_rtk,twist_rtk, twist_cov_rtk, datahead)
             # toc = time.time() 
             # rospy.loginfo("Hz:%.2f"%(1/(toc-tic))) # get frequency
