@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!-- node_name: make sure the different between the each IMU node
+     ID : ID must be spcific
+     serialport_name: /dev/ttyUSB* (default, * depending on the USB hub)
+ -->
 <launch>
     <arg name="node_name" default="imu_0"></arg>
     <param name = "ID" type="string" value ="0"/>

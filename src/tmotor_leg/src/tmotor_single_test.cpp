@@ -1,7 +1,5 @@
 #include "include/tmotor_common.hpp"
 
-
-
 void positionTest(struct can_frame &frame);
 void velTest(struct can_frame &frame);
 void StopTest(struct can_frame &frame);
@@ -42,7 +40,7 @@ void rxThread(int s)
 void txThread(int s)
 {
 	struct can_frame frame;
-	frame.can_id = 0x1; //0x2
+	frame.can_id = 0x01; //0x2
 	frame.can_dlc = 8;
 	for (int j = 0; j < 8; j++)
 	{
@@ -50,6 +48,7 @@ void txThread(int s)
 	}
 	frame.data[7] = 0xfc;
 	//进入电机控制模式
+
 
 	int nbytes;
 
@@ -189,7 +188,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname = "can0";
+	const char *ifname = "can2";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
