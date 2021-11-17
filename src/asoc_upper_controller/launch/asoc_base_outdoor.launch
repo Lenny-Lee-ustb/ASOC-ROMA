@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <launch>
-    <!-- Spawn RTK module !! -->
+    <!-- Spawn RTK read module !! -->
     <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen">
        <!-- <param name = "port" type="string" value = "/dev/ttyXRUSB0"/>  -->
        <param name = "port" type="string" value = "/dev/ttyUSB0"/> 
-       <param name = "baud" type="int" value = "921600"/> -->
+       <param name = "baud" type="int" value = "115200"/> -->
        <!-- <param name = "frame_id" type="string" value = "RTK"/> -->
     </node>
 
-    <!-- Convert GPS topic !!  -->
-   <!-- <node name="rtk_pub" pkg="rtk-bnav" type="rtk_pub.py"/> -->
+    <!-- Convert rtk topic !!  -->
+   <node name="rtk_pub" pkg="rtk-bnav" type="rtk_pub.py"/>
 
     <!--Load fixed path !!  -->
     <node pkg="path_load" type="path_load.py" name="path_loader" >
@@ -18,15 +18,12 @@
     </node>
 
     <!-- spawn EKF !! -->
-    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
-        <!-- <remap from="vo" to="gps_meas" /> -->
+    <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
         <rosparam command="load" file="$(find localization)/params/ekf_params_encoder.yaml" />
-    </node>
+    </node> -->
 
-<!-- 
     <remap from="/camera/odom/sample" to="/camera/odometry"/>
-    <include file="$(find realsense2_camera)/launch/rs_t265.launch"/> -->
-
+    <include file="$(find realsense2_camera)/launch/rs_t265.launch"/>
 
     <!-- rviz -->
     <!-- <node pkg="rviz" type="rviz" name="display" args="-d $(find localization)/rviz/navigation.rviz" required="true"/> -->
@@ -36,7 +33,7 @@
         name="odom_static_transform_publisher" args="0 0 0 0 0 0 map odom " />
     <!-- Broadcast RTK tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
-            name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps " />
+            name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps_link " />
     <!-- Broadcast imu tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="imu_static_transform_publisher" args="0 0 0 0 0 0 base_footprint imu_link " />

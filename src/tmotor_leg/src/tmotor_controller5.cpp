@@ -359,7 +359,7 @@ void frameDataSet(struct can_frame &frame, int id)
 //打印信息
 void printTmotorInfo(int id)
 {
-	ROS_INFO("\n-----\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nxbox_mode: %d\nstop_flag:%d\n",
+	ROS_INFO("\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nxbox_mode: %d\nstop_flag:%d\n------------\n",
 			 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
 			 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now,
 			 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
@@ -399,11 +399,9 @@ void txThread(int s)
 			if (nbytes == -1)
 			{
 				printf("send error\n");
-				printf("please check battary!!\n");
 				exit(1);
 			}
 			txCounter++;
-			//printf("tx is %d;",txCounter);
 			printTmotorInfo(id);
 
 			tmotor_info_msgs.polygon.points[id].x = tmotor[id].pos_now;
@@ -460,6 +458,7 @@ int main(int argc, char **argv)
 	for (int id = 1; id < 5; id++)
 	{
 		canCheck(frame, s, id);
+		ROS_INFO("D[%d] pass check!", id);
 	}
 	//检查can通讯连接
 
