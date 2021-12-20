@@ -11,10 +11,11 @@ int xbox_power_last = 0;
 
 double K_S = 7.0;
 double D_S = 0.3;
-double zero_length=1.0;
+double zero_length = 1.0;
 //电弹簧模式参数
 
 geometry_msgs::PolygonStamped tmotor_info_msgs;
+//电机位置信息，速度信息，力矩信息（带时间戳）
 
 Tmotor tmotor[4];
 
@@ -33,7 +34,6 @@ void flagTest2(int id)
 		}
 	}
 }
-
 
 //监测电机状态
 void flagTest(int id)
@@ -56,6 +56,7 @@ void flagTest(int id)
 		}
 	}
 
+	//电弹簧模式工作状态，接近零点启用flag3，远离零点启用flag4（常规电弹簧模式），flag3的目的是避免零点附近的电机震荡
 	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
 	{
 		tmotor[id].flag = 3;
@@ -66,7 +67,7 @@ void flagTest(int id)
 	}
 }
 
-// upper_controller_callback
+// upper_controller_callback 由上位机修正tmotor的目标速度及零点位置
 void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 {
 	for (int id = 0; id < 4; id++)
@@ -77,30 +78,29 @@ void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
 		//！！待加
 
-		 if(fabs(ctrl_cmd.polygon.points[id].x)>=0.03){
-            tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
-            tmotor[id].flag = 6;
-        }
-		else{
-            flagTest(id);
-        }
+		if (fabs(ctrl_cmd.polygon.points[id].x) >= 0.03)
+		{
+			tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
+			tmotor[id].flag = 6;
+		}
+		else
+		{
+			flagTest(id);
+		}
 
-		tmotor[id].pos_zero=ctrl_cmd.polygon.points[id].y;
+		tmotor[id].pos_zero = ctrl_cmd.polygon.points[id].y;
 	}
 }
-
 
 //joy按键回调函数
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
-	//只有四个电机都调零完毕才能手柄控制
-	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) 
-	 && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
+	//只有四个电机都调零完毕才能手柄控制，flag5为手柄控制模式
+	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
 	{
 		xbox_power = joy->buttons[7];
 		float move_up = -(joy->axes[2]) + 1;
 		float move_down = -(joy->axes[5]) + 1;
-
 
 		if (xbox_power > xbox_power_last)
 		{
@@ -215,8 +215,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 		}
 
 		if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
-		{	
-			
+		{
+
 			if (xbox_mode_on > 0)
 			{
 				for (int id = 0; id < 4; id++)
@@ -239,7 +239,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 	}
 }
 
-
+//收报函数
 void rxThread(int s)
 {
 	int i;
@@ -264,6 +264,7 @@ void rxThread(int s)
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
 
+        //参考AK80-6电机手册，整型转浮点型
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
 		f_t = uint_to_float(t, T_MIN, T_MAX, 12);
@@ -272,17 +273,18 @@ void rxThread(int s)
 		tmotor[ID].vel_now = f_vel;
 		tmotor[ID].t_now = f_t;
 
-        if(rxCounter<4){
-			tmotor[rxCounter].pos_abszero=tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero=tmotor[rxCounter].pos_abszero+2.0;
+		if (rxCounter < 4)
+		{
+			tmotor[rxCounter].pos_abszero = tmotor[rxCounter].pos_now;
+			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 2.0;
 		}
 
-        rxCounter++;
+		rxCounter++;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 	}
 }
 
-
+//设置tmotor各个flag对应的电机参数
 void motorParaSet(int id)
 {
 	switch (tmotor[id].flag)
@@ -339,14 +341,15 @@ void motorParaSet(int id)
 		tmotor[id].kd = 0;
 		tmotor[id].kp = 0;
 		break;
-     case 6: 
-        tmotor[id].t_des = 2;
+		//flag6为主动悬挂调平衡中的力矩+速度控制，速度由上位机指定
+	case 6:
+		tmotor[id].t_des = 2;
 		tmotor[id].vel_des = tmotor[id].vel_des;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
 		tmotor[id].kd = 3;
 		break;
-	
+
 	default:
 		break;
 	}
@@ -358,6 +361,7 @@ void frameDataSet(struct can_frame &frame, int id)
 	float f_p, f_v, f_kp, f_kd, f_t;
 	uint16_t p, v, kp, kd, t;
 
+	//如果电机flag不为5，表示电机由上位机而非手柄控制，给定电机参数
 	if (tmotor[id].flag != 5)
 	{
 		flagTest(id);
@@ -370,10 +374,12 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_kp = tmotor[id].kp;
 	f_kd = tmotor[id].kd;
 
-    f_t=fmax(fminf(tmotor[id].t_des,T_MAX),T_MIN);
-	f_p=fmax(fminf(tmotor[id].pos_des,P_MAX),P_MIN);
-	f_v=fmax(fminf(tmotor[id].vel_des,V_MAX),V_MIN);
+	//限位保護
+	f_t = fmax(fminf(tmotor[id].t_des, T_MAX), T_MIN);
+	f_p = fmax(fminf(tmotor[id].pos_des, P_MAX), P_MIN);
+	f_v = fmax(fminf(tmotor[id].vel_des, V_MAX), V_MIN);
 
+	//参考AK80-6电机使用手册，将各参数的浮点型转化为整型后保存在data中
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
 	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
 	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
@@ -393,19 +399,18 @@ void frameDataSet(struct can_frame &frame, int id)
 void printTmotorInfo(int id)
 {
 	ROS_INFO("\n-----\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \nt_des is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nxbox_mode: %d\nstop_flag:%d\n",
-	 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
-	 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now, 
-	 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
-     tmotor[0].vel_des, tmotor[1].vel_des, tmotor[2].vel_des, tmotor[3].vel_des,
-	 tmotor[0].t_now, tmotor[1].t_now, tmotor[2].t_now, tmotor[3].t_now, 
-	 tmotor[0].t_des, tmotor[1].t_des, tmotor[2].t_des, tmotor[3].t_des, 
-	 tmotor[0].pos_zero, tmotor[1].pos_zero, tmotor[2].pos_zero, tmotor[3].pos_zero, 
-	 xbox_mode_on,
-	 Stop_flag
-	 );
+			 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
+			 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now,
+			 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
+			 tmotor[0].vel_des, tmotor[1].vel_des, tmotor[2].vel_des, tmotor[3].vel_des,
+			 tmotor[0].t_now, tmotor[1].t_now, tmotor[2].t_now, tmotor[3].t_now,
+			 tmotor[0].t_des, tmotor[1].t_des, tmotor[2].t_des, tmotor[3].t_des,
+			 tmotor[0].pos_zero, tmotor[1].pos_zero, tmotor[2].pos_zero, tmotor[3].pos_zero,
+			 xbox_mode_on,
+			 Stop_flag);
 }
 
-
+//发报函数
 void txThread(int s)
 {
 	struct can_frame frame;
@@ -427,9 +432,9 @@ void txThread(int s)
 				{
 					frame.data[j] = 0xff;
 				}
-				frame.data[7] = 0xfd;// exit T-motor control mode!
+				frame.data[7] = 0xfd; // exit T-motor control mode!
 			}
-			
+
 			nbytes = write(s, &frame, sizeof(struct can_frame));
 			if (nbytes == -1)
 			{
@@ -441,18 +446,18 @@ void txThread(int s)
 			//printf("tx is %d;",txCounter);
 			printTmotorInfo(id);
 
-			tmotor_info_msgs.polygon.points[id].x=tmotor[id].pos_now;
-			tmotor_info_msgs.polygon.points[id].y=tmotor[id].vel_now;
-			tmotor_info_msgs.polygon.points[id].z=tmotor[id].t_now;
+			tmotor_info_msgs.polygon.points[id].x = tmotor[id].pos_now;
+			tmotor_info_msgs.polygon.points[id].y = tmotor[id].vel_now;
+			tmotor_info_msgs.polygon.points[id].z = tmotor[id].t_now;
 			//每个点x为tmotor当前位置，y为tmotor当前速度，z为tmotor当前电流
 
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 		}
-		tmotor_info_msgs.header.stamp=ros::Time::now();
+		tmotor_info_msgs.header.stamp = ros::Time::now();
+		//标记时间戳
 		Tmotor_Info.publish(tmotor_info_msgs);
 	}
 }
-
 
 int main(int argc, char **argv)
 {
@@ -461,12 +466,11 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
 	signal(SIGINT, signalCallback);
-	
 
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname ="can2";
+	const char *ifname = "can2";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
@@ -499,10 +503,10 @@ int main(int argc, char **argv)
 		canCheck(frame, s, id);
 	}
 	//检查can通讯连接
-	
+
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 2, buttonCallback);
 	Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
-	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info",2);
+	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 2);
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);

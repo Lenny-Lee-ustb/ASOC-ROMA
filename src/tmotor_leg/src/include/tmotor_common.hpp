@@ -18,6 +18,7 @@
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point32.h>
 
+//参考AK80-6电机手册
 #define P_MIN -12.5f //-12.5f —— 12.5f rad
 #define P_MAX 12.5f
 #define V_MIN -38.2f //-30.0f——30.0f rad/s
@@ -42,12 +43,12 @@ struct Tmotor
 	float pos_zero = 1;	   //相对零点
 	float pos_abszero = 0; //绝对零点
 
-	float pos_now;		//当前位置
-	float pos_des;	//目标（前馈）位置
-	float vel_now;		//当前速度
+	float pos_now; //当前位置
+	float pos_des; //目标（前馈）位置
+	float vel_now; //当前速度
 	float vel_des; //目标速度
-	float t_now;		//当前力矩（电流？）
-	float t_des;	//前馈力矩（电流？）
+	float t_now;   //当前力矩（电流？）
+	float t_des;   //前馈力矩（电流？）
 	float kp;
 	float kd;
 
@@ -57,7 +58,6 @@ struct Tmotor
 	//新版本：（上电位置为绝对零点）1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
 };
 
-
 // Converts a float to an unsigned int
 int float_to_uint(float x, float x_min, float x_max, int bits)
 {
@@ -65,7 +65,6 @@ int float_to_uint(float x, float x_min, float x_max, int bits)
 	float offset = x_min;
 	return (int)((x - offset) * ((float)((1 << bits) - 1)) / span);
 }
-
 
 // converts unsigned int to float
 float uint_to_float(int x_int, float x_min, float x_max, int bits)
@@ -87,10 +86,10 @@ void canCheck(can_frame &frame, int s, int id)
 	}
 	frame.data[7] = 0xfc;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
-    //enter Tmotor control mode
+	//enter Tmotor control mode
 	frame.data[7] = 0xfe;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
-	//set Tmotor zero point	
+	//set Tmotor zero point
 	// printf("Wrote %d bytes\n", nbytes);
 	sleep(0.01);
 	if (nbytes == -1)
@@ -101,8 +100,8 @@ void canCheck(can_frame &frame, int s, int id)
 
 // A thread to deal with Ctrl-C command
 void signalCallback(int signum)
-{	
-	double startt,endt;
+{
+	double startt, endt;
 	startt = clock();
 	Stop_flag = 1;
 	ros::Duration(1.0).sleep();
