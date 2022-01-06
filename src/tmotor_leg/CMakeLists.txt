@@ -40,17 +40,18 @@ src/tmotor_controller3.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_controller3 ${catkin_LIBRARIES})
 
-add_executable(tmotor_rp_test
-src/tmotor_rp_test.cpp
-src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_rp_test ${catkin_LIBRARIES})
 
-add_executable(tmotor_controller4 
-src/tmotor_controller4.cpp
+add_executable(tmotor_controller_xbox
+src/tmotor_controller_xbox.cpp
 src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_controller4 ${catkin_LIBRARIES})
+target_link_libraries(tmotor_controller_xbox ${catkin_LIBRARIES})
 
-add_executable(tmotor_controller5 
-src/tmotor_controller5.cpp
+add_executable(tmotor_controller_uppercontroller
+src/tmotor_controller_uppercontroller.cpp
 src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_controller5 ${catkin_LIBRARIES})
+target_link_libraries(tmotor_controller_uppercontroller ${catkin_LIBRARIES})
+
+add_executable(tmotor2_xboxtest1
+src/tmotor2_xboxtest1.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor2_xboxtest1 ${catkin_LIBRARIES})
