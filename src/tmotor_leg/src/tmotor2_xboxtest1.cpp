@@ -218,7 +218,7 @@ void rxThread(int s)
 		if (rxCounter < 4)
 		{
 			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].zeroPointSet == 1;
+			tmotor[rxCounter].zeroPointSet = 1;
 		}
 
 		rxCounter++;
@@ -298,7 +298,7 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_p = fmax(fminf(tmotor[id].pos_des, P_MAX), P_MIN);
 	f_v = fmax(fminf(tmotor[id].vel_des, V_MAX), V_MIN);
 
-	//参考AK80-6电机使用手册，将各参数的浮点型转化为整型后保存在data中
+	//参考AK80-9电机使用手册，将各参数的浮点型转化为整型后保存在data中
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
 	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
 	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
@@ -388,7 +388,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname = "can2";
+	const char *ifname = "can0";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{

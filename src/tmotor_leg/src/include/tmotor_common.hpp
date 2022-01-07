@@ -21,10 +21,10 @@
 //参考AK80-9电机手册
 #define P_MIN -12.5f //-12.5f —— 12.5f rad
 #define P_MAX 12.5f
-#define V_MIN -50.0f //-30.0f——30.0f rad/s
-#define V_MAX 50.0f
-#define T_MIN -18.0f //-18.0f——18.0f N*m
-#define T_MAX 18.0f
+#define V_MIN -76.0f //-30.0f——30.0f rad/s
+#define V_MAX 76.0f
+#define T_MIN -12.0f //-18.0f——18.0f N*m
+#define T_MAX 12.0f
 
 #define KP_MIN 0.0f
 #define KP_MAX 500.0f
@@ -52,7 +52,7 @@ struct Tmotor
 	float kp;
 	float kd;
 
-	int zeroPointSet = 0; //设过零点为1，未设过零点为0
+	int zeroPointSet = 1; //设过零点为1，未设过零点为0
 	int flag = 1;
 	//旧版本： 0:调绝对零点 ；1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
 	//新版本：（上电位置为绝对零点）1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制

@@ -137,12 +137,12 @@ void motorParaSet()
 	switch (tmotor.flag)
 	{
 	case 1:
-		tmotor.t_des = 10;
-		tmotor.vel_des = 10;
+		tmotor.t_des = 0;
+		tmotor.vel_des = 0;
 		// tmotor.pos_des = tmotor.pos_zero;
 		tmotor.pos_des = 0;
 		tmotor.kp = 0;
-		tmotor.kd = 3;
+		tmotor.kd = 0;
 		break;
 
 	case 2:
@@ -169,10 +169,10 @@ void motorParaSet()
 		// 		tmotor.t_des = -(tmotor.pos_now - tmotor.pos_zero) * K_S + 0.6 + D_S * abs(tmotor.vel_now);
 		// 	}
 		// }
-		tmotor.t_des = 10;
+		tmotor.t_des = 0;
 		tmotor.pos_des = 0;
-		tmotor.vel_des = 10;
-		tmotor.kd = 3;
+		tmotor.vel_des = 0;
+		tmotor.kd = 0;
 		tmotor.kp = 0;
 		break;
 
@@ -305,11 +305,11 @@ int main(int argc, char **argv)
 	//can连接完毕
 
 	struct can_frame frame;
-	// for (int id = 1; id < 5; id++)
-	// {
-	// 	canCheck(frame, s, id);
-	// 	ROS_INFO("D[%d] pass check!", id);
-	// }
+	for (int id = 1; id < 5; id++)
+	{
+		canCheck(frame, s, id);
+		ROS_INFO("D[%d] pass check!", id);
+	}
 	//检查can通讯连接
 
 	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
