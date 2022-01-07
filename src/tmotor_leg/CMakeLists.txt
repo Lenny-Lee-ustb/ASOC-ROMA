@@ -55,3 +55,8 @@ add_executable(tmotor2_xboxtest1
 src/tmotor2_xboxtest1.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor2_xboxtest1 ${catkin_LIBRARIES})
+
+add_executable(tmotor2_singletest1
+src/tmotor2_singletest1.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor2_singletest1 ${catkin_LIBRARIES})

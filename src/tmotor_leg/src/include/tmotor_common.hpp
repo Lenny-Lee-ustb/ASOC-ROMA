@@ -18,11 +18,11 @@
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point32.h>
 
-//参考AK80-6电机手册
+//参考AK80-9电机手册
 #define P_MIN -12.5f //-12.5f —— 12.5f rad
 #define P_MAX 12.5f
-#define V_MIN -38.2f //-30.0f——30.0f rad/s
-#define V_MAX 38.2f
+#define V_MIN -50.0f //-30.0f——30.0f rad/s
+#define V_MAX 50.0f
 #define T_MIN -18.0f //-18.0f——18.0f N*m
 #define T_MAX 18.0f
 
