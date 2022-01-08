@@ -60,3 +60,14 @@ add_executable(tmotor2_singletest1
 src/tmotor2_singletest1.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor2_singletest1 ${catkin_LIBRARIES})
+
+add_executable(tmotor_controller_uppercontroller
+src/tmotor_controller_uppercontroller.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor_controller_uppercontroller ${catkin_LIBRARIES})
+
+add_executable(tmotor_controller_xbox
+src/tmotor_controller_xbox.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor_controller_xbox ${catkin_LIBRARIES})
+
