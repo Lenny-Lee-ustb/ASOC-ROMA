@@ -1,10 +1,11 @@
 #include "include/tmotor_common.hpp"
+//单个tmotor测试
 
 void positionTest(struct can_frame &frame);
 void velTest(struct can_frame &frame);
 void StopTest(struct can_frame &frame);
 
-
+//收报函数
 void rxThread(int s)
 {
 	int i;
@@ -26,6 +27,8 @@ void rxThread(int s)
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
 		rxCounter++;
+
+		//参考AK80-6电机手册，整型转浮点型
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
 		f_t = uint_to_float(t, T_MIN, T_MAX, 12);
@@ -37,6 +40,7 @@ void rxThread(int s)
 	}
 }
 
+//发报函数
 void txThread(int s)
 {
 	struct can_frame frame;
@@ -49,7 +53,6 @@ void txThread(int s)
 	frame.data[7] = 0xfc;
 	//进入电机控制模式
 
-
 	int nbytes;
 
 	for (int i = 0;; i++)
@@ -61,9 +64,9 @@ void txThread(int s)
 		{
 			StopTest(frame);
 		}
-		
+
 		nbytes = write(s, &frame, sizeof(struct can_frame));
-		
+
 		if (nbytes == -1)
 		{
 			printf("send error\n");
@@ -76,7 +79,6 @@ void txThread(int s)
 	}
 }
 
-
 void StopTest(struct can_frame &frame)
 {
 	float f_p, f_v, f_kp, f_kd, f_t;
@@ -85,6 +87,8 @@ void StopTest(struct can_frame &frame)
 	f_kp = 0;
 	f_kd = 0;
 	f_p = 0;
+
+	//限位保護
 	f_p = fminf(fmaxf(P_MIN, f_p), P_MAX);
 	f_v = fminf(fmaxf(V_MIN, f_v), V_MAX);
 	f_kp = fminf(fmaxf(KP_MIN, f_kp), KP_MAX);
@@ -92,6 +96,7 @@ void StopTest(struct can_frame &frame)
 	f_t = fminf(fmaxf(T_MIN, f_t), T_MAX);
 	printf("------pos_des is %f, vel_des is %f, torque_des is %f  ------\n", f_p, f_v, f_t);
 
+	//参考AK80-6电机手册，浮点型转整型
 	uint16_t p, v, kp, kd, t;
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
 	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
@@ -108,7 +113,6 @@ void StopTest(struct can_frame &frame)
 	frame.data[6] = ((kd & 0xF) << 4) | (t >> 8);
 	frame.data[7] = t & 0xff;
 }
-
 
 void positionTest(struct can_frame &frame)
 {
@@ -143,7 +147,6 @@ void positionTest(struct can_frame &frame)
 	frame.data[7] = t & 0xff;
 }
 
-
 void velTest(struct can_frame &frame)
 {
 	float f_p, f_v, f_kp, f_kd, f_t;
@@ -176,14 +179,12 @@ void velTest(struct can_frame &frame)
 	frame.data[7] = t & 0xff;
 }
 
-
 int main(int argc, char **argv)
 {
 
 	ros::init(argc, argv, "rosTest1");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
-	
 
 	int s;
 	struct sockaddr_can addr;
@@ -230,7 +231,7 @@ int main(int argc, char **argv)
 	std::thread canTx(txThread, s);
 	sleep(0.1);
 	std::thread canRx(rxThread, s);
-    ROS_INFO("***");
+	ROS_INFO("***");
 	while (1)
 	{
 		sleep(1);

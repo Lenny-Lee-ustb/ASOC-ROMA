@@ -40,10 +40,6 @@ src/tmotor_controller3.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_controller3 ${catkin_LIBRARIES})
 
-add_executable(tmotor_rp_test
-src/tmotor_rp_test.cpp
-src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_rp_test ${catkin_LIBRARIES})
 
 add_executable(tmotor_auto 
 src/tmotor_auto.cpp
@@ -54,3 +50,13 @@ add_executable(tmotor_joy
 src/tmotor_joy.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_joy ${catkin_LIBRARIES})
+
+add_executable(tmotor2_xboxtest1
+src/tmotor2_xboxtest1.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor2_xboxtest1 ${catkin_LIBRARIES})
+
+add_executable(tmotor2_singletest1
+src/tmotor2_singletest1.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor2_singletest1 ${catkin_LIBRARIES})

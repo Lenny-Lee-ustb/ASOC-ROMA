@@ -1,5 +1,5 @@
 #include "include/tmotor_common.hpp"
-//无手柄控制~
+//无手柄控制，纯上位机控制模式
 
 ros::Publisher Tmotor_Info;
 ros::Subscriber Control_sub;
@@ -10,6 +10,7 @@ double zero_length = 1.0;
 //电弹簧模式参数
 
 geometry_msgs::PolygonStamped tmotor_info_msgs;
+//电机位置信息，速度信息，力矩信息（带时间戳）
 
 Tmotor tmotor[4];
 
@@ -34,6 +35,7 @@ void flagTest(int id)
 		}
 	}
 
+	//电弹簧模式工作状态，接近零点启用flag3，远离零点启用flag4（常规电弹簧模式），flag3的目的是避免零点附近的电机震荡
 	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
 	{
 		tmotor[id].flag = 3;
@@ -44,6 +46,7 @@ void flagTest(int id)
 	}
 }
 
+//一个判断电机在电弹簧状态的辅助函数，接近零点为flag3，否则为flag4
 void flagTest_position(int id)
 {
 	if (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15)
@@ -56,31 +59,16 @@ void flagTest_position(int id)
 	}
 }
 
-// upper_controller_callback
+// 由上位机修正电机零点
 void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 {
 	for (int id = 0; id < 4; id++)
 	{
-		// tmotor[id].pos_des = ctrl_cmd.data[id*3];
-		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
-		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
-		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
-		//！！待加
-
-		// if (fabs(ctrl_cmd.polygon.points[id].x) >= 0.03)
-		// {
-		// 	tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
-		// 	tmotor[id].flag = 6;
-		// }
-		// else
-		// {
-		// 	flagTest_position(id);
-		// }
-
 		tmotor[id].pos_zero = ctrl_cmd.polygon.points[id].y;
 	}
 }
 
+//收报函数
 void rxThread(int s)
 {
 	int i;
@@ -105,6 +93,7 @@ void rxThread(int s)
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
 
+		//参考AK80-6电机手册，整型转浮点型
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
 		f_t = uint_to_float(t, T_MIN, T_MAX, 12);
@@ -124,6 +113,7 @@ void rxThread(int s)
 	}
 }
 
+//设置tmotor各个flag对应的电机参数
 void motorParaSet(int id)
 {
 	switch (tmotor[id].flag)
@@ -151,7 +141,7 @@ void motorParaSet(int id)
 		break;
 	case 4:
 
-		//F=kx+电机自身阻尼补偿+速度阻尼
+		//F=kx+电机自身阻尼补偿（0.6）+速度阻尼
 		if (tmotor[id].pos_now - tmotor[id].pos_zero > 0)
 		{
 			if (tmotor[id].vel_now > 0)
@@ -180,6 +170,7 @@ void motorParaSet(int id)
 		tmotor[id].kd = 0;
 		tmotor[id].kp = 0;
 		break;
+	//flag6为主动悬挂调平衡中的力矩+速度控制，速度由上位机指定
 	case 6:
 		tmotor[id].t_des = 2;
 		tmotor[id].vel_des = tmotor[id].vel_des;
@@ -208,10 +199,11 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_kp = tmotor[id].kp;
 	f_kd = tmotor[id].kd;
 
+	//限位保護
 	f_t = fmax(fminf(tmotor[id].t_des, T_MAX), T_MIN);
 	f_p = fmax(fminf(tmotor[id].pos_des, P_MAX), P_MIN);
 	f_v = fmax(fminf(tmotor[id].vel_des, V_MAX), V_MIN);
-
+	//参考AK80-6电机使用手册，将各参数的浮点型转化为整型后保存在data中
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
 	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
 	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
@@ -241,6 +233,7 @@ void printTmotorInfo(int id)
 			 Stop_flag);
 }
 
+//发报函数
 void txThread(int s)
 {
 	struct can_frame frame;
@@ -286,6 +279,7 @@ void txThread(int s)
 		}
 		tmotor_info_msgs.header.stamp = ros::Time::now();
 		Tmotor_Info.publish(tmotor_info_msgs);
+		//标记时间戳并发布msg
 	}
 }
 

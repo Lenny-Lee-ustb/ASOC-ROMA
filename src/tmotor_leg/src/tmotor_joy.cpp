@@ -1,5 +1,5 @@
 #include "include/tmotor_common.hpp"
-//无uppercontroller控制
+//仅手柄控制
 
 ros::Publisher Tmotor_Info;
 ros::Subscriber joy_sub;
@@ -15,6 +15,7 @@ double zero_length = 2.0;
 //电弹簧模式参数
 
 geometry_msgs::PolygonStamped tmotor_info_msgs;
+//电机位置信息，速度信息，力矩信息（带时间戳）
 
 Tmotor tmotor[4];
 
@@ -57,6 +58,7 @@ void flagTest(int id)
 		}
 	}
 
+	//电弹簧模式工作状态，接近零点启用flag3，远离零点启用flag4（常规电弹簧模式），flag3的目的是避免零点附近的电机震荡
 	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
 	{
 		tmotor[id].flag = 3;
@@ -71,7 +73,7 @@ void flagTest(int id)
 //joy按键回调函数
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
-	//只有四个电机都调零完毕才能手柄控制
+	//只有四个电机都调零完毕才能手柄控制，flag5为手柄控制模式
 	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
 	{
 		xbox_power = joy->buttons[7];
@@ -215,7 +217,6 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 	}
 }
 
-
 void rxThread(int s)
 {
 	int i;
@@ -241,6 +242,7 @@ void rxThread(int s)
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
 
+		//参考AK80-6电机手册，整型转浮点型
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
 		f_t = uint_to_float(t, T_MIN, T_MAX, 12);
@@ -259,7 +261,6 @@ void rxThread(int s)
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 	}
 }
-
 
 void motorParaSet(int id)
 {
@@ -342,10 +343,12 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_kp = tmotor[id].kp;
 	f_kd = tmotor[id].kd;
 
+	//限位保護
 	f_t = fmax(fminf(tmotor[id].t_des, T_MAX), T_MIN);
 	f_p = fmax(fminf(tmotor[id].pos_des, P_MAX), P_MIN);
 	f_v = fmax(fminf(tmotor[id].vel_des, V_MAX), V_MIN);
 
+	//参考AK80-6电机使用手册，将各参数的浮点型转化为整型后保存在data中
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
 	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
 	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
@@ -376,7 +379,6 @@ void printTmotorInfo(int id)
 			 xbox_mode_on,
 			 Stop_flag);
 }
-
 
 void txThread(int s)
 {
@@ -422,6 +424,7 @@ void txThread(int s)
 		}
 		tmotor_info_msgs.header.stamp = ros::Time::now();
 		Tmotor_Info.publish(tmotor_info_msgs);
+		//标记时间戳并发布msg
 	}
 }
 
@@ -437,7 +440,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname = "can2";
+	const char *ifname = "can0";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{

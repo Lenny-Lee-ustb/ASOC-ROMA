@@ -14,6 +14,7 @@ double D_S = 0.3;
 //电弹簧模式参数
 
 std_msgs::Float32MultiArray tmotor_pos_msgs;
+//电机位置信息
 
 Tmotor tmotor[4];
 
@@ -33,7 +34,6 @@ void flagTest2(int id)
 	}
 }
 
-
 //监测电机状态
 void flagTest(int id)
 {
@@ -43,7 +43,7 @@ void flagTest(int id)
 		if (abs(tmotor[id].t_now) > 8)
 		{
 			tmotor[id].pos_abszero = tmotor[id].pos_now;
-			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero-2.5;
+			tmotor[id].pos_zero = tmotor[id].pos_des = tmotor[id].pos_abszero - 2.5;
 			tmotor[id].flag = 1;
 		}
 	}
@@ -66,6 +66,7 @@ void flagTest(int id)
 		}
 	}
 
+	//电弹簧模式工作状态，接近零点启用flag3，远离零点启用flag4（常规电弹簧模式），flag3的目的是避免零点附近的电机震荡
 	if ((tmotor[id].flag == 4) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
 	{
 		tmotor[id].flag = 3;
@@ -76,7 +77,7 @@ void flagTest(int id)
 	}
 }
 
-// upper_controller_callback
+// upper_controller_callback 由上位机修正tmotor的零点位置
 void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
 {
 	for (int id = 0; id < 4; id++)
@@ -84,22 +85,19 @@ void ControlCallback(const std_msgs::Float32MultiArray &ctrl_cmd)
 		// tmotor[id].pos_des = ctrl_cmd.data[id*3];
 		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
 		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
-		tmotor[id].pos_zero   = ctrl_cmd.data[id];
+		tmotor[id].pos_zero = ctrl_cmd.data[id];
 	}
 }
-
 
 //joy按键回调函数
 void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
-	//只有四个电机都调零完毕才能手柄控制
-	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) 
-	 && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
+	//只有四个电机都调零完毕才能手柄控制，flag5为手柄控制模式
+	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
 	{
 		xbox_power = joy->buttons[7];
 		float move_up = -(joy->axes[2]) + 1;
 		float move_down = -(joy->axes[5]) + 1;
-
 
 		if (xbox_power > xbox_power_last)
 		{
@@ -214,8 +212,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 		}
 
 		if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
-		{	
-			
+		{
+
 			if (xbox_mode_on > 0)
 			{
 				for (int id = 0; id < 4; id++)
@@ -238,7 +236,7 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 	}
 }
 
-
+//收报函数
 void rxThread(int s)
 {
 	int i;
@@ -276,7 +274,7 @@ void rxThread(int s)
 	}
 }
 
-
+//设置tmotor各个flag对应的电机参数
 void motorParaSet(int id)
 {
 	switch (tmotor[id].flag)
@@ -311,7 +309,7 @@ void motorParaSet(int id)
 		break;
 	case 4:
 
-		//F=kx+电机自身阻尼补偿+速度阻尼
+		//F=kx+电机自身阻尼补偿（0.6）+速度阻尼
 		if (tmotor[id].pos_now - tmotor[id].pos_zero > 0)
 		{
 			if (tmotor[id].vel_now > 0)
@@ -352,6 +350,7 @@ void frameDataSet(struct can_frame &frame, int id)
 	float f_p, f_v, f_kp, f_kd, f_t;
 	uint16_t p, v, kp, kd, t;
 
+	//如果电机flag不为5，表示电机由上位机而非手柄控制，给定电机参数
 	if (tmotor[id].flag != 5)
 	{
 		flagTest(id);
@@ -364,6 +363,7 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_kp = tmotor[id].kp;
 	f_kd = tmotor[id].kd;
 
+	//参考AK80-6电机使用手册，将各参数的浮点型转化为整型后保存在data中
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
 	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
 	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
@@ -383,19 +383,17 @@ void frameDataSet(struct can_frame &frame, int id)
 void printTmotorInfo(int id)
 {
 	ROS_INFO("\n-----\nID[%d]\nflag[%d] \npos_now is %.2f\npos_des is %.2f \nt_now is %.2f \npos_zero is %.2f \nxbox_mode: %d\nstop_flag:%d\n",
-	 tmotor[id].id, 
-	 tmotor[id].flag,
-	 tmotor[id].pos_now, 
-	 tmotor[id].pos_des, 
-	 tmotor[id].t_now, 
-	 tmotor[id].pos_zero, 
-	 xbox_mode_on,
-	 Stop_flag
-	 );
+			 tmotor[id].id,
+			 tmotor[id].flag,
+			 tmotor[id].pos_now,
+			 tmotor[id].pos_des,
+			 tmotor[id].t_now,
+			 tmotor[id].pos_zero,
+			 xbox_mode_on,
+			 Stop_flag);
 }
 
-
-
+//发报函数
 void txThread(int s)
 {
 	struct can_frame frame;
@@ -417,9 +415,9 @@ void txThread(int s)
 				{
 					frame.data[j] = 0xff;
 				}
-				frame.data[7] = 0xfd;// exit T-motor control mode!
+				frame.data[7] = 0xfd; // exit T-motor control mode!
 			}
-			
+
 			nbytes = write(s, &frame, sizeof(struct can_frame));
 			if (nbytes == -1)
 			{
@@ -439,7 +437,6 @@ void txThread(int s)
 	}
 }
 
-
 int main(int argc, char **argv)
 {
 
@@ -451,7 +448,7 @@ int main(int argc, char **argv)
 	int s;
 	struct sockaddr_can addr;
 	struct ifreq ifr;
-	const char *ifname ="can2";
+	const char *ifname = "can2";
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
@@ -498,7 +495,7 @@ int main(int argc, char **argv)
 	while (ros::ok())
 	{
 		ros::spinOnce();
-		//必须开，否则无法启用回调函数
+		//此函数必须开，否则无法启用回调函数
 		loop_rate.sleep();
 	}
 
