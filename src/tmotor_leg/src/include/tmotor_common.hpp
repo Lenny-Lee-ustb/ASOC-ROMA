@@ -63,7 +63,8 @@ int float_to_uint(float x, float x_min, float x_max, int bits)
 {
 	float span = x_max - x_min;
 	float offset = x_min;
-	return (int)((x - offset) * ((float)((1 << bits) - 1)) / span);
+	x = fmax(fminf(x, x_max), x_min);
+	return (int)((x - offset) * ((float)((1 << bits) - 1) / span));
 }
 
 
@@ -88,14 +89,23 @@ void canCheck(can_frame &frame, int s, int id)
 	frame.data[7] = 0xfc;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
+	
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	
 	frame.data[7] = 0xfe;
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
-	// printf("Wrote %d bytes\n", nbytes);
-	sleep(0.01);
+	
+	ROS_INFO("Wrote %d bytes", nbytes);
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	
 	if (nbytes == -1)
 	{
-		printf("send error\n");
+		ROS_INFO("Send error in initial process");
+	}
+	else
+	{
+		ROS_INFO("D[%d] pass check!", id);
 	}
 }
 
@@ -107,6 +117,6 @@ void signalCallback(int signum)
 	Stop_flag = 1;
 	ros::Duration(1.0).sleep();
 	endt = clock();
-	ROS_INFO("shutdown!!!!!!!");
+	ROS_INFO("WARN：got signal [2], shutdown!");
 	exit(1);
 }

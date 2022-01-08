@@ -45,12 +45,12 @@ src/tmotor_rp_test.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_rp_test ${catkin_LIBRARIES})
 
-add_executable(tmotor_controller4 
-src/tmotor_controller4.cpp
+add_executable(tmotor_auto 
+src/tmotor_auto.cpp
 src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_controller4 ${catkin_LIBRARIES})
+target_link_libraries(tmotor_auto ${catkin_LIBRARIES})
 
-add_executable(tmotor_controller5 
-src/tmotor_controller5.cpp
+add_executable(tmotor_joy
+src/tmotor_joy.cpp
 src/include/tmotor_common.hpp)
-target_link_libraries(tmotor_controller5 ${catkin_LIBRARIES})
+target_link_libraries(tmotor_joy ${catkin_LIBRARIES})

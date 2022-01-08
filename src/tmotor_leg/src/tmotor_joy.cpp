@@ -1,17 +1,40 @@
 #include "include/tmotor_common.hpp"
-//无手柄控制~
+//无uppercontroller控制
 
 ros::Publisher Tmotor_Info;
-ros::Subscriber Control_sub;
+ros::Subscriber joy_sub;
 
-double K_S = 7.0;
+//判断是否开启手柄模式 xbox_mode_on>0: 开启；<0关闭
+int xbox_mode_on = -1;
+int xbox_power = 0;
+int xbox_power_last = 0;
+
+double K_S = 9.0;
 double D_S = 0.3;
-double zero_length = 1.0;
+double zero_length = 2.0;
 //电弹簧模式参数
 
 geometry_msgs::PolygonStamped tmotor_info_msgs;
 
 Tmotor tmotor[4];
+
+
+//监测调零后电机状态
+void flagTest2(int id)
+{
+	if (tmotor[id].flag == 5)
+	{
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
+		{
+			tmotor[id].flag = 3;
+		}
+		else
+		{
+			tmotor[id].flag = 4;
+		}
+	}
+}
+
 
 //监测电机状态
 void flagTest(int id)
@@ -27,7 +50,7 @@ void flagTest(int id)
 	//慢速调相对零点；十分接近时进入flag3；调零完毕，可以进入手柄控制模式
 	if (tmotor[id].flag == 2)
 	{
-		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.1)
+		if (abs(tmotor[id].pos_zero - tmotor[id].pos_now) < 0.15)
 		{
 			tmotor[id].zeroPointSet = 1;
 			tmotor[id].flag = 3;
@@ -44,48 +67,161 @@ void flagTest(int id)
 	}
 }
 
-void flagTest_position(int id)
+
+//joy按键回调函数
+void buttonCallback(const sensor_msgs::Joy::ConstPtr &joy)
 {
-	if (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15)
+	//只有四个电机都调零完毕才能手柄控制
+	if ((tmotor[0].zeroPointSet == 1) && (tmotor[1].zeroPointSet == 1) && (tmotor[2].zeroPointSet == 1) && (tmotor[3].zeroPointSet == 1))
 	{
-		tmotor[id].flag = 3;
-	}
-	else
-	{
-		tmotor[id].flag = 4;
+		xbox_power = joy->buttons[7];
+		float move_up = -(joy->axes[2]) + 1;
+		float move_down = -(joy->axes[5]) + 1;
+
+		if (xbox_power > xbox_power_last)
+		{
+			xbox_mode_on = -xbox_mode_on;
+		}
+		xbox_power_last = xbox_power;
+
+		if (move_up != 0)
+		{
+			for (int id = 0; id < 4; id++)
+			{
+				tmotor[id].flag = 5;
+				tmotor[id].vel_des = 4 * move_up;
+				tmotor[id].pos_des = 0;
+				tmotor[id].t_des = 0;
+				tmotor[id].kd = 2;
+				tmotor[id].kp = 0;
+			}
+		}
+
+		if (move_down != 0)
+		{
+			for (int id = 0; id < 4; id++)
+			{
+				tmotor[id].flag = 5;
+				tmotor[id].vel_des = -(4 * move_down);
+				tmotor[id].pos_des = 0;
+				tmotor[id].t_des = 0;
+				tmotor[id].kd = 2;
+				tmotor[id].kp = 0;
+			}
+		}
+
+		if (joy->buttons[3] == 1)
+		{
+			tmotor[0].flag = 5;
+			tmotor[0].vel_des = 6;
+			tmotor[0].pos_des = 0;
+			tmotor[0].t_des = 0;
+			tmotor[0].kd = 5;
+			tmotor[0].kp = 0;
+		}
+
+		if (joy->buttons[2] == 1)
+		{
+			tmotor[1].flag = 5;
+			tmotor[1].vel_des = 6;
+			tmotor[1].pos_des = 0;
+			tmotor[1].t_des = 0;
+			tmotor[1].kd = 5;
+			tmotor[1].kp = 0;
+		}
+
+		if (joy->buttons[1] == 1)
+		{
+			tmotor[3].flag = 5;
+			tmotor[3].vel_des = 6;
+			tmotor[3].pos_des = 0;
+			tmotor[3].t_des = 0;
+			tmotor[3].kd = 5;
+			tmotor[3].kp = 0;
+		}
+
+		if (joy->buttons[0] == 1)
+		{
+			tmotor[2].flag = 5;
+			tmotor[2].vel_des = 6;
+			tmotor[2].pos_des = 0;
+			tmotor[2].t_des = 0;
+			tmotor[2].kd = 5;
+			tmotor[2].kp = 0;
+		}
+
+		if (joy->axes[7] == 1)
+		{
+			tmotor[0].flag = 5;
+			tmotor[0].vel_des = -4;
+			tmotor[0].pos_des = 0;
+			tmotor[0].t_des = 0;
+			tmotor[0].kd = 5;
+			tmotor[0].kp = 0;
+		}
+
+		if (joy->axes[6] == 1)
+		{
+			tmotor[1].flag = 5;
+			tmotor[1].vel_des = -4;
+			tmotor[1].pos_des = 0;
+			tmotor[1].t_des = 0;
+			tmotor[1].kd = 5;
+			tmotor[1].kp = 0;
+		}
+
+		if (joy->axes[7] == -1)
+		{
+			tmotor[2].flag = 5;
+			tmotor[2].vel_des = -4;
+			tmotor[2].pos_des = 0;
+			tmotor[2].t_des = 0;
+			tmotor[2].kd = 5;
+			tmotor[2].kp = 0;
+		}
+
+		if (joy->axes[6] == -1)
+		{
+			tmotor[3].flag = 5;
+			tmotor[3].vel_des = -4;
+			tmotor[3].pos_des = 0;
+			tmotor[3].t_des = 0;
+			tmotor[3].kd = 5;
+			tmotor[3].kp = 0;
+		}
+
+		if ((move_up == 0) && (move_down == 0) && (joy->buttons[0] == 0) && (joy->buttons[1] == 0) && (joy->buttons[2] == 0) && (joy->buttons[3] == 0) && (joy->axes[6] == 0) && (joy->axes[7] == 0))
+		{
+
+			if (xbox_mode_on > 0)
+			{
+				for (int id = 0; id < 4; id++)
+				{
+					tmotor[id].pos_des = tmotor[id].pos_now;
+					tmotor[id].vel_des = 0;
+					tmotor[id].t_des = 0;
+					tmotor[id].kp = 20;
+					tmotor[id].kd = 0;
+				}
+			}
+			else
+			{
+				for (int id = 0; id < 4; id++)
+				{
+					flagTest2(id);
+				}
+			}
+		}
 	}
 }
 
-// upper_controller_callback
-void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
-{
-	for (int id = 0; id < 4; id++)
-	{
-		// tmotor[id].pos_des = ctrl_cmd.data[id*3];
-		// tmotor[id].vel_des = ctrl_cmd.data[id*3+1];
-		// tmotor[id].t_des   = ctrl_cmd.data[id*3+2];
-		//tmotor[id].pos_zero   = ctrl_cmd.polygon.[id];
-		//！！待加
-
-		// if (fabs(ctrl_cmd.polygon.points[id].x) >= 0.03)
-		// {
-		// 	tmotor[id].vel_des = ctrl_cmd.polygon.points[id].x;
-		// 	tmotor[id].flag = 6;
-		// }
-		// else
-		// {
-		// 	flagTest_position(id);
-		// }
-
-		tmotor[id].pos_zero = ctrl_cmd.polygon.points[id].y;
-	}
-}
 
 void rxThread(int s)
 {
 	int i;
 	struct can_frame frame;
 	int nbytes;
+	sleep(0.4);
 	for (i = 0;; i++)
 	{
 		ros::spinOnce();
@@ -116,13 +252,14 @@ void rxThread(int s)
 		if (rxCounter < 4)
 		{
 			tmotor[rxCounter].pos_abszero = tmotor[rxCounter].pos_now;
-			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 2.0;
+			tmotor[rxCounter].pos_zero = tmotor[rxCounter].pos_abszero + 0.5;
 		}
 
 		rxCounter++;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 	}
 }
+
 
 void motorParaSet(int id)
 {
@@ -180,18 +317,12 @@ void motorParaSet(int id)
 		tmotor[id].kd = 0;
 		tmotor[id].kp = 0;
 		break;
-	case 6:
-		tmotor[id].t_des = 2;
-		tmotor[id].vel_des = tmotor[id].vel_des;
-		tmotor[id].pos_des = 0;
-		tmotor[id].kp = 0;
-		tmotor[id].kd = 3;
-		break;
 
 	default:
 		break;
 	}
 }
+
 
 //init CAN_Frame member data
 void frameDataSet(struct can_frame &frame, int id)
@@ -199,8 +330,11 @@ void frameDataSet(struct can_frame &frame, int id)
 	float f_p, f_v, f_kp, f_kd, f_t;
 	uint16_t p, v, kp, kd, t;
 
-	flagTest(id);
-	motorParaSet(id);
+	if (tmotor[id].flag != 5)
+	{
+		flagTest(id);
+		motorParaSet(id);
+	}
 
 	f_p = tmotor[id].pos_des;
 	f_v = tmotor[id].vel_des;
@@ -217,6 +351,7 @@ void frameDataSet(struct can_frame &frame, int id)
 	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
 	kd = float_to_uint(f_kd, KD_MIN, KD_MAX, 12);
 	t = float_to_uint(f_t, T_MIN, T_MAX, 12);
+
 	frame.data[0] = p >> 8;
 	frame.data[1] = p & 0xFF;
 	frame.data[2] = v >> 4;
@@ -227,19 +362,21 @@ void frameDataSet(struct can_frame &frame, int id)
 	frame.data[7] = t & 0xff;
 }
 
+
 //打印信息
 void printTmotorInfo(int id)
 {
-	ROS_INFO("\n-----\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \nt_des is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nstop_flag:%d\n",
+	ROS_INFO("\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nxbox_mode: %d\nstop_flag:%d\n------------\n",
 			 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
 			 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now,
 			 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
 			 tmotor[0].vel_des, tmotor[1].vel_des, tmotor[2].vel_des, tmotor[3].vel_des,
 			 tmotor[0].t_now, tmotor[1].t_now, tmotor[2].t_now, tmotor[3].t_now,
-			 tmotor[0].t_des, tmotor[1].t_des, tmotor[2].t_des, tmotor[3].t_des,
 			 tmotor[0].pos_zero, tmotor[1].pos_zero, tmotor[2].pos_zero, tmotor[3].pos_zero,
+			 xbox_mode_on,
 			 Stop_flag);
 }
+
 
 void txThread(int s)
 {
@@ -249,6 +386,7 @@ void txThread(int s)
 
 	int nbytes;
 
+	sleep(0.6);
 	for (int i = 0;; i++)
 	{
 		tmotor_info_msgs.polygon.points.resize(4);
@@ -269,11 +407,10 @@ void txThread(int s)
 			if (nbytes == -1)
 			{
 				printf("send error\n");
-				printf("please check battary!!\n");
+				close(s);
 				exit(1);
 			}
 			txCounter++;
-			//printf("tx is %d;",txCounter);
 			printTmotorInfo(id);
 
 			tmotor_info_msgs.polygon.points[id].x = tmotor[id].pos_now;
@@ -287,6 +424,7 @@ void txThread(int s)
 		Tmotor_Info.publish(tmotor_info_msgs);
 	}
 }
+
 
 int main(int argc, char **argv)
 {
@@ -333,12 +471,11 @@ int main(int argc, char **argv)
 	}
 	//检查can通讯连接
 
-	Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
-	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 2);
+	joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 10, buttonCallback);
+	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 100);
 	//发布及订阅节点
 
 	std::thread canTx(txThread, s);
-	sleep(0.1);
 	std::thread canRx(rxThread, s);
 	//开启收报/发报线程
 
