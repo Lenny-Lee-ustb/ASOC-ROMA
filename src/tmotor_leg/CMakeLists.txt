@@ -71,3 +71,8 @@ src/tmotor_controller_xbox.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_controller_xbox ${catkin_LIBRARIES})
 
+add_executable(tmotor2_uppercontroller1
+src/tmotor2_uppercontroller1.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor2_uppercontroller1 ${catkin_LIBRARIES})
+

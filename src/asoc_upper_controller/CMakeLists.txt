@@ -62,3 +62,10 @@ src/include/upper_controller_v2.hpp)
 target_link_libraries(upper_controller_turnstraight
   ${catkin_LIBRARIES}
 )
+
+add_executable(upper_controller_anti2 
+src/upper_controller_anti2.cpp
+src/include/upper_controller_v3.hpp)
+target_link_libraries(upper_controller_anti2
+  ${catkin_LIBRARIES}
+)

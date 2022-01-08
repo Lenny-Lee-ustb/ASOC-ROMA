@@ -55,6 +55,8 @@ UpperController::UpperController()
   // Publishers and Subscribers
   odom_sub = n_.subscribe("/odometry/filtered", 1, &UpperController::odomCB, this);
 
+  imu_sub = n_.subscribe("/imu_data_body", 1, &UpperController::imuCB, this);
+
   path_sub = n_.subscribe("/fix_path", 1,
                           &UpperController::pathCB, this);
   goal_sub =
@@ -136,6 +138,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
 
   geometry_msgs::Pose carPose = odom.pose.pose;
   geometry_msgs::Twist carVel = odom.twist.twist;
+  sensor_msgs::Imu imuMsg = imu_msg;
   geometry_msgs::Pose LateralPose = getTrackPose(carPose);
   geometry_msgs::Pose ForwardPose = getTrackForwardPose(carPose, forward_dist);
   geometry_msgs::Pose ForwardPose2 = getTrackForwardPose(carPose, forward_dist2);
@@ -155,12 +158,12 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
 
   if (goal_received)
   {
-    double thetar = getYawFromPose(carPose);       // ego yaw
+    double thetar = getYawFromPose(imuMsg);        // ego yaw
     double theta = getYawFromPose(ForwardPose);    // yaw on path
     double theta_2 = getYawFromPose(ForwardPose2); // yaw on path
     double theta_3 = getYawFromPose(ForwardPose3);
-    double roll = getRollFromPose(carPose);   // ego roll
-    double pitch = getPitchFromPose(carPose); // ego pitch
+    double roll = getRollFromPose(imuMsg);   // ego roll
+    double pitch = getPitchFromPose(imuMsg); // ego pitch
     double rollForward = getRollFromPose(ForwardPose);
     double pitchForward = getPitchFromPose(ForwardPose);
 
@@ -203,8 +206,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
         susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
         susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
 
-        last_pitch = pitch;1
-        last_roll = roll;
+        last_pitch = pitch;
+        1 last_roll = roll;
 
         // limit max values
         for (int i = 0; i < 4; i++)

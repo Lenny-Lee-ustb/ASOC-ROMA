@@ -190,7 +190,7 @@ if __name__=='__main__':
         rospy.init_node(node_name, log_level=rospy.DEBUG)
         
         ser = serial.Serial(port, baud, timeout=0.5)
-        pub = rospy.Publisher('/imu_data_leg_'+ID, Imu, queue_size=1, latch=True)
+        pub = rospy.Publisher('/imu_data_body', Imu, queue_size=1, latch=True)
         
         print(port,ID)
         print(str(ser.is_open)+'_'+ID)

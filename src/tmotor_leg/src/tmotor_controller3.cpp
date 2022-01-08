@@ -264,7 +264,7 @@ void rxThread(int s)
 		vel = ((uint16_t)frame.data[3] << 4) | (frame.data[4] >> 4);
 		t = ((uint16_t)(frame.data[4] & 0xf) << 8) | frame.data[5];
 
-        //参考AK80-6电机手册，整型转浮点型
+		//参考AK80-6电机手册，整型转浮点型
 		f_pos = uint_to_float(pos, P_MIN, P_MAX, 16);
 		f_vel = uint_to_float(vel, V_MIN, V_MAX, 12);
 		f_t = uint_to_float(t, T_MIN, T_MAX, 12);
