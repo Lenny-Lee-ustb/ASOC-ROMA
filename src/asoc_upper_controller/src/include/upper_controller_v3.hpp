@@ -76,7 +76,6 @@ private:
   void imuCB(const sensor_msgs::Imu &sensorMsg);
   void goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg);
   void goalReachingCB(const ros::TimerEvent &);
-
   void controlLoopCB(const ros::TimerEvent &);
 };
 void UpperController::initMarker()

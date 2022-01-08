@@ -1,4 +1,4 @@
-#include "include/upper_controller.hpp"
+#include "include/upper_controller_v3.hpp"
 
 double last_d_theta = 0;
 double last_lateral_dist = 0;
@@ -207,7 +207,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
         susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
 
         last_pitch = pitch;
-        1 last_roll = roll;
+        last_roll = roll;
 
         // limit max values
         for (int i = 0; i < 4; i++)

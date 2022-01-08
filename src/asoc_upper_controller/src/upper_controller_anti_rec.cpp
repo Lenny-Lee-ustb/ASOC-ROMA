@@ -203,7 +203,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
         susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
         susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
 
-        last_pitch = pitch;1
+        last_pitch = pitch;
         last_roll = roll;
 
         // limit max values
