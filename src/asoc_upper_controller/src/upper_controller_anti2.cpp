@@ -30,6 +30,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
 
   double roll = getRollFromPose(imuMsg);   // ego roll
   double pitch = getPitchFromPose(imuMsg); // ego pitch
+  double yaw = getYawFromPose(imuMsg);
 
   // body control
   susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch);
@@ -47,7 +48,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   }
 
   ROS_INFO("----------");
-  ROS_INFO("Roll:%.2f, Pitch:%.2ff", roll, pitch);
+  ROS_INFO("Roll:%.2f, Pitch:%.2f,Yaw: %.2f", roll, pitch,yaw);
 
   susp_cmd.header.stamp = ros::Time::now();
   pub_suspension.publish(susp_cmd);
@@ -61,11 +62,6 @@ int main(int argc, char **argv)
   // Initiate ROS
   ros::init(argc, argv, "UpperController");
   UpperController controller;
-  // reconfig
-  dynamic_reconfigure::Server<asoc_upper_controller::controller_Config> server;
-  dynamic_reconfigure::Server<asoc_upper_controller::controller_Config>::CallbackType f;
-  f = boost::bind(&callback, _1, _2);
-  server.setCallback(f);
   ros::spin();
   return 0;
 }

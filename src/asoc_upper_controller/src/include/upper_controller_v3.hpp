@@ -33,6 +33,7 @@ public:
   double getPitchFromPose(const sensor_msgs::Imu &sensorMsg);
   double getYawFromPose(const sensor_msgs::Imu &sensorMsg);
   void imuCB(const sensor_msgs::Imu &sensorMsg);
+  void controlLoopCB(const ros::TimerEvent &);
 
 private:
   ros::NodeHandle n_;
@@ -46,7 +47,7 @@ private:
 
 void UpperController::imuCB(const sensor_msgs::Imu &sensorMsg)
 {
-  imu_msg = *sensorMsg;
+  imu_msg = sensorMsg;
 }
 
 double UpperController::getRollFromPose(const sensor_msgs::Imu &sensorMsg)

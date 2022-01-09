@@ -33,7 +33,7 @@ void ControlCallback(const geometry_msgs::PolygonStamped &ctrl_cmd)
 {
 	for (int id = 0; id < 4; id++)
 	{
-		tmotor[id].pos_zero = ctrl_cmd.polygon.points[id].y;
+		tmotor[id].pos_zero = ctrl_cmd.polygon.points[id].x;
 	}
 }
 
