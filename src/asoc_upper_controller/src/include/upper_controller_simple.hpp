@@ -42,13 +42,13 @@ private:
 
   geometry_msgs::PolygonStamped susp_cmd;
   std_msgs::Float32MultiArray imu_msg;
-  double roll,pitch,yaw;
+  double roll, pitch, yaw;
 };
 
 void UpperController::imuCB(const std_msgs::Float32MultiArray &sensorMsg)
 {
   // imu_msg = sensorMsg;
-  roll=sensorMsg.data[0];
-  pitch=sensorMsg.data[1];
-  yaw=sensorMsg.data[2];
+  roll = sensorMsg.data[0];
+  pitch = sensorMsg.data[1];
+  yaw = sensorMsg.data[2];
 }
