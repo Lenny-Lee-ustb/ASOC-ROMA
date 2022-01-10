@@ -108,6 +108,7 @@ UpperController::UpperController()
   ROS_INFO("[param] velocity_factor: %.2f", velocity_factor);
   ROS_INFO("[param] P_pit, D_pit: %.2f, %.2f", P_pit, D_pit);
   ROS_INFO("[param] P_rol, D_pit: %.2f, %.2f", P_rol, D_rol);
+  ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f", roll, pitch, yaw);
 
   // Visualization Marker Settings
   initMarker();
@@ -226,7 +227,6 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
         }
 
         ROS_INFO("----------");
-        ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f", roll, pitch, yaw);
         ROS_INFO("d_yaw:%.2f, slow_factor:%.2f", d_theta, slow_factor);
         // ROS_INFO("pos:(%.2f,%.2f)",ForwardPose.position.x,ForwardPose.position.y);
         ROS_INFO("lateral_dist:%.2f, long_vel:%.2f", lateral_dist, carVel.linear.x);
