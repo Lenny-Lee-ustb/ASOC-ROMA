@@ -9,13 +9,13 @@ UpperController::UpperController()
   ros::NodeHandle pn("~");
 
   // Controller parameter
-  pn.param("P_pit", P_pit, 150.0);
-  pn.param("D_pit", D_pit, 1.0);
-  pn.param("P_rol", P_rol, 150.0);
-  pn.param("D_rol", D_rol, 1.0);
+  pn.param("P_pit", P_pit, 0.02);
+  pn.param("D_pit", D_pit, 0.02);
+  pn.param("P_rol", P_rol, 0.02);
+  pn.param("D_rol", D_rol, 0.02);
 
   // Publishers and Subscribers
-  imu_sub = n_.subscribe("/imu_data_rpy0", 1, &UpperController::imuCB, this);
+  imu_sub = n_.subscribe("/imu_rpy0", 1, &UpperController::imuCB, this);
   pub_suspension = n_.advertise<geometry_msgs::PolygonStamped>("/suspension_cmd", 1);
 
   // Timer
@@ -29,14 +29,14 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   std_msgs::Float32MultiArray imuMsg = imu_msg;
   susp_cmd.polygon.points.resize(4);
 
-  double roll = imuMsg.data[0];  // ego roll
-  double pitch = imuMsg.data[1]; // ego pitch
-  double yaw = imuMsg.data[2];
+  // double roll = imuMsg.data[0];  // ego roll
+  // double pitch = imuMsg.data[1]; // ego pitch
+  // double yaw = imuMsg.data[2];
 
   // body control
-  susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch);
-  susp_cmd.polygon.points[1].x = -(P_rol * roll + D_rol * (roll - last_roll));
-  susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
+  susp_cmd.polygon.points[2].x = P_pit * pitch + D_pit * (pitch - last_pitch);
+  susp_cmd.polygon.points[0].x = -(P_rol * roll + D_rol * (roll - last_roll));
+  susp_cmd.polygon.points[1].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
   susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
 
   last_pitch = pitch;

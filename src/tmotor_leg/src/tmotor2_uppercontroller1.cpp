@@ -279,6 +279,7 @@ int main(int argc, char **argv)
 	}
 	//检查can通讯连接
 
+    Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
 	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 100);
 	//发布及订阅节点
 

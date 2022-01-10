@@ -18,7 +18,6 @@
 #include <geometry_msgs/PolygonStamped.h>
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point32.h>
-#include "sensor_msgs/Imu.h"
 
 #define PI 3.14159265358979
 
@@ -43,9 +42,13 @@ private:
 
   geometry_msgs::PolygonStamped susp_cmd;
   std_msgs::Float32MultiArray imu_msg;
+  double roll,pitch,yaw;
 };
 
 void UpperController::imuCB(const std_msgs::Float32MultiArray &sensorMsg)
 {
-  imu_msg = *sensorMsg;
+  // imu_msg = sensorMsg;
+  roll=sensorMsg.data[0];
+  pitch=sensorMsg.data[1];
+  yaw=sensorMsg.data[2];
 }
