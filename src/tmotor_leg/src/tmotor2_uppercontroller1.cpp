@@ -150,6 +150,16 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_kp = tmotor[id].kp;
 	f_kd = tmotor[id].kd;
 
+	//粗暴地限流
+	if (f_t > 10.0)
+	{
+		f_t = 10.0;
+	}
+	else if (f_t < -10.0)
+	{
+		f_t = -10.0;
+	}
+
 	//限位保護
 	f_t = fmax(fminf(tmotor[id].t_des, T_MAX), T_MIN);
 	f_p = fmax(fminf(tmotor[id].pos_des, P_MAX), P_MIN);
@@ -279,7 +289,7 @@ int main(int argc, char **argv)
 	}
 	//检查can通讯连接
 
-    Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
+	Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
 	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 100);
 	//发布及订阅节点
 
