@@ -1,4 +1,4 @@
-#include "include/upper_controller_v4.hpp"
+#include "include/upper_controller_outdoor.hpp"
 //outdoor test using RTK
 
 double last_d_theta = 0;
@@ -57,7 +57,7 @@ UpperController::UpperController()
   // Publishers and Subscribers
   imu_sub = n_.subscribe("/imu_rpy0", 1, &UpperController::imuCB, this);
 
-  odom_sub = n_.subscribe("/GPS_odom", 1, &UpperController::odomCB, this);
+  odom_sub = n_.subscribe("/camera/odometry", 1, &UpperController::odomCB, this);
 
   path_sub = n_.subscribe("/fix_path", 1, &UpperController::pathCB, this);
 

@@ -13,7 +13,7 @@
 
     <!--Load fixed path !!  -->
     <node pkg="path_load" type="path_load.py" name="path_loader" >
-        <param name="file_path" value="$(find path_load)/src/data_small.csv" />
+        <param name="file_path" value="$(find path_load)/src/data_square.csv" />
         <param name="pub_hz" value="3" />
     </node>
 
@@ -22,8 +22,8 @@
         <rosparam command="load" file="$(find localization)/params/ekf_params_encoder.yaml" />
     </node> -->
 
-    <remap from="/camera/odom/sample" to="/camera/odometry"/>
-    <include file="$(find realsense2_camera)/launch/rs_t265.launch"/>
+    <!-- <remap from="/camera/odom/sample" to="/camera/odometry"/>
+    <include file="$(find realsense2_camera)/launch/rs_t265.launch"/> -->
 
     <!-- rviz -->
     <!-- <node pkg="rviz" type="rviz" name="display" args="-d $(find localization)/rviz/navigation.rviz" required="true"/> -->
@@ -31,9 +31,9 @@
     <!-- broadcast map->odom tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
         name="odom_static_transform_publisher" args="0 0 0 0 0 0 map odom " />
-    <!-- Broadcast RTK tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps_link " />
+    <!-- Broadcast RTK tf -->
     <!-- Broadcast imu tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="imu_static_transform_publisher" args="0 0 0 0 0 0 base_footprint imu_link " />
