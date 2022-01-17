@@ -2,8 +2,8 @@
 <launch>
     <!-- Spawn RTK read module !! -->
     <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen">
-       <!-- <param name = "port" type="string" value = "/dev/ttyXRUSB0"/>  -->
-       <param name = "port" type="string" value = "/dev/ttyUSB0"/> 
+       <!-- <param name = "port" type="string" value = "/dev/ttyUSB0"/>  -->
+       <param name = "port" type="string" value = "/dev/RTK"/> 
        <param name = "baud" type="int" value = "115200"/> -->
        <!-- <param name = "frame_id" type="string" value = "RTK"/> -->
     </node>
@@ -17,13 +17,12 @@
         <param name="pub_hz" value="3" />
     </node>
 
-    <!-- spawn EKF !! -->
-    <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
-        <rosparam command="load" file="$(find localization)/params/ekf_params_encoder.yaml" />
-    </node> -->
-
-    <!-- <remap from="/camera/odom/sample" to="/camera/odometry"/>
-    <include file="$(find realsense2_camera)/launch/rs_t265.launch"/> -->
+    <param name = "ID" type="string" value ="0"/>    
+    <arg name="node_name" default="imu_0"></arg>
+    <node pkg="wt931" type="IMU_pub.py" name="$(arg node_name)" clear_params="true" output="screen" >
+        <param name = "serialport_name" type="string" value = "/dev/IMU"/> 
+        <param name = "baudrate" type="int" value = "921600"/>
+    </node>
 
     <!-- rviz -->
     <!-- <node pkg="rviz" type="rviz" name="display" args="-d $(find localization)/rviz/navigation.rviz" required="true"/> -->
@@ -33,7 +32,6 @@
         name="odom_static_transform_publisher" args="0 0 0 0 0 0 map odom " />
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps_link " />
-    <!-- Broadcast RTK tf -->
     <!-- Broadcast imu tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="imu_static_transform_publisher" args="0 0 0 0 0 0 base_footprint imu_link " />

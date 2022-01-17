@@ -616,11 +616,6 @@ int main(int argc, char** argv) {
 	leg_angle_Pub_high = n.advertise<geometry_msgs::PolygonStamped>("leg_angle_high",100);
 	RollPub_high = n.advertise<geometry_msgs::PolygonStamped>("Roll_high",100);
 
-	//leg_angle_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_low",100);
-    //leg_angle_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_high",100);
-	// leg_angle_sum_Pub_low = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_low",100);
-	// leg_angle_sum_Pub_high = n.advertise<std_msgs::Float32MultiArray>("leg_angle_sum_high",100);
-
 	int s_low;
 	int s_high;
 	struct sockaddr_can addr_low;
