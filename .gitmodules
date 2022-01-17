@@ -1,0 +1,3 @@
+[submodule "src/wt931"]
+	path = src/wt931
+	url = https://github.com/Lenny-Lee-ustb/Witsensor-IMU-ros-pkg
