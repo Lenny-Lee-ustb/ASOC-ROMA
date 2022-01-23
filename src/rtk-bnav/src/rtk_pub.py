@@ -11,13 +11,14 @@
 # 0.0400,0.0476,1.1325, #var-roll pitch yaw
 # 00000000,0*93c5919d"
 
-from math import pi
+from math import pi, cos, sin
+from turtle import position
 import rospy
 import utm
 import tf2_ros
 from nmea_msgs.msg import Sentence
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Pose, Twist, Quaternion, TransformStamped
+from geometry_msgs.msg import Pose, Twist, Quaternion, TransformStamped, Point
 from tf.transformations import quaternion_from_euler
 
 _angle2rad = pi/180.0
@@ -31,29 +32,32 @@ class rtk_publisher:
         self.initPitch = 0
         self.initYaw = 0
         self.tf_broadcast = tf_broadcast
+        self.datahead = None
         
     def callback(self,data):
-        global tic 
-        datahead = data.header
+        self.datahead = data.header
         datastr = data.sentence
         str = datastr.split(',')
+        pose_rtk = Pose()
 
         if str[0] == '#INSPVAXA':
-            pose_rtk = Pose()
-            # add position
-            pos_lat = float(str[11])
-            pos_lon = float(str[12])
-            pos = utm.from_latlon(pos_lat, pos_lon)
-            pose_rtk.position.x = pos[0] - self.initPose.position.x # North
-            pose_rtk.position.y = pos[1] - self.initPose.position.y # East
-            pose_rtk.position.z = float(str[13]) - self.initPose.position.z # Height
-            
             # add orientation
-            roll = float(str[18]) * _angle2rad - self.initRoll
-            pitch = float(str[19]) * _angle2rad - self.initPitch
+            roll = float(str[18]) * _angle2rad
+            pitch = float(str[19]) * _angle2rad
             yaw = float(str[20]) * _angle2rad -self.initYaw
             quat = quaternion_from_euler(roll, pitch, yaw, axes='rxyz') # r p y
             pose_rtk.orientation = Quaternion(quat[0], quat[1], quat[2], quat[3]) 
+
+            # add position
+            pos_lat = float(str[11])
+            pos_lon = float(str[12])
+            # transpose to X,Y
+            pos = utm.from_latlon(pos_lat, pos_lon)
+            Y = pos[0] - self.initPose.position.y # North Y
+            X = pos[1] - self.initPose.position.x # East X
+            pose_rtk.position = self.rotatePt(X,Y,self.initYaw)
+            # pose_rtk.position.z = float(str[13]) # Height
+            pose_rtk.position.z = 0
             
             Var_Lat = float(str[21])
             Var_Long = float(str[22])
@@ -89,22 +93,32 @@ class rtk_publisher:
                             0, 0, 0, 0, 999, 0, 
                             0, 0, 0, 0, 0, 999] # 6x6 vx(not sure), vy(not sure), vz, v_roll, v_pitch, v_yaw
 
-            if str[10] == 'INS_RTKFIXED' and self.is_Init:
+            if str[10] == ('INS_RTKFIXED' or 'INS_PSRDIFF') and self.is_Init:
                 # pub msgs !
-                self.pub_data(pose_rtk, pose_cov_rtk,twist_rtk, twist_cov_rtk, datahead)
+                self.pub_data(pose_rtk, pose_cov_rtk,twist_rtk, twist_cov_rtk)
+                self.br_tf(pose_rtk, self.datahead.stamp, 'odom', 'base_footprint')
+                rospy.loginfo("%s %s" %(str[9], str[10]))
             elif str[10] == 'INS_RTKFIXED' and not self.is_Init:
                 self.initPose.position = pose_rtk.position
                 self.initRoll = roll
                 self.initPitch = pitch
                 self.initYaw = yaw
                 self.is_Init = True
+                print('Init pos (%.2f, %.2f)'%(self.initPose.position.x, self.initPose.position.y))
+                print('Init yaw (%.2f)'%(self.initYaw))
             else:
-                rospy.logwarn("No RTK Signal !!")
+                rospy.logwarn("No RTK Signal %s %s !!" %(str[9], str[10]))
 
-    def pub_data(self,pose, pose_cov, twist, twist_cov, dataheader):
+    def rotatePt(self, x, y, yaw):
+        rotPt = Point()
+        rotPt.x = cos(yaw)*x - sin(yaw)*y
+        rotPt.y = sin(yaw)*x + cos(yaw)*y
+        return  rotPt
+
+    def pub_data(self,pose, pose_cov, twist, twist_cov):
         pub_rtk = Odometry()
         # put pos into msgs
-        pub_rtk.header.stamp = dataheader.stamp
+        pub_rtk.header.stamp = self.datahead.stamp
         pub_rtk.header.frame_id = 'odom'
         pub_rtk.child_frame_id = 'base_footprint'
         pub_rtk.pose.pose.position = pose.position
@@ -115,11 +129,14 @@ class rtk_publisher:
         # Pub it!
         pub.publish(pub_rtk)
         
+
+    def br_tf(self, pose, stamp, frame_id, child_frame_id):
         # init a tranform to tf2
         br_rtk = tf2_ros.TransformBroadcaster()
         rtk_tf_stamped = TransformStamped()
-        rtk_tf_stamped.header = pub_rtk.header
-        rtk_tf_stamped.child_frame_id = pub_rtk.child_frame_id
+        rtk_tf_stamped.header.stamp = stamp
+        rtk_tf_stamped.header.frame_id = frame_id
+        rtk_tf_stamped.child_frame_id = child_frame_id
         rtk_tf_stamped.transform.translation = pose.position
         rtk_tf_stamped.transform.rotation = pose.orientation
         if self.tf_broadcast : # check the param
