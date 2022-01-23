@@ -89,11 +89,12 @@ void motorParaSet(int id)
 	switch (tmotor[id].flag)
 	{
 	case 1:
+		//纯位置模式
 		tmotor[id].t_des = 0.2;
 		tmotor[id].vel_des = 0;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
-		tmotor[id].kp = 3;
-		tmotor[id].kd = 0;
+		tmotor[id].kp = 3;//位置控制
+		tmotor[id].kd = 0;//速度控制
 		break;
 
 	case 2:

@@ -105,8 +105,8 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     }
     power_last = power;  
 
-	frame_vt = 15*stick_forward + 19 * forward_s;
-	frame_vn = 15*stick_right;
+	frame_vt = 30*stick_forward + 19 * forward_s;
+	frame_vn = 30*stick_right;
 	frame_w =  -60*stick_yaw;
 }
 

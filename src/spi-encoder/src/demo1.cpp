@@ -64,11 +64,12 @@ encoderMultiTurn enMT[numOfMulti];
 
 void signalCallback(int signum){
     printf("Caught signal %d\n", signum);
-    exit(0);
+    
     for (int i = 0;i<4;i++){
         FT4222_UnInitialize(ftHandle[i]);
         FT_Close(ftHandle[i]);
     }
+    sleep(1);
     exit(0);
 }
 
