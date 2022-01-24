@@ -4,9 +4,9 @@ project(asoc_upper_controller)
 find_package(catkin REQUIRED COMPONENTS
 roscpp
 rospy  
+dynamic_reconfigure
 std_msgs
 tf
-dynamic_reconfigure
 geometry_msgs
 nav_msgs
 visualization_msgs
@@ -23,7 +23,7 @@ catkin_package(
 )
 
 include_directories(
-# include
+  # include
   ${catkin_INCLUDE_DIRS}
 )
 

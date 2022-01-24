@@ -57,7 +57,8 @@ UpperController::UpperController()
   // Publishers and Subscribers
   imu_sub = n_.subscribe("/imu_rpy0", 1, &UpperController::imuCB, this);
 
-  odom_sub = n_.subscribe("/camera/odometry", 1, &UpperController::odomCB, this);
+  odom_sub = n_.subscribe("/GPS_odom", 1, &UpperController::odomCB, this);
+  // NOTICE: This topic should be change w.r.t the odometry node!!
 
   path_sub = n_.subscribe("/fix_path", 1, &UpperController::pathCB, this);
 

@@ -11,6 +11,9 @@
 # 0.0400,0.0476,1.1325, #var-roll pitch yaw
 # 00000000,0*93c5919d"
 
+# tihs node is involved TF, but no gps->map. This(gps->map) transform was dealed in odom->base_footprint. 
+# The code record the initial state when RTK spawn. Then the node minus the initial state. 
+
 from math import pi, cos, sin
 from turtle import position
 import rospy
@@ -22,7 +25,7 @@ from geometry_msgs.msg import Pose, Twist, Quaternion, TransformStamped, Point
 from tf.transformations import quaternion_from_euler
 
 _angle2rad = pi/180.0
-# _rad2angle = 180.0/pi
+_rad2angle = 180.0/pi
 
 class rtk_publisher:
     def __init__(self, tf_broadcast):
@@ -44,8 +47,10 @@ class rtk_publisher:
             # add orientation
             roll = float(str[18]) * _angle2rad
             pitch = float(str[19]) * _angle2rad
-            yaw = float(str[20]) * _angle2rad -self.initYaw
+            # Have a pi/2 here, due to the Bnav-rtk count y-axis as front             
+            yaw = pi/2.0 - float(str[20]) * _angle2rad -self.initYaw
             quat = quaternion_from_euler(roll, pitch, yaw, axes='rxyz') # r p y
+            # quat = quaternion_from_euler(roll, pitch, yaw) # r p y
             pose_rtk.orientation = Quaternion(quat[0], quat[1], quat[2], quat[3]) 
 
             # add position
@@ -53,9 +58,11 @@ class rtk_publisher:
             pos_lon = float(str[12])
             # transpose to X,Y
             pos = utm.from_latlon(pos_lat, pos_lon)
-            Y = pos[0] - self.initPose.position.y # North Y
-            X = pos[1] - self.initPose.position.x # East X
-            pose_rtk.position = self.rotatePt(X,Y,self.initYaw)
+            X = pos[0] - self.initPose.position.x # East X
+            Y = pos[1] - self.initPose.position.y # North Y
+            # transfer is pi/2-init, same reason as yaw angle transfer
+            pose_rtk.position = self.rotatePt(X,Y,pi/2.0-self.initYaw)
+            # pose_rtk.position = self.rotatePt(X,Y,0)
             # pose_rtk.position.z = float(str[13]) # Height
             pose_rtk.position.z = 0
             
@@ -91,21 +98,25 @@ class rtk_publisher:
                             0, 0, Var_vz*Var_vz, 0, 0, 0,
                             0, 0, 0, 999, 0, 0,
                             0, 0, 0, 0, 999, 0, 
-                            0, 0, 0, 0, 0, 999] # 6x6 vx(not sure), vy(not sure), vz, v_roll, v_pitch, v_yaw
+                            0, 0, 0, 0, 0, 999] 
+                            # 6x6 vx(not sure), vy(not sure), vz, v_roll, v_pitch, v_yaw
 
             if str[10] == ('INS_RTKFIXED' or 'INS_PSRDIFF') and self.is_Init:
                 # pub msgs !
                 self.pub_data(pose_rtk, pose_cov_rtk,twist_rtk, twist_cov_rtk)
                 self.br_tf(pose_rtk, self.datahead.stamp, 'odom', 'base_footprint')
-                rospy.loginfo("%s %s" %(str[9], str[10]))
+                # rospy.loginfo("%s %s" %(str[9], str[10]))
+                # print('yaw_ori (%.2f)'%(float(str[20])))
+                # print('yaw (%.2f)'%(yaw*_rad2angle))
+                # print('X=%.2f, Y=%.2f'%(X,Y))
+                # print('x=%.2f, y=%.2f'%(pose_rtk.position.x,pose_rtk.position.y))
             elif str[10] == 'INS_RTKFIXED' and not self.is_Init:
-                self.initPose.position = pose_rtk.position
-                self.initRoll = roll
-                self.initPitch = pitch
-                self.initYaw = yaw
+                self.initPose.position.x = X
+                self.initPose.position.y = Y
+                self.initYaw = (yaw + 2*pi)%(2*pi)
                 self.is_Init = True
                 print('Init pos (%.2f, %.2f)'%(self.initPose.position.x, self.initPose.position.y))
-                print('Init yaw (%.2f)'%(self.initYaw))
+                print('Init yaw (%.2f)'%(self.initYaw*_rad2angle))
             else:
                 rospy.logwarn("No RTK Signal %s %s !!" %(str[9], str[10]))
 

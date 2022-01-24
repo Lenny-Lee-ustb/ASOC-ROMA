@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Spawn RTK read module !! -->
-    <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen">
+    <!-- <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen"> -->
        <!-- <param name = "port" type="string" value = "/dev/ttyUSB0"/>  -->
-       <param name = "port" type="string" value = "/dev/RTK"/> 
-       <param name = "baud" type="int" value = "115200"/> -->
+       <!-- <param name = "port" type="string" value = "/dev/RTK"/>  -->
+       <!-- <param name = "baud" type="int" value = "115200"/>  -->
        <!-- <param name = "frame_id" type="string" value = "RTK"/> -->
-    </node>
+    <!-- </node> -->
 
     <!-- Convert rtk topic !!  -->
-   <node name="rtk_pub" pkg="rtk-bnav" type="rtk_pub.py"/>
+    <node name="rtk_pub" pkg="rtk-bnav" type="rtk_pub.py" output="screen"/>
 
     <!--Load fixed path !!  -->
     <node pkg="path_load" type="path_load.py" name="path_loader" >
@@ -29,7 +29,7 @@
 
     <!-- broadcast map->odom tf -->
     <node pkg="tf2_ros" type="static_transform_publisher" 
-        name="odom_static_transform_publisher" args="0 0 0 0 0 0 map odom " />
+        name="odom_static_transform_publisher" args="0 0 0 1.5708 0 0 map odom " />
     <node pkg="tf2_ros" type="static_transform_publisher" 
             name="rtk_static_transform_publisher" args="0 0 0 0 0 0 base_footprint gps_link " />
     <!-- Broadcast imu tf -->
