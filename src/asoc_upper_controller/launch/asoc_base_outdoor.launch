@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Spawn RTK read module !! -->
-    <!-- <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen"> -->
+    <node pkg="nmea_navsat_driver" type="nmea_topic_serial_reader" name="RTK_GPS" clear_params="true" output="screen">
        <!-- <param name = "port" type="string" value = "/dev/ttyUSB0"/>  -->
-       <!-- <param name = "port" type="string" value = "/dev/RTK"/>  -->
-       <!-- <param name = "baud" type="int" value = "115200"/>  -->
-       <!-- <param name = "frame_id" type="string" value = "RTK"/> -->
-    <!-- </node> -->
+       <param name = "port" type="string" value = "/dev/RTK"/> 
+       <param name = "baud" type="int" value = "115200"/> 
+       <param name = "frame_id" type="string" value = "RTK"/>
+    </node>
 
     <!-- Convert rtk topic !!  -->
     <node name="rtk_pub" pkg="rtk-bnav" type="rtk_pub.py" output="screen"/>

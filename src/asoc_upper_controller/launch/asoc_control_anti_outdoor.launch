@@ -7,9 +7,9 @@
         <param name = "goal_pose_err" type="double" value = "1.0"/>
 
         <param name = "baseSpeed" type="double" value = "5.0"/>
-        <param name = "para_vel" type="double" value = "5.0"/>
+        <param name = "para_vel" type="double" value = "10.0"/>
         <param name = "rot_angle" type="double" value = "0.0"/>
-        <param name = "P_Long" type="double" value = "5.0"/>
+        <param name = "P_Long" type="double" value = "11.0"/>
         <param name = "I_Long" type="double" value = "0.0"/>
         <param name = "D_Long" type="double" value = "2.0"/>
 
@@ -34,7 +34,7 @@
         <param name = "P_rol" type="double" value = "0.2"/>
         <param name = "D_pit" type="double" value = "0.2"/>
         <param name = "D_rol" type="double" value = "0.2"/>
-        <param name = "slow_ff" type="double" value = "1.2"/>
+        <param name = "slow_ff" type="double" value = "0.0"/>
             </node>
 </launch>
 

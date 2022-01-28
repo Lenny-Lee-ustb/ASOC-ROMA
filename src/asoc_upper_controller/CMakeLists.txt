@@ -86,8 +86,15 @@ target_link_libraries(upper_controller_anti3
 
 add_executable(upper_controller_anti_outdoor
 src/upper_controller_anti_outdoor.cpp
-src/include/upper_controller_v4.hpp)
+src/include/upper_controller_outdoor.hpp)
 target_link_libraries(upper_controller_anti_outdoor
+  ${catkin_LIBRARIES}
+)
+
+add_executable(upper_controller_outdoor
+src/upper_controller_outdoor.cpp
+src/include/upper_controller_outdoor.hpp)
+target_link_libraries(upper_controller_outdoor
   ${catkin_LIBRARIES}
 )
 
