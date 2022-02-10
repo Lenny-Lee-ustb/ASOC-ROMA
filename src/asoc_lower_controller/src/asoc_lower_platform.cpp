@@ -95,9 +95,13 @@ void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
 
 void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-    stick_forward = joy->axes[1];
-    stick_right = -joy->axes[0];
-	stick_yaw = joy->axes[3];
+    // stick_forward = joy->axes[1];
+    // stick_right = -joy->axes[0];
+	// stick_yaw = joy->axes[3];
+    stick_forward = joy->axes[4];
+    stick_right = -joy->axes[3];
+	stick_yaw = joy->axes[0];
+
     power = joy -> buttons[8];
 	forward_s = joy->buttons[5];
     if(power>power_last){
