@@ -101,7 +101,8 @@ class rtk_publisher:
                             0, 0, 0, 0, 0, 999] 
                             # 6x6 vx(not sure), vy(not sure), vz, v_roll, v_pitch, v_yaw
 
-            if str[10] == ('INS_RTKFIXED' or 'INS_PSRDIFF') and self.is_Init:
+            # if str[10] == ('INS_RTKFIXED' or 'INS_PSRDIFF') and self.is_Init:
+            if str[9] == ('757;INS_SOLUTION_GOOD') and self.is_Init:
                 # pub msgs !
                 self.pub_data(pose_rtk, pose_cov_rtk,twist_rtk, twist_cov_rtk)
                 self.br_tf(pose_rtk, self.datahead.stamp, 'odom', 'base_footprint')
