@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=asoc-platform
+Name[zh_CN]=asoc-platform
+Comment=asoc-platform Client
+Exec=/home/roma/asoc-roma/asoc_lower_platform.sh
+Icon=/home/roma/asoc-roma/docs/controller.png
+Terminal=true
+Type=Application
+Categories=Application;
+Encoding=UTF-8
+StartupNotify=true

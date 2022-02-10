@@ -30,7 +30,10 @@
         "string": "cpp",
         "vector": "cpp",
         "system_error": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "eigen": "cpp",
+        "dense": "cpp",
+        "core": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src"

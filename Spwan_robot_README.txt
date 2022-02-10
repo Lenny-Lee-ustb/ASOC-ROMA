@@ -1,7 +1,7 @@
 asoc_lower_controller.sh needs authority to run:
 	sudo chmod a+x asoc_lower_controller.sh
 
-SpimTest demo1 needs root authority to run:
+spi-encoder demo1 needs root authority to run:
 	sudo su
 
 asoc_lower_controller has 2 CANs, and they need to be initialized as follow:

@@ -6,7 +6,7 @@ echo "1234" | sudo ip link set up can0
 echo "1234" | sudo ip link set can1 type can bitrate 1000000
 echo "1234" | sudo ip link set up can1 
 
-source devel/setup.bash
+source /home/roma/asoc-roma/devel/setup.bash
 roslaunch asoc_lower_controller asoc_lower_platform.launch
 
 # {

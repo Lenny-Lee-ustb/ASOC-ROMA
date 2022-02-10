@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=asoc-outdoor
+Name[zh_CN]=asoc-outdoor
+Comment=asoc-outdoor Client
+Exec=/home/roma/asoc-roma/asoc_base_outdoor.sh
+Icon=/home/roma/asoc-roma/docs/icon.png
+Terminal=true
+Type=Application
+Categories=Application;
+Encoding=UTF-8
+StartupNotify=true

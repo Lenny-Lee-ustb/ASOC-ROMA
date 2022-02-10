@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=asoc-rosbag
+Name[zh_CN]=asoc-rosbag
+Comment=asoc-rosbag Client
+Exec=/home/roma/asoc-roma/asoc_rosbag.sh
+Icon=/home/roma/asoc-roma/docs/bag.png
+Terminal=true
+Type=Application
+Categories=Application;
+Encoding=UTF-8
+StartupNotify=true

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=asoc-controller
+Name[zh_CN]=asoc-controller
+Comment=asoc-controller Client
+Exec=/home/roma/asoc-roma/asoc_upper_controller.sh
+Icon=/home/roma/asoc-roma/docs/icon.png
+Terminal=true
+Type=Application
+Categories=Application;
+Encoding=UTF-8
+StartupNotify=true
