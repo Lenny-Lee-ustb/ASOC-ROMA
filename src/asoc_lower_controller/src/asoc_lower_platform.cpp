@@ -628,19 +628,22 @@ int main(int argc, char** argv) {
     struct ifreq ifr_high;
 	struct can_frame frame;
 
+	/*建立套接字，设置为原始套接字，原始CAN协议 */
 	if ((s_low = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
 		perror("Error while opening socket");
 		return -1;
 	}
 
+	/*以下是对CAN接口进行初始化，如设置CAN接口名，即当我们用ifconfig命令时显示的名字 */
 	strcpy(ifr_low.ifr_name, "can0");
 	ioctl(s_low, SIOCGIFINDEX, &ifr_low);
 
+	/*设置CAN协议 */
 	addr_low.can_family = AF_CAN;
 	addr_low.can_ifindex = ifr_low.ifr_ifindex;
-
 	printf("%s at index %d\n", ifr_low.ifr_name, ifr_low.ifr_ifindex);
 
+	/*将刚生成的套接字与网络地址进行绑定*/
 	if (bind(s_low, (struct sockaddr *)&addr_low, sizeof(addr_low)) < 0) {
 		perror("Error in socket bind");
 		return -2;

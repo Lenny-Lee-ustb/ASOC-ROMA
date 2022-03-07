@@ -19,16 +19,16 @@
 #include <geometry_msgs/Point32.h>
 
 //参考AK80-9电机手册
-#define P_MIN -12.5f //-12.5f —— 12.5f rad
+#define P_MIN -12.5f //-12.5f —— 12.5f rad，电机位置
 #define P_MAX 12.5f
-#define V_MIN -76.0f //-30.0f——30.0f rad/s
+#define V_MIN -76.0f //-30.0f——30.0f rad/s，电机速度
 #define V_MAX 76.0f
-#define T_MIN -12.0f //-18.0f——18.0f N*m
+#define T_MIN -12.0f //-18.0f——18.0f N*m，电机扭矩
 #define T_MAX 12.0f
 
-#define KP_MIN 0.0f
+#define KP_MIN 0.0f //position control index
 #define KP_MAX 500.0f
-#define KD_MIN 0.0f
+#define KD_MIN 0.0f // velocity control index
 #define KD_MAX 5.0f
 
 int rxCounter = 0;
@@ -40,8 +40,8 @@ struct Tmotor
 {
 	int id;
 
-	float pos_zero = 1;	   //相对零点
-	float pos_abszero = 0; //绝对零点
+	float pos_zero = 0;	   //弹簧零点（相对零点）
+	float pos_abszero = 0; //绝对零点。pos_des=0 表示电机零点（绝对零点）
 
 	float pos_now; //当前位置
 	float pos_des; //目标（前馈）位置
@@ -52,7 +52,7 @@ struct Tmotor
 	float kp;
 	float kd;
 
-	int zeroPointSet = 1; //设过零点为1，未设过零点为0
+	int zeroPointSet = 0; //设零点为1，not设零点为0
 	int flag = 1;
 	//旧版本： 0:调绝对零点 ；1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
 	//新版本：（上电位置为绝对零点）1：快速调相对零点；2：慢速调相对零点；3：电弹簧模式（近）4：电弹簧模式（远); 5:手柄控制
@@ -85,22 +85,58 @@ void canCheck(can_frame &frame, int s, int id)
 	{
 		frame.data[i] = 0xff;
 	}
-	frame.data[7] = 0xfc;
+	frame.data[7] = 0xfc;//
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+    //enter Tmotor control mode
+	
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	
+	ROS_INFO("Wrote %d bytes", nbytes);
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	
+	if (nbytes == -1)
+	{
+		ROS_INFO("Send error in canCheck process");
+	}
+	else
+	{
+		ROS_INFO("D[%d] pass check!", id);
+	}
+}
+
+// check communication and open T-motor
+void canCheckZeroSet(can_frame &frame, int s, int id)
+{
+	int nbytes;
+	frame.can_dlc = 8;
+	frame.can_id = 0x000 + id;
+	for (int i = 0; i < 8; i++)
+	{
+		frame.data[i] = 0xff;
+	}
+	frame.data[7] = 0xfc;//
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
 	
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	
-	frame.data[7] = 0xfe;
+	frame.data[7] = 0xfe;//电机零点
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
 	
 	ROS_INFO("Wrote %d bytes", nbytes);
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		frame.data[7] = 0xfe;//电机零点
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+	//set Tmotor zero point	
+	
+	ROS_INFO("Wrote %d bytes", nbytes);
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	
 	if (nbytes == -1)
 	{
-		ROS_INFO("Send error in initial process");
+		ROS_INFO("Send error in canCheck process");
 	}
 	else
 	{
@@ -116,6 +152,6 @@ void signalCallback(int signum)
 	Stop_flag = 1;
 	ros::Duration(1.0).sleep();
 	endt = clock();
-	ROS_INFO("WARN：got signal [2], shutdown!");
+	ROS_INFO("WARN:got signal [2], shutdown!");
 	exit(1);
 }

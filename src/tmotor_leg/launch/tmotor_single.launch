@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="tmotor_leg" type="tmotor3_singletest" name="tmotor_control" required="true" output="screen" />
+        <param name="InitZero" value="false" />
+</launch>

@@ -54,7 +54,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   double rollForward = 0.0;
   double pitchForward = 0.0;
 
-  // body control planA
+  // body control planA,change the pos_zero point
   susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch) + P_rol * roll + D_rol * (roll - last_roll);
   susp_cmd.polygon.points[1].x = P_pit * pitch + D_pit * (pitch - last_pitch) - (P_rol * roll + D_rol * (roll - last_roll));
   susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) - (P_rol * roll + D_rol * (roll - last_roll));

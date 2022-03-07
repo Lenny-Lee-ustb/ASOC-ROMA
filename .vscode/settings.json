@@ -33,7 +33,15 @@
         "random": "cpp",
         "eigen": "cpp",
         "dense": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "exception": "cpp",
+        "iosfwd": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "shared_mutex": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "memory_resource": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.sourceDirectory": "${workspaceFolder}/src"

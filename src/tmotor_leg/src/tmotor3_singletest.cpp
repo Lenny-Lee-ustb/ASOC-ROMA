@@ -1,5 +1,5 @@
 #include "include/tmotor_common.hpp"
-//AK80_9测试1，这里没有用手柄控制
+//AK80_6测试，这里没有用手柄控制
 
 ros::Publisher Tmotor_Info;
 ros::Subscriber Control_sub;
@@ -12,21 +12,22 @@ double zero_length = 2.0;
 //电机位置信息，速度信息，力矩信息（带时间戳）
 geometry_msgs::PolygonStamped tmotor_info_msgs;
 
-Tmotor tmotor[4];
+Tmotor tmotor[1];
 
 //监测电机状态
 void flagTest(int id)
 {
-	// 电弹簧模式工作状态，接近零点启用flag1，远离零点启用flag2（常规电弹簧模式），flag3的目的是避免零点附近的电机震荡
-	// 0.15rad近似8.6度
-	if ((tmotor[id].flag == 2) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
-	{
-		tmotor[id].flag = 1;
-	}
-	else if ((tmotor[id].flag == 1) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
-	{
-		tmotor[id].flag = 1;
-	}
+	//电弹簧模式工作状态，接近零点启用flag1，远离零点启用flag2（常规电弹簧模式），flag3的目的是避免零点附近的电机震荡
+	//0.15rad近似8.6度
+	// if ((tmotor[id].flag == 2) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) < 0.15))
+	// {
+	// 	tmotor[id].flag = 1;
+	// }
+	// else if ((tmotor[id].flag == 1) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
+	// {
+	// 	tmotor[id].flag = 2;
+	// }
+	tmotor[id].flag = 1;
 }
 
 // 由上位机修正弹簧零点（相对零点）
@@ -71,13 +72,16 @@ void rxThread(int s)
 		tmotor[ID].pos_now = f_pos;
 		tmotor[ID].vel_now = f_vel;
 		tmotor[ID].t_now = f_t;
-		
-		//收到报文后，将当前位置即电机零点（绝对零点），赋值为弹簧零点（相对零点）
-		if (rxCounter < 40)
+		// if(rxCounter<10){
+		// 	ROS_INFO("pos:%.2f",tmotor[ID].pos_now);
+		// };
+		//收到报文后, 将弹簧零点(相对零点)赋值为当前位置
+		if(rxCounter<10)
 		{
 			tmotor[ID].pos_zero = tmotor[ID].pos_now;
 			tmotor[ID].zeroPointSet = 1;
-			ROS_INFO("Balance ponit set!! pos:%.2f",tmotor[ID].pos_now);
+			ROS_INFO("Balance ponit set!!");
+			ROS_INFO("pos:%.2f",tmotor[ID].pos_now);
 		}
 
 		rxCounter++;
@@ -92,10 +96,10 @@ void motorParaSet(int id)
 	{
 	case 1:
 		//纯位置模式
-		tmotor[id].t_des = 0.0;//前馈力矩
+		tmotor[id].t_des = 0;//前馈力矩0.2
 		tmotor[id].vel_des = 0;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
-		tmotor[id].kp = 2.0;//位置控制参数
+		tmotor[id].kp = 3;//位置控制参数
 		tmotor[id].kd = 0;//速度控制参数
 		break;
 
@@ -193,13 +197,13 @@ void frameDataSet(struct can_frame &frame, int id)
 //打印信息
 void printTmotorInfo(int id)
 {
-	ROS_INFO("\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.2f,%.2f,%.2f,%.2f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nstop_flag:%d\n------------\n",
-			 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
-			 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now,
-			 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
-			 tmotor[0].vel_des, tmotor[1].vel_des, tmotor[2].vel_des, tmotor[3].vel_des,
-			 tmotor[0].t_now, tmotor[1].t_now, tmotor[2].t_now, tmotor[3].t_now,
-			 tmotor[0].pos_zero, tmotor[1].pos_zero, tmotor[2].pos_zero, tmotor[3].pos_zero,
+	ROS_INFO("\nflag[%d] \npos_now is [%.2f]\npos_des is [%.2f] \nvel_des is [%.2f] \nt_now is [%.2f] \npos_zero is [%.2f] \nstop_flag:%d\n------------------\n",
+			 tmotor[0].flag, 
+			 tmotor[0].pos_now, 
+			 tmotor[0].pos_des, 
+			 tmotor[0].vel_des, 
+			 tmotor[0].t_now, 
+			 tmotor[0].pos_zero, 
 			 Stop_flag);
 }
 
@@ -211,14 +215,13 @@ void txThread(int s)
 	frame.can_dlc = 8;
 
 	int nbytes;
-
 	// sleep 
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
 	for (int i = 0;; i++)
 	{
-		tmotor_info_msgs.polygon.points.resize(4);
-		for (int id = 0; id < 4; id++)
+		tmotor_info_msgs.polygon.points.resize(1);//4
+		for (int id = 0; id < 1; id++)
 		{
 			frame.can_id = 0x00 + id + 1;
 			frameDataSet(frame, id);
@@ -263,6 +266,8 @@ int main(int argc, char **argv)
 	ros::Rate loop_rate(10);
 	signal(SIGINT, signalCallback);
 	bool InitZero=0;
+
+	
 	Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
 	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 100);
 	//发布及订阅节点
@@ -292,14 +297,14 @@ int main(int argc, char **argv)
 	}
 	//can连接完毕
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		tmotor[i].id = i;
 	}
 	//设置对应tmotor的id
 
 	struct can_frame frame;
-	for (int id = 1; id < 5; id++)
+	for (int id = 1; id < 2; id++)
 	{
 		if(InitZero == false){
 			canCheck(frame, s, id);
@@ -310,8 +315,6 @@ int main(int argc, char **argv)
 		}
 	}
 	//进入电机控制模式，电机初始化位置设为电机零点（绝对零点），并检查can通讯连接
-
-
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	std::thread canTx(txThread, s);

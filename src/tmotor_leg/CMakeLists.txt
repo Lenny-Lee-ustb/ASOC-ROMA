@@ -76,3 +76,7 @@ src/tmotor2_uppercontroller1.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor2_uppercontroller1 ${catkin_LIBRARIES})
 
+add_executable(tmotor3_singletest
+src/tmotor3_singletest.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor3_singletest ${catkin_LIBRARIES})
