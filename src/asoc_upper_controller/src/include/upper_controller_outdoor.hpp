@@ -1,4 +1,4 @@
-//indoor test with IMU
+//outdoor test with IMU
 
 #include "nav_msgs/Path.h"
 #include "ros/ros.h"
@@ -44,8 +44,7 @@ public:
 
 private:
   ros::NodeHandle n_;
-  ros::Subscriber odom_sub, path_sub, goal_sub;
-  ros::Subscriber imu_sub;
+  ros::Subscriber odom_sub, path_sub, goal_sub, imu_sub;
   ros::Publisher pub_, marker_pub, pub_suspension;
   ros::Timer timer1, timer2;
   tf::TransformListener tf_listener;
@@ -56,22 +55,20 @@ private:
   geometry_msgs::PolygonStamped susp_cmd;
   nav_msgs::Odometry odom;
   nav_msgs::Path map_path;
+  std_msgs::Float32MultiArray imuPose;
 
   double controller_freq, baseSpeed;
   double goalRadius, goal_pose_err;
   double lateral_dist, lateral_dist_sum;
   double rot_angle;
-  double roll, pitch, yaw;
-
-  std_msgs::Float32MultiArray imu_msg;
 
   bool foundForwardPt, goal_received, goal_reached;
 
   void odomCB(const nav_msgs::Odometry::ConstPtr &odomMsg);
   void pathCB(const nav_msgs::Path::ConstPtr &pathMsg);
   void goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg);
+  void imuCB(const std_msgs::Float32MultiArray::ConstPtr &sensorMsg);
   void goalReachingCB(const ros::TimerEvent &);
-  void imuCB(const std_msgs::Float32MultiArray &sensorMsg);
   void controlLoopCB(const ros::TimerEvent &);
 };
 void UpperController::initMarker()
@@ -126,11 +123,9 @@ void UpperController::pathCB(const nav_msgs::Path::ConstPtr &pathMsg)
   map_path = *pathMsg;
 }
 
-void UpperController::imuCB(const std_msgs::Float32MultiArray &sensorMsg)
+void UpperController::imuCB(const std_msgs::Float32MultiArray::ConstPtr &sensorMsg)
 {
-  roll = sensorMsg.data[0];
-  pitch = sensorMsg.data[1];
-  yaw = sensorMsg.data[2];
+  imuPose = *sensorMsg;
 }
 
 void UpperController::goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg)

@@ -72,13 +72,13 @@ void rxThread(int s)
 		tmotor[ID].vel_now = f_vel;
 		tmotor[ID].t_now = f_t;
 		
-		//收到报文后，将当前位置即电机零点（绝对零点），赋值为弹簧零点（相对零点）
-		if (rxCounter < 40)
-		{
-			tmotor[ID].pos_zero = tmotor[ID].pos_now;
-			tmotor[ID].zeroPointSet = 1;
-			ROS_INFO("Balance ponit set!! pos:%.2f",tmotor[ID].pos_now);
-		}
+		
+		// if (rxCounter < 40)
+		// {
+		// 	tmotor[ID].pos_zero = tmotor[ID].pos_now;
+		// 	tmotor[ID].zeroPointSet = 1;
+		// 	ROS_INFO("Balance ponit set!! pos:%.2f",tmotor[ID].pos_now);
+		// }
 
 		rxCounter++;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
@@ -92,10 +92,10 @@ void motorParaSet(int id)
 	{
 	case 1:
 		//纯位置模式
-		tmotor[id].t_des = 0.0;//前馈力矩
+		tmotor[id].t_des = 0;//前馈力矩
 		tmotor[id].vel_des = 0;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
-		tmotor[id].kp = 2.0;//位置控制参数
+		tmotor[id].kp = 0.5;//位置控制参数
 		tmotor[id].kd = 0;//速度控制参数
 		break;
 
@@ -167,6 +167,14 @@ void frameDataSet(struct can_frame &frame, int id)
 	{
 		f_t = -10.0;
 	}
+
+	//位置限幅只对纯位置模式起小作用，因为在纯位置模式下模拟弹簧，电机依旧可以远离目标位置。
+	//所以限幅应该比一开始设想的3.5rad还小，3.0
+	if (f_p > 3.0)
+	{
+		f_p = 3.0;
+	}
+	
 
 	//限位保護
 	f_t = fmax(fminf(tmotor[id].t_des, T_MAX), T_MIN);
@@ -258,15 +266,26 @@ void txThread(int s)
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "tmotor2_xboxtest1");
+	ros::init(argc, argv, "tmotor2_uppercontroller1");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
 	signal(SIGINT, signalCallback);
-	bool InitZero=0;
+	bool InitZero;
+	double pos_zero_temp;
+
 	Control_sub = n.subscribe("suspension_cmd", 2, ControlCallback);
 	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 100);
 	//发布及订阅节点
+	
 	n.param("InitZero",InitZero,false);
+	// roslauch文件给定pos_zero
+	n.param("pos_zero_temp",pos_zero_temp,0.0);
+	for (int i = 0; i < 4; i++)
+	{
+	tmotor[i].pos_zero = pos_zero_temp;
+	}
+	ROS_INFO("pos_zero is given by roslaunch !!!!!");
+	ROS_INFO("pos_zero_temp is [%.2f]",pos_zero_temp);	
 
 	int s;
 	struct sockaddr_can addr;

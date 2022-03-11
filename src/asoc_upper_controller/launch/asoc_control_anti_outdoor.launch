@@ -18,7 +18,6 @@
         <param name = "D_Yaw" type="double" value = "25.0"/>
         <param name = "forward_dist" type="double" value = "0.1"/>
         <param name = "forward_dist2" type="double" value = "0.4"/>
-        
 
         <param name = "P_Lateral" type="double" value = "20.0"/>
         <param name = "I_Lateral" type="double" value = "1.0"/>
@@ -26,7 +25,7 @@
 
         <param name = "Kp" type="double" value = "1.0"/>
         <param name = "Kd" type="double" value = "0.0"/>
-        <param name = "zero_pos" type="double" value = "1.0"/>
+        <param name = "zero_pos" type="double" value = "1.2"/>
         <param name = "roll_rot_factor" type="double" value = "0.8"/>        
         <param name = "roll_lat_factor" type="double" value = "1.0"/>
         <param name = "velocity_factor" type="double" value = "0"/>

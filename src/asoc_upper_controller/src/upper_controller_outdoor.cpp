@@ -109,7 +109,6 @@ UpperController::UpperController()
   ROS_INFO("[param] velocity_factor: %.2f", velocity_factor);
   ROS_INFO("[param] P_pit, D_pit: %.2f, %.2f", P_pit, D_pit);
   ROS_INFO("[param] P_rol, D_pit: %.2f, %.2f", P_rol, D_rol);
-  ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f", roll, pitch, yaw);
 
   // Visualization Marker Settings
   initMarker();
@@ -173,6 +172,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
 
     double d_theta = theta - thetar;
     //double d_theta = - thetar;
+    double roll = imuPose.data[0];
+    double pitch = imuPose.data[1];
     double d_roll = rollForward - roll;
     double d_pitch = pitchForward - pitch;
     double slow_factor = 1.0 - slow_ff * fabs(pow((d_theta) / 3.14, 1));
@@ -235,7 +236,10 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
       }
     }
     susp_cmd.header.stamp = ros::Time::now();
+    //pub command for lower controller
     pub_.publish(cmd_vel);
+
+    //pub command for tmotor
     pub_suspension.publish(susp_cmd);
   }
   else

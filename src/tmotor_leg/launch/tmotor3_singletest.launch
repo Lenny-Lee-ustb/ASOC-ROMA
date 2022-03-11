@@ -1,0 +1,9 @@
+<launch>
+    <node pkg="tmotor_leg" type="tmotor3_singletest" name="tmotor3_singletest" required="true" output="screen" />
+        <param name="InitZero" type="bool" value="false" />
+        <param name="pos_abszero0" type="double" value="0.0" /> 
+        <param name="pos_abszero1" type="double" value="1.0" />
+        <param name="pos_abszero2" type="double" value="1.0" />
+        <param name="pos_abszero3" type="double" value="1.0" />
+        
+</launch>

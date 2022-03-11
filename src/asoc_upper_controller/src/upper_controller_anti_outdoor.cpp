@@ -47,9 +47,9 @@ UpperController::UpperController() {
   pn.param("roll_rot_factor", roll_rot_factor, 1.0);
   pn.param("roll_lat_factor", roll_lat_factor, 1.0);
   pn.param("velocity_factor",velocity_factor,0.1);
-  pn.param("P_pit", P_pit, 150.0);
+  pn.param("P_pit", P_pit, 1.0);
   pn.param("D_pit", D_pit, 1.0);
-  pn.param("P_rol", P_rol, 150.0);
+  pn.param("P_rol", P_rol, 1.0);
   pn.param("D_rol", D_rol, 1.0);
   pn.param("slow_ff", slow_ff, 1.0);
   // Publishers and Subscribers
@@ -59,6 +59,8 @@ UpperController::UpperController() {
                           &UpperController::pathCB, this);
   goal_sub = 
              n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
+  imu_sub = n_.subscribe("/imu_rpy0", 1, &UpperController::imuCB, this);
+  
 
   marker_pub = n_.advertise<visualization_msgs::Marker>("/car_path", 10);
 
@@ -143,7 +145,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   double rot_rad = rot_angle / 180.0 * PI;
   double vt,vn,w,v_sum;
   lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
-  double goal_dist=getCar2GoalDist();
+  double goal_dist=getCar2GoalDist(); 
 
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
@@ -155,8 +157,10 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     double theta = getYawFromPose(ForwardPose);// yaw on path
     double theta_2 = getYawFromPose(ForwardPose2);// yaw on path
     double theta_3 = getYawFromPose(ForwardPose3);
-    double roll = getRollFromPose(carPose); // ego roll
-    double pitch =  getPitchFromPose(carPose); // ego pitch
+    // double roll = getRollFromPose(carPose); // ego roll
+    // double pitch =  getPitchFromPose(carPose); // ego pitch
+    double roll = imuPose.data[0];
+    double pitch = imuPose.data[1];
     double rollForward = getRollFromPose(ForwardPose);
     double pitchForward = getPitchFromPose(ForwardPose);
 
@@ -196,17 +200,17 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.linear.x = vn * sin(rot_rad) + vt * cos(rot_rad);//vt'
 
           // body control
-          susp_cmd.polygon.points[0].x = P_pit * pitch + D_pit * (pitch - last_pitch);
-          susp_cmd.polygon.points[1].x = -(P_rol * roll + D_rol * (roll - last_roll));
-          susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch));
-          susp_cmd.polygon.points[3].x = P_rol * roll + D_rol * (roll - last_roll);
+          susp_cmd.polygon.points[1].x = (P_pit * pitch + D_pit * (pitch - last_pitch)) + zero_pos;
+          susp_cmd.polygon.points[3].x = -(P_rol * roll + D_rol * (roll - last_roll)) + zero_pos;
+          susp_cmd.polygon.points[2].x = -(P_pit * pitch + D_pit * (pitch - last_pitch))+ zero_pos;
+          susp_cmd.polygon.points[0].x = P_rol * roll + D_rol * (roll - last_roll)+ zero_pos;
 
           last_pitch = pitch;
           last_roll = roll;
 
           // limit max values
           for(int i=0; i<4; i++){
-            susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x,-8.0),8.0);
+            susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x,0),3.5);
           }
 
           cmd_vel.linear.x=fmin(fmax(cmd_vel.linear.x,-100.0),100.0);
@@ -235,7 +239,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
     cmd_vel.linear.y = 0;
     cmd_vel.linear.x = 0;
     for(int i=0; i<4; i++){
-      susp_cmd.polygon.points[i].x = 0;
+      susp_cmd.polygon.points[i].x = zero_pos;
     }
     susp_cmd.header.stamp=ros::Time::now();
     pub_.publish(cmd_vel);

@@ -61,10 +61,10 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   susp_cmd.polygon.points[3].x = -(P_pit * pitch + D_pit * (pitch - last_pitch)) + P_rol * roll + D_rol * (roll - last_roll);
 
   //body control planB
-  susp_cmd.polygon.points[0].y = zero_length+P_pit2 * pitch + D_pit2 *(pitch-last_pitch)+P_rol2*roll+D_rol2*(roll-last_roll);
-  susp_cmd.polygon.points[1].y = zero_length+P_pit2 * pitch + D_pit2 *(pitch-last_pitch)-(P_rol2*roll+D_rol2*(roll-last_roll));
-  susp_cmd.polygon.points[2].y = zero_length-(P_pit2 * pitch + D_pit2 *(pitch-last_pitch))-(P_rol2*roll+D_rol2*(roll-last_roll));
-  susp_cmd.polygon.points[3].y = zero_length-(P_pit2 * pitch + D_pit2 *(pitch-last_pitch))+P_rol2*roll+D_rol2*(roll-last_roll);
+  // susp_cmd.polygon.points[0].y = zero_length+P_pit2 * pitch + D_pit2 *(pitch-last_pitch)+P_rol2*roll+D_rol2*(roll-last_roll);
+  // susp_cmd.polygon.points[1].y = zero_length+P_pit2 * pitch + D_pit2 *(pitch-last_pitch)-(P_rol2*roll+D_rol2*(roll-last_roll));
+  // susp_cmd.polygon.points[2].y = zero_length-(P_pit2 * pitch + D_pit2 *(pitch-last_pitch))-(P_rol2*roll+D_rol2*(roll-last_roll));
+  // susp_cmd.polygon.points[3].y = zero_length-(P_pit2 * pitch + D_pit2 *(pitch-last_pitch))+P_rol2*roll+D_rol2*(roll-last_roll);
 
 
   last_pitch = pitch;
@@ -73,8 +73,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   // limit max values
   for (int i = 0; i < 4; i++)
   {
-    susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x, -8.0), 8.0);
-    susp_cmd.polygon.points[i].y = fmin(fmax(susp_cmd.polygon.points[i].y, 0), 4.0);
+    susp_cmd.polygon.points[i].x = fmin(fmax(susp_cmd.polygon.points[i].x, 0), 3.5);//上电后，限位为0-3.5rad
+    // susp_cmd.polygon.points[i].y = fmin(fmax(susp_cmd.polygon.points[i].y, 0), 4.0);
   }
 
   ROS_INFO("----------");

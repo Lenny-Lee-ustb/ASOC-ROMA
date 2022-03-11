@@ -197,13 +197,14 @@ void frameDataSet(struct can_frame &frame, int id)
 //打印信息
 void printTmotorInfo(int id)
 {
-	ROS_INFO("\nflag[%d] \npos_now is [%.2f]\npos_des is [%.2f] \nvel_des is [%.2f] \nt_now is [%.2f] \npos_zero is [%.2f] \nstop_flag:%d\n------------------\n",
+	ROS_INFO("\nflag[%d] \npos_now is [%.2f]\npos_des is [%.2f] \nvel_des is [%.2f] \nt_now is [%.2f] \npos_zero is [%.2f]\npos_abszero is [%0.2f] \nstop_flag:%d \n------------------\n",
 			 tmotor[0].flag, 
 			 tmotor[0].pos_now, 
 			 tmotor[0].pos_des, 
 			 tmotor[0].vel_des, 
 			 tmotor[0].t_now, 
-			 tmotor[0].pos_zero, 
+			 tmotor[0].pos_zero,
+			 tmotor[0].pos_abszero,
 			 Stop_flag);
 }
 
@@ -253,7 +254,6 @@ void txThread(int s)
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 		}
 		tmotor_info_msgs.header.stamp = ros::Time::now();
-		Tmotor_Info.publish(tmotor_info_msgs);
 		//标记时间戳并发布msg
 	}
 }
@@ -261,7 +261,7 @@ void txThread(int s)
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "tmotor2_xboxtest1");
+	ros::init(argc, argv, "tmotor3_singletest");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
 	signal(SIGINT, signalCallback);
@@ -272,6 +272,22 @@ int main(int argc, char **argv)
 	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 100);
 	//发布及订阅节点
 	n.param("InitZero",InitZero,false);
+	
+	double pos_abszero0;
+	double pos_abszero1;
+	double pos_abszero2;
+	double pos_abszero3;
+
+	n.getParam("pos_abszero0",pos_abszero0);
+	n.getParam("pos_abszero1",pos_abszero1);
+	n.getParam("pos_abszero2",pos_abszero2);
+	n.getParam("pos_abszero3",pos_abszero3);
+
+	tmotor[0].pos_abszero = pos_abszero0;
+	tmotor[1].pos_abszero = pos_abszero1;	
+	tmotor[2].pos_abszero = pos_abszero2;
+	tmotor[3].pos_abszero = pos_abszero3;
+	
 
 	int s;
 	struct sockaddr_can addr;

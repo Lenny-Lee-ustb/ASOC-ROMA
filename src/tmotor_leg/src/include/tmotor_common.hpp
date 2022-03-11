@@ -40,8 +40,8 @@ struct Tmotor
 {
 	int id;
 
-	float pos_zero = 0;	   //弹簧零点（相对零点）
-	float pos_abszero = 0; //绝对零点。pos_des=0 表示电机零点（绝对零点）
+	float pos_zero;	   //弹簧零点（相对零点），一开始不赋值
+	float pos_abszero; //绝对零点。电机零点
 
 	float pos_now; //当前位置
 	float pos_des; //目标（前馈）位置
@@ -114,26 +114,19 @@ void canCheckZeroSet(can_frame &frame, int s, int id)
 	{
 		frame.data[i] = 0xff;
 	}
-	frame.data[7] = 0xfc;//
+	frame.data[7] = 0xfc;//进入电机控制模式
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
 	
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	
+
 	frame.data[7] = 0xfe;//电机零点
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
-	
+
 	ROS_INFO("Wrote %d bytes", nbytes);
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-		frame.data[7] = 0xfe;//电机零点
-	nbytes = write(s, &frame, sizeof(struct can_frame));
-	//set Tmotor zero point	
-	
-	ROS_INFO("Wrote %d bytes", nbytes);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	
 	if (nbytes == -1)
 	{
 		ROS_INFO("Send error in canCheck process");
