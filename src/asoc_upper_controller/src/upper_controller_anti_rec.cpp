@@ -148,9 +148,6 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
-  // susp_cmd.data={float(zero_pos),float(zero_pos),
-  //                float(zero_pos),float(zero_pos)};
-  //susp_cmd.data={0,0,0,0};
   susp_cmd.polygon.points.resize(4);
 
   if (goal_received)

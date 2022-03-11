@@ -50,7 +50,6 @@ private:
   geometry_msgs::Twist cmd_vel;
   geometry_msgs::Point odom_goal_pos;
   geometry_msgs::PolygonStamped susp_cmd;
-  //std_msgs::Float32MultiArray susp_cmd;
   nav_msgs::Odometry odom;
   nav_msgs::Path map_path;
 
@@ -58,11 +57,6 @@ private:
   double  goalRadius, goal_pose_err;
   double lateral_dist,lateral_dist_sum;
   double rot_angle;
-  // double P_Yaw, I_Yaw, D_Yaw;
-  // double P_Lateral, I_Lateral, D_Lateral;
-  // double P_Long, I_Long, D_Long;
-  // double Kp, Kd;
-  // double zero_pos,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
 
   bool foundForwardPt,goal_received, goal_reached;
 
@@ -70,7 +64,6 @@ private:
   void pathCB(const nav_msgs::Path::ConstPtr &pathMsg);
   void goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg);
   void goalReachingCB(const ros::TimerEvent &);
-
   void controlLoopCB(const ros::TimerEvent &);
 
 };

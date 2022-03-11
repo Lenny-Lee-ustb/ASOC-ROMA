@@ -57,16 +57,13 @@ UpperController::UpperController() {
 
   path_sub = n_.subscribe("/fix_path", 1,
                           &UpperController::pathCB, this);
-  goal_sub = 
-             n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
+  goal_sub = n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
   imu_sub = n_.subscribe("/imu_rpy0", 1, &UpperController::imuCB, this);
-  
 
   marker_pub = n_.advertise<visualization_msgs::Marker>("/car_path", 10);
 
   pub_ = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
-  //pub_suspension = n_.advertise<std_msgs::Float32MultiArray>("/suspension_cmd", 1);
   pub_suspension = n_.advertise<geometry_msgs::PolygonStamped>("/suspension_cmd", 1);
 
   // Timer
@@ -150,6 +147,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
+  imuPose.data.resize(3);
   susp_cmd.polygon.points.resize(4);
 
   if (goal_received) {
