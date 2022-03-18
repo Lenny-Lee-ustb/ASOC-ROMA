@@ -1,10 +1,10 @@
 <launch>
     <node pkg="tmotor_leg" type="tmotor2_uppercontroller1" name="tmotor2_uppercontroller1" required="true" output="screen" />
-        <!-- <param name="InitZero" type="bool" value="false" />
-        <param name="pos_zero_temp" type="double" value="1.2" /> -->
-        <param name="InitZero" type="bool" value="true" />
-        <param name="pos_zero_temp" type="double" value="0.0" />  
+        <param name="InitZero" type="bool" value="false" />
+        <param name="pos_zero_temp" type="double" value="1.2" />
+        <!-- <param name="InitZero" type="bool" value="true" />
+        <param name="pos_zero_temp" type="double" value="0.0" />   -->
 
-        <param name="K_S" type="double" value="0.0" />
+        <param name="K_S" type="double" value="3.0" />
         <param name="D_S" type="double" value="0.1" />  
 </launch>

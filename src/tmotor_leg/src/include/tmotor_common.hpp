@@ -31,6 +31,8 @@
 #define KD_MIN 0.0f // velocity control index
 #define KD_MAX 5.0f
 
+#define PI 3.14159265358979
+
 int rxCounter = 0;
 int txCounter = 0;
 int Stop_flag = 0;
@@ -47,6 +49,7 @@ struct Tmotor
 	float pos_des; //目标（前馈）位置
 	float vel_now; //当前速度
 	float vel_des; //目标速度
+	float vel_pd;
 	float t_now;   //当前力矩（电流？）
 	float t_des;   //前馈力矩（电流？）
 	float kp;
@@ -85,14 +88,14 @@ void canCheck(can_frame &frame, int s, int id)
 	{
 		frame.data[i] = 0xff;
 	}
-	frame.data[7] = 0xfc;//
+	frame.data[7] = 0xfd;// close
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	frame.data[7] = 0xfc;// start
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
-	
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	
-	ROS_INFO("Wrote %d bytes", nbytes);
 	std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	ROS_INFO("Wrote %d bytes", nbytes);
 	
 	if (nbytes == -1)
 	{
@@ -114,15 +117,20 @@ void canCheckZeroSet(can_frame &frame, int s, int id)
 	{
 		frame.data[i] = 0xff;
 	}
-	frame.data[7] = 0xfc;//进入电机控制模式
+	frame.data[7] = 0xfd;// close
+	nbytes = write(s, &frame, sizeof(struct can_frame));
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	
+	frame.data[7] = 0xfc;// start
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 	frame.data[7] = 0xfe;//电机零点
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
 	ROS_INFO("Wrote %d bytes", nbytes);
 	// std::this_thread::sleep_for(std::chrono::milliseconds(20));

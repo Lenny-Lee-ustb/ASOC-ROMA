@@ -80,3 +80,8 @@ add_executable(tmotor3_singletest
 src/tmotor3_singletest.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor3_singletest ${catkin_LIBRARIES})
+
+add_executable(tmotor_imu
+src/tmotor_imu.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor_imu ${catkin_LIBRARIES})
