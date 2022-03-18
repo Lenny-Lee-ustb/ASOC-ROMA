@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=asoc-tmotor
+Name[zh_CN]=asoc-tmotor
+Comment=asoc-tmotor Client
+Exec=/home/roma/asoc-roma/asoc_tmotor.sh
+Icon=/home/roma/asoc-roma/docs/tmotor.png
+Terminal=true
+Type=Application
+Categories=Application;
+Encoding=UTF-8
+StartupNotify=true

@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="tmotor_leg" type="tmotor_controller3" name="tmotor_controller3" required="true" output="screen" />
+</launch>

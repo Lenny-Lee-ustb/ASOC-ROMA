@@ -315,7 +315,8 @@ geometry_msgs::Pose UpperController::getTrackPose(const geometry_msgs::Pose &car
         geometry_msgs::Point odom_path_wayPt = odom_path_pose.pose.position;
         double dist = sqrt((odom_path_wayPt.x - carPose_pos.x) * (odom_path_wayPt.x - carPose_pos.x) +
                            (odom_path_wayPt.y - carPose_pos.y) * (odom_path_wayPt.y - carPose_pos.y));
-        if (dist < min_dist)
+        // if (dist < min_dist)
+        if ( (dist < min_dist) && (i >= min_i))
         {
           min_dist = dist;
           min_i = i;
@@ -398,7 +399,8 @@ geometry_msgs::Pose UpperController::getTrackForwardPose(const geometry_msgs::Po
         geometry_msgs::Point odom_path_wayPt = odom_path_pose.pose.position;
         double dist = sqrt((odom_path_wayPt.x - carPose_pos.x) * (odom_path_wayPt.x - carPose_pos.x) +
                            (odom_path_wayPt.y - carPose_pos.y) * (odom_path_wayPt.y - carPose_pos.y));
-        if (dist < min_dist)
+        // if (dist < min_dist)
+        if ( (dist < min_dist) && (i >= min_i))
         {
           min_dist = dist;
           min_i = i;

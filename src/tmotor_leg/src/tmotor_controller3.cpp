@@ -9,7 +9,7 @@ int xbox_mode_on = -1;
 int xbox_power = 0;
 int xbox_power_last = 0;
 
-double K_S = 7.0;
+double K_S = 2.0;
 double D_S = 0.3;
 double zero_length = 1.0;
 //电弹簧模式参数
@@ -297,7 +297,7 @@ void motorParaSet(int id)
 		tmotor[id].kd = 5;
 		break;
 	case 2:
-		tmotor[id].t_des = 10;
+		tmotor[id].t_des = 5.0;
 		tmotor[id].vel_des = 0.4;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
@@ -418,7 +418,7 @@ void txThread(int s)
 	frame.can_dlc = 8;
 
 	int nbytes;
-
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	for (int i = 0;; i++)
 	{
 		tmotor_info_msgs.polygon.points.resize(4);
@@ -500,7 +500,7 @@ int main(int argc, char **argv)
 	struct can_frame frame;
 	for (int id = 1; id < 5; id++)
 	{
-		canCheck(frame, s, id);
+		canCheckZeroSet(frame, s, id);
 	}
 	//检查can通讯连接
 
@@ -509,8 +509,8 @@ int main(int argc, char **argv)
 	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info", 2);
 	//发布及订阅节点
 
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	std::thread canTx(txThread, s);
-	sleep(0.1);
 	std::thread canRx(rxThread, s);
 	//开启收报/发报线程
 

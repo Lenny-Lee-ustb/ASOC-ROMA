@@ -5,8 +5,8 @@ ros::Publisher Tmotor_Info;
 ros::Subscriber Control_sub;
 
 //电弹簧模式参数
-double K_S = 9.0;
-double D_S = 0.3;
+double K_S =0.0;
+double D_S =0.0;
 double zero_length = 2.0;
 
 //电机位置信息，速度信息，力矩信息（带时间戳）
@@ -25,7 +25,7 @@ void flagTest(int id)
 	}
 	else if ((tmotor[id].flag == 1) && (abs(tmotor[id].pos_now - tmotor[id].pos_zero) >= 0.15))
 	{
-		tmotor[id].flag = 1;
+		tmotor[id].flag = 2;
 	}
 }
 
@@ -95,7 +95,7 @@ void motorParaSet(int id)
 		tmotor[id].t_des = 0;//前馈力矩
 		tmotor[id].vel_des = 0;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
-		tmotor[id].kp = 0.5;//位置控制参数
+		tmotor[id].kp = K_S;//位置控制参数
 		tmotor[id].kd = 0;//速度控制参数
 		break;
 
@@ -110,22 +110,22 @@ void motorParaSet(int id)
 		{
 			if (tmotor[id].vel_now > 0)
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S - 0.6 - D_S * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S - D_S * abs(tmotor[id].vel_now);
 			}
 			else
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S - 0.6 + D_S * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S + D_S * abs(tmotor[id].vel_now);
 			}
 		}
 		else
 		{
 			if (tmotor[id].vel_now > 0)
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S + 0.6 - D_S * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S - D_S * abs(tmotor[id].vel_now);
 			}
 			else
 			{
-				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S + 0.6 + D_S * abs(tmotor[id].vel_now);
+				tmotor[id].t_des = -(tmotor[id].pos_now - tmotor[id].pos_zero) * K_S + D_S * abs(tmotor[id].vel_now);
 			}
 		}
 
@@ -159,13 +159,13 @@ void frameDataSet(struct can_frame &frame, int id)
 	f_kd = tmotor[id].kd;
 
 	//粗暴地限流，持续扭矩6nm，峰值扭矩12nm
-	if (f_t > 10.0)
+	if (f_t > 8.0)
 	{
-		f_t = 10.0;
+		f_t = 8.0;
 	}
-	else if (f_t < -10.0)
+	else if (f_t < -8.0)
 	{
-		f_t = -10.0;
+		f_t = -8.0;
 	}
 
 	//位置限幅只对纯位置模式起小作用，因为在纯位置模式下模拟弹簧，电机依旧可以远离目标位置。
@@ -246,7 +246,7 @@ void txThread(int s)
 				exit(1);
 			}
 			txCounter++;
-			if(txCounter%250==0){
+			if(txCounter%100==0){
 				printTmotorInfo(id);
 			}
 
@@ -280,6 +280,11 @@ int main(int argc, char **argv)
 	n.param("InitZero",InitZero,false);
 	// roslauch文件给定pos_zero
 	n.param("pos_zero_temp",pos_zero_temp,0.0);
+	n.param("K_S",K_S,0.0);
+	n.param("D_S",D_S,0.0);
+	ROS_INFO("--------------");
+	ROS_INFO("K_S: %.2f, D_S: %.2f",K_S,D_S);
+	ROS_INFO("--------------");
 	for (int i = 0; i < 4; i++)
 	{
 	tmotor[i].pos_zero = pos_zero_temp;

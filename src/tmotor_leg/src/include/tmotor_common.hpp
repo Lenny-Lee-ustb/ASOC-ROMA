@@ -89,10 +89,10 @@ void canCheck(can_frame &frame, int s, int id)
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
 	
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	
 	ROS_INFO("Wrote %d bytes", nbytes);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	
 	if (nbytes == -1)
 	{
@@ -118,14 +118,14 @@ void canCheckZeroSet(can_frame &frame, int s, int id)
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
 	
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 	frame.data[7] = 0xfe;//电机零点
 	nbytes = write(s, &frame, sizeof(struct can_frame));
 	//set Tmotor zero point	
 
 	ROS_INFO("Wrote %d bytes", nbytes);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	// std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
 	if (nbytes == -1)
 	{

@@ -77,6 +77,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
     // susp_cmd.polygon.points[i].y = fmin(fmax(susp_cmd.polygon.points[i].y, 0), 4.0);
   }
 
+
   ROS_INFO("----------");
   ROS_INFO("Roll:%.2f, Pitch:%.2f", roll, pitch);
   ROS_INFO("X:[%.2f]  [%.2f] [%.2f]  [%.2f]",susp_cmd.polygon.points[0].x,susp_cmd.polygon.points[1].x,susp_cmd.polygon.points[2].x,susp_cmd.polygon.points[3].x );
