@@ -1,0 +1,39 @@
+<launch>
+    <!-- <node pkg="tmotor_leg" type="tmotor2_uppercontroller1" name="tmotor2_uppercontroller1" required="true" output="screen" /> -->
+    <node pkg="tmotor_leg" type="tmotor_vel_pos" name="tmotor_vel_pos" required="true" output="screen" />
+ 
+        <param name="InitZero" type="bool" value="false" />
+        <param name="pos_zero_temp" type="double" value="1.2" />
+        <!-- <param name="InitZero" type="bool" value="true" />
+        <param name="pos_zero_temp" type="double" value="0.0" />   -->
+
+        <param name="K_S" type="double" value="1.0" />
+        <param name="D_S" type="double" value="0.1" />  
+        <param name="vel_factor" type="double" value="4.2" />  
+
+        <param name = "P_pit" type="double" value = "50.0"/>
+        <param name = "I_pit" type="double" value = "0.0"/>        
+        <param name = "D_pit" type="double" value = "2.0"/>
+
+        <param name = "P_rol" type="double" value = "50.0"/>
+        <param name = "I_rol" type="double" value = "0.0"/>
+        <param name = "D_rol" type="double" value = "2.0"/>
+
+        <param name = "P_pos" type="double" value = "0.0"/>
+        <param name = "D_pos" type="double" value = "0.0"/>
+
+        <param name = "roll_ref" type="double" value = "0.2"/>
+        <param name = "pitch_ref" type="double" value = "0.2"/>
+
+        <param name = "tmotor_torque" type="double" value = "0.0"/>
+
+        <param name = "ID" type="string" value ="0"/>    
+    <arg name="node_name" default="imu_0"></arg>
+    <node pkg="wt931" type="IMU_pub.py" name="$(arg node_name)" clear_params="true" output="screen" >
+        <param name = "serialport_name" type="string" value = "/dev/IMU"/> 
+        <param name = "baudrate" type="int" value = "921600"/>
+    </node>
+
+    <node pkg="joy" type="joy_node" name="joy_node" />
+
+</launch>

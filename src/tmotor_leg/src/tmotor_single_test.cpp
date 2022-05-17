@@ -1,6 +1,11 @@
 #include "include/tmotor_common.hpp"
 //单个tmotor测试
 
+geometry_msgs::PolygonStamped tmotor_info_msgs;
+ros::Publisher Tmotor_Info;
+Tmotor tmotor;
+
+
 void positionTest(struct can_frame &frame);
 void velTest(struct can_frame &frame);
 void StopTest(struct can_frame &frame);
@@ -36,6 +41,9 @@ void rxThread(int s)
 		// printf("id is %d;pos is %d;vel is %d;t is %d;\n", motorID, pos, vel, t);
 		printf("pos_now is %.2f;vel_now is %.1f;torque_now is %.2f\n", f_pos, f_vel, f_t);
 		printf("\n");
+		tmotor.pos_now = f_pos;
+		tmotor.vel_now = f_vel;
+		tmotor.t_now = f_t;	
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 	}
 }
@@ -44,7 +52,7 @@ void rxThread(int s)
 void txThread(int s)
 {
 	struct can_frame frame;
-	frame.can_id = 0x01; //0x2
+	frame.can_id = 0x04; //0x2
 	frame.can_dlc = 8;
 	for (int j = 0; j < 8; j++)
 	{
@@ -58,14 +66,72 @@ void txThread(int s)
 	for (int i = 0;; i++)
 	{
 		// positionTest(frame);
-		velTest(frame);
 		// StopTest(frame);
-		if (Stop_flag == 1)
-		{
-			StopTest(frame);
-		}
+		// velTest(frame);
 
+		// if (Stop_flag == 1)
+		// {
+		// 	StopTest(frame);
+		// }
+		float f_p, f_v, f_kp, f_kd, f_t;
+		// f_v = 1;
+		// f_t = 0;
+		// f_p = 0;
+		// f_kd = 2;
+		// f_kp = 0;
+		//t=5 T=2.87  kt=0.574
+		//t=10 T=5.42   kt=0.542
+		//t=2 T=1.05        转矩模式  kt=0.525
+		//纯速度模式 0.56
+
+		if (txCounter < 1000)
+		{
+			f_v = 0;
+			f_t = -1;
+			f_p = 0;
+			f_kd = 0;
+			f_kp = 0;
+		}
+		else
+		{
+			f_v = 0;
+			f_t = 1;
+			f_p = 0;
+			f_kd = 0;
+			f_kp = 0;
+		}
+		
+		printf("pos_des is %.2f, vel_des is %.1f, torque_des is %.2f\n", f_p, f_v, f_t);
+	
+		tmotor.pos_des = f_p;
+		tmotor.vel_des = f_v;
+		tmotor.t_des = f_t;
+
+		uint16_t p, v, kp, kd, t;
+		p = float_to_uint(f_p, P_MIN, P_MAX, 16);
+		v = float_to_uint(f_v, V_MIN, V_MAX, 12);
+		kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
+		kd = float_to_uint(f_kd, KD_MIN, KD_MAX, 12);
+		t = float_to_uint(f_t, T_MIN, T_MAX, 12);
+		frame.data[0] = p >> 8;
+		frame.data[1] = p & 0xFF;
+		frame.data[2] = v >> 4;
+		frame.data[3] = ((v & 0xF) << 4) | (kp >> 8);
+		frame.data[4] = kp & 0xFF;
+		frame.data[5] = kd >> 4;
+		frame.data[6] = ((kd & 0xF) << 4) | (t >> 8);
+		frame.data[7] = t & 0xff;
 		nbytes = write(s, &frame, sizeof(struct can_frame));
+
+		tmotor_info_msgs.polygon.points.resize(2);
+		tmotor_info_msgs.header.stamp = ros::Time::now();	
+		tmotor_info_msgs.polygon.points[0].x = tmotor.pos_now;
+		tmotor_info_msgs.polygon.points[0].y = tmotor.vel_now;
+		tmotor_info_msgs.polygon.points[0].z = tmotor.t_now;
+		tmotor_info_msgs.polygon.points[1].x = tmotor.pos_des;
+		tmotor_info_msgs.polygon.points[1].y = tmotor.vel_des;
+		tmotor_info_msgs.polygon.points[1].z = tmotor.t_des;
+		Tmotor_Info.publish(tmotor_info_msgs);
 
 		if (nbytes == -1)
 		{
@@ -74,9 +140,49 @@ void txThread(int s)
 			exit(1);
 		}
 		txCounter++;
-
-		std::this_thread::sleep_for(std::chrono::nanoseconds(10000000)); // freq 1000hz
+		if (txCounter >= 2000)
+		{
+			txCounter = 0;
+		}
+	
+		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000)); // freq 1000hz
 	}
+}
+
+void velTest(struct can_frame &frame)
+{
+	float f_p, f_v, f_kp, f_kd, f_t;
+	f_v = 1;
+	f_t = 0;
+	//t=5 T=2.87  kt=0.574
+	//t=10 T=5.42   kt=0.542
+	//t=2 T=1.05        转矩模式  kt=0.525
+	//纯速度模式 0.56
+	f_p = 0;
+	f_kd = 2;
+	f_kp = 0;
+
+
+	printf("pos_des is %.2f, vel_des is %.1f, torque_des is %.2f\n", f_p, f_v, f_t);
+	
+	tmotor.pos_des = f_p;
+	tmotor.vel_des = f_v;
+	tmotor.t_des = f_t;
+
+	uint16_t p, v, kp, kd, t;
+	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
+	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
+	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
+	kd = float_to_uint(f_kd, KD_MIN, KD_MAX, 12);
+	t = float_to_uint(f_t, T_MIN, T_MAX, 12);
+	frame.data[0] = p >> 8;
+	frame.data[1] = p & 0xFF;
+	frame.data[2] = v >> 4;
+	frame.data[3] = ((v & 0xF) << 4) | (kp >> 8);
+	frame.data[4] = kp & 0xFF;
+	frame.data[5] = kd >> 4;
+	frame.data[6] = ((kd & 0xF) << 4) | (t >> 8);
+	frame.data[7] = t & 0xff;
 }
 
 void StopTest(struct can_frame &frame)
@@ -123,12 +229,16 @@ void positionTest(struct can_frame &frame)
 	f_kd = 0;
 	//f_p = 12.5f;
 	f_p = 1;
+
 	f_p = fminf(fmaxf(P_MIN, f_p), P_MAX);
 	f_v = fminf(fmaxf(V_MIN, f_v), V_MAX);
 	f_kp = fminf(fmaxf(KP_MIN, f_kp), KP_MAX);
 	f_kd = fminf(fmaxf(KD_MIN, f_kd), KD_MAX);
 	f_t = fminf(fmaxf(T_MIN, f_t), T_MAX);
 	printf("pos_des is %.2f, vel_des is %.1f, torque_des is %.2f\n", f_p, f_v, f_t);
+	tmotor.pos_des = f_p;
+	tmotor.vel_des = f_v;
+	tmotor.t_des = f_t;
 
 	uint16_t p, v, kp, kd, t;
 	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
@@ -147,37 +257,7 @@ void positionTest(struct can_frame &frame)
 	frame.data[7] = t & 0xff;
 }
 
-void velTest(struct can_frame &frame)
-{
-	float f_p, f_v, f_kp, f_kd, f_t;
-	f_v = 1;
-	f_t = 0;
-	//t=5 T=2.87  kt=0.574
-	//t=10 T=5.42   kt=0.542
-	//t=2 T=1.05        转矩模式  kt=0.525
 
-	//纯速度模式 0.56
-
-	f_p = 0;
-	f_kd = 2;
-	f_kp = 0;
-	printf("pos_des is %.2f, vel_des is %.1f, torque_des is %.2f\n", f_p, f_v, f_t);
-
-	uint16_t p, v, kp, kd, t;
-	p = float_to_uint(f_p, P_MIN, P_MAX, 16);
-	v = float_to_uint(f_v, V_MIN, V_MAX, 12);
-	kp = float_to_uint(f_kp, KP_MIN, KP_MAX, 12);
-	kd = float_to_uint(f_kd, KD_MIN, KD_MAX, 12);
-	t = float_to_uint(f_t, T_MIN, T_MAX, 12);
-	frame.data[0] = p >> 8;
-	frame.data[1] = p & 0xFF;
-	frame.data[2] = v >> 4;
-	frame.data[3] = ((v & 0xF) << 4) | (kp >> 8);
-	frame.data[4] = kp & 0xFF;
-	frame.data[5] = kd >> 4;
-	frame.data[6] = ((kd & 0xF) << 4) | (t >> 8);
-	frame.data[7] = t & 0xff;
-}
 
 int main(int argc, char **argv)
 {
@@ -185,6 +265,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "rosTest1");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
+	Tmotor_Info = n.advertise<geometry_msgs::PolygonStamped>("Tmotor_Info",1);
 
 	int s;
 	struct sockaddr_can addr;
@@ -212,7 +293,7 @@ int main(int argc, char **argv)
 	int nbytes;
 	struct can_frame frame;
 	frame.can_dlc = 8;
-	frame.can_id = 0x001; //0x002
+	frame.can_id = 0x04; //0x002
 	for (int i = 0; i < 8; i++)
 	{
 		frame.data[i] = 0xff;
@@ -229,7 +310,8 @@ int main(int argc, char **argv)
 	signal(SIGINT, signalCallback);
 
 	std::thread canTx(txThread, s);
-	sleep(0.1);
+	// sleep(0.1);
+	std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	std::thread canRx(rxThread, s);
 	ROS_INFO("***");
 	while (1)

@@ -11,26 +11,38 @@ ros::Subscriber Imu_sub, Joy_sub;
 double K_S =0.0;
 double D_S =0.0;
 
-
-double P_pit, D_pit, P_rol, D_rol;
 int imuOnOff= -1;
 float button_A;
 float button_A_last=0;
 
+int posture_refOnOff= -1;
+float button_B;
+float button_B_last=0;
 
 
 // orientation
+double vel_factor = 0.0;
+double P_pit, D_pit, I_pit, P_rol, D_rol, I_rol ;
 double roll, pitch;
+double roll_set=0.0;
+double pitch_set=0.0;
 double roll_ref=0.0;
 double pitch_ref=0.0;
+double e_pitch, e_roll;
 double deltaRoll, deltaPitch;
 double lastRoll, lastPitch;
+double roll_sum = 0.0, pitch_sum = 0.0;
 
-std_msgs::Float32MultiArray imuPose;
+double P_pos, D_pos;
+double errorPosition_now[4], errorPosition_last[4];
+
+geometry_msgs::PolygonStamped imuPose;
 geometry_msgs::PolygonStamped tmotor_info_msgs;
 sensor_msgs::Joy button;
 
 Tmotor tmotor[4];
+double tmotor_torque = 0.0; 
+ros::Time time_tx1,time_tx2,time_nsec;
 
 void joyCB(const sensor_msgs::Joy::ConstPtr& joy){
 	button = *joy;
@@ -40,26 +52,61 @@ void joyCB(const sensor_msgs::Joy::ConstPtr& joy){
 	}
 	button_A_last = button_A;
 
+	button_B = button.buttons[1];
+	if(button_B > button_B_last){
+		posture_refOnOff = -posture_refOnOff;
+	}
+	button_B_last = button_B;
 }
 
-void imuCB(const std_msgs::Float32MultiArray::ConstPtr &sensorMsg)
+void imuCB(const geometry_msgs::PolygonStamped::ConstPtr &sensorMsg)
 {
-    imuPose.data.resize(3);
+    // imuPose.polygon.points=[geometry_msgs::Point32()];
     imuPose = *sensorMsg;
-	if(fabs(imuPose.data[0])< 20.0 && fabs(imuPose.data[1])< 20.0){
-		roll = imuPose.data[0]/180.0*PI;
-		pitch = imuPose.data[1]/180.0*PI;
+	if(fabs(imuPose.polygon.points[0].x)< 20.0 && fabs(imuPose.polygon.points[0].y)< 20.0){
+		roll = imuPose.polygon.points[0].x/180.0*PI;
+		pitch = imuPose.polygon.points[0].y/180.0*PI;
 	}
-	deltaRoll = roll_ref - roll;
-    deltaPitch = pitch_ref - pitch;
 
-    tmotor[2].vel_pd = P_pit * pitch + D_pit * (pitch - lastPitch);
-    tmotor[0].vel_pd = -(P_rol * roll + D_rol * (roll - lastRoll));
-    tmotor[1].vel_pd = -(P_pit * pitch + D_pit * (pitch - lastPitch));
-    tmotor[3].vel_pd = P_rol * roll + D_rol * (roll - lastRoll);
+	if (posture_refOnOff == -1)
+	{
+		roll_set = 0.0;
+		pitch_set = 0.0;
+	}
+	else if (posture_refOnOff == 1)
+	{
+		roll_set = roll_ref;
+		pitch_set = pitch_ref;
+	}
 
-    lastPitch = deltaPitch;
-    lastRoll = deltaRoll;
+
+	e_roll = roll - roll_set;
+	e_pitch = pitch - pitch_set;
+
+
+	// deltaRoll = roll_ref - roll;
+    // deltaPitch = pitch_ref - pitch;
+
+    for (int i = 0; i < 4; i++)
+    {
+        errorPosition_now[i]=tmotor[i].pos_zero-tmotor[i].pos_now;
+    }
+
+    tmotor[2].vel_pd = P_pit * e_pitch + D_pit * (e_pitch - lastPitch) + I_pit * pitch_sum + P_pos * errorPosition_now[2] + D_pos * (errorPosition_now[2] - errorPosition_last[2]);
+    tmotor[0].vel_pd = -(P_rol * e_roll + D_rol * (e_roll - lastRoll)) + I_rol * roll_sum + P_pos * errorPosition_now[0] + D_pos * (errorPosition_now[0] - errorPosition_last[0]);
+    tmotor[1].vel_pd = -(P_pit * e_pitch + D_pit * (e_pitch - lastPitch)) + I_pit * pitch_sum + P_pos * errorPosition_now[1] + D_pos * (errorPosition_now[1] - errorPosition_last[1]);
+    tmotor[3].vel_pd = P_rol * e_roll + D_rol * (e_roll - lastRoll) + I_rol * roll_sum + P_pos * errorPosition_now[3] + D_pos * (errorPosition_now[3] - errorPosition_last[3]);
+
+    
+    lastRoll = e_roll;
+	lastPitch = e_pitch;
+	roll_sum += lastRoll;
+	pitch_sum += lastPitch;
+    for (int i = 0; i < 4; i++)
+    {
+    errorPosition_last[i]=errorPosition_now[i];
+    }
+    
 }
 
 
@@ -86,7 +133,8 @@ void rxThread(int s)
 	int nbytes;
 	for (i = 0;; i++)
 	{
-		ros::spinOnce();
+		// time_tx1=ros::Time::now();
+		// ros::spinOnce();
 		nbytes = read(s, &frame, sizeof(struct can_frame));
 		if (nbytes < 0)
 		{
@@ -112,7 +160,8 @@ void rxThread(int s)
 		tmotor[ID].vel_now = f_vel;
 		tmotor[ID].t_now = f_t;
 		
-		
+		std::this_thread::sleep_for(std::chrono::nanoseconds(960000));
+
 		// if (rxCounter < 40)
 		// {
 		// 	tmotor[ID].pos_zero = tmotor[ID].pos_now;
@@ -120,8 +169,11 @@ void rxThread(int s)
 		// 	ROS_INFO("Balance ponit set!! pos:%.2f",tmotor[ID].pos_now);
 		// }
 
-		rxCounter++;
-		std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+		// rxCounter++;
+		// time_tx2=ros::Time::now();
+		// time_nsec.nsec = time_tx2.nsec - time_tx1.nsec;
+		// ROS_INFO("time1 sec %d;time2 sec %d time1 nsec %d;time2 nsec %d \ntime_nsec %d" ,time_tx1.sec,time_tx2.sec,time_tx1.nsec,time_tx2.nsec,time_nsec.nsec);
+		// ROS_INFO("time_nsec %d" ,time_nsec.nsec);
 	}
 }
 
@@ -132,7 +184,7 @@ void motorParaSet(int id)
 	{
 	case 1:
 
-		tmotor[id].t_des = 0;
+		tmotor[id].t_des = tmotor_torque;
 		tmotor[id].pos_des = tmotor[id].pos_zero;
 		tmotor[id].vel_des = 0;
 		tmotor[id].kd = 0;
@@ -140,11 +192,11 @@ void motorParaSet(int id)
 		break;
 
 	case 2:
-		tmotor[id].t_des = 0.1;
+		tmotor[id].t_des = tmotor_torque;
 		tmotor[id].vel_des = tmotor[id].vel_pd;
 		tmotor[id].pos_des = 0;
 		tmotor[id].kp = 0;
-		tmotor[id].kd = 3;
+		tmotor[id].kd = vel_factor;
 		break;
 
 	default:
@@ -214,49 +266,54 @@ void printTmotorInfo(int id)
 		ROS_INFO("Roll: %.3f, Pitch: %.3f", roll, pitch);
 		}
 
-	ROS_INFO("\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.3f,%.3f,%.3f,%.3f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nstop_flag:%d\n------------\n",
+	ROS_INFO("\nflag[%d,%d,%d,%d] \npos_now is [%.2f,%.2f,%.2f,%.2f]\npos_des is [%.2f,%.2f,%.2f,%.2f] \nvel_des is [%.3f,%.3f,%.3f,%.3f] \nt_now is [%.2f,%.2f,%.2f,%.2f] \npos_zero is [%.2f,%.2f,%.2f,%.2f] \nt_des is [%.2f,%.2f,%.2f,%.2f] \nstop_flag:%d\n------------\n",
 			 tmotor[0].flag, tmotor[1].flag, tmotor[2].flag, tmotor[3].flag,
 			 tmotor[0].pos_now, tmotor[1].pos_now, tmotor[2].pos_now, tmotor[3].pos_now,
 			 tmotor[0].pos_des, tmotor[1].pos_des, tmotor[2].pos_des, tmotor[3].pos_des,
 			 tmotor[0].vel_des, tmotor[1].vel_des, tmotor[2].vel_des, tmotor[3].vel_des,
 			 tmotor[0].t_now, tmotor[1].t_now, tmotor[2].t_now, tmotor[3].t_now,
 			 tmotor[0].pos_zero, tmotor[1].pos_zero, tmotor[2].pos_zero, tmotor[3].pos_zero,
+			 tmotor[0].t_des, tmotor[1].t_des, tmotor[2].t_des, tmotor[3].t_des, 
 			 Stop_flag);
+	ROS_INFO("\n e_roll and e_pitch is [%.2f,%.2f] \nroll_set and pitch_set is [%.2f,%.2f]", e_roll, e_pitch, roll_set, pitch_set);
+
 }
 
 //发报函数
 void txThread(int s)
 {
-	struct can_frame frame;
-	frame.can_id = 0x01;
-	frame.can_dlc = 8;
+	struct can_frame frame2;
+	frame2.can_id = 0x01;
+	frame2.can_dlc = 8;
 
-	int nbytes;
+	int nbytes1;
 
 	// sleep 
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::this_thread::sleep_for(std::chrono::milliseconds(25));
 
 	for (int i = 0;; i++)
-	{
-		tmotor_info_msgs.polygon.points.resize(4);
+	{	
+		// time_tx1=ros::Time::now();
+		tmotor_info_msgs.polygon.points.resize(8);
 		for (int id = 0; id < 4; id++)
 		{
-			frame.can_id = 0x00 + id + 1;
-			frameDataSet(frame, id);
+			// time_tx1=ros::Time::now();
+			frame2.can_id = 0x00 + id + 1;
+			frameDataSet(frame2, id);
 			if (Stop_flag == 1)
 			{
 				for (int j = 0; j < 8; j++)
 				{
-					frame.data[j] = 0xff;
+					frame2.data[j] = 0xff;
 				}
-				frame.data[7] = 0xfd; // exit T-motor control mode!
+				frame2.data[7] = 0xfd; // exit T-motor control mode!
 			}
-
-			nbytes = write(s, &frame, sizeof(struct can_frame));
-			if (nbytes == -1)
+		// printf("dlc: %d, id: %d, data: %x %x %x %x %x %x %x %x\n", frame2.can_dlc,frame2.can_id,frame2.data[0],frame2.data[1],frame2.data[2],frame2.data[3],frame2.data[4],frame2.data[5],frame2.data[6],frame2.data[7]);
+			nbytes1 = write(s, &frame2, sizeof(struct can_frame));
+			if (nbytes1 == -1)
 			{
 				printf("send error\n");
-				exit(1);
+				// exit(1);
 			}
 			txCounter++;
 			if(txCounter%100==0){
@@ -266,12 +323,24 @@ void txThread(int s)
 			tmotor_info_msgs.polygon.points[id].x = tmotor[id].pos_now;
 			tmotor_info_msgs.polygon.points[id].y = tmotor[id].vel_now;
 			tmotor_info_msgs.polygon.points[id].z = tmotor[id].t_now;
+			tmotor_info_msgs.polygon.points[id+4].x = tmotor[id].pos_des;
+			tmotor_info_msgs.polygon.points[id+4].y = tmotor[id].vel_des;
+			tmotor_info_msgs.polygon.points[id+4].z = tmotor[id].t_des;
 			//每个点x为tmotor当前位置，y为tmotor当前速度，z为tmotor当前电流
 
-			std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+			std::this_thread::sleep_for(std::chrono::nanoseconds(960000));
+			// time_tx2=ros::Time::now();
+			// time_nsec.nsec = time_tx2.nsec - time_tx1.nsec;
+			// ROS_INFO("time1 sec %d;time2 sec %d time1 nsec %d;time2 nsec %d \ntime_nsec %d" ,time_tx1.sec,time_tx2.sec,time_tx1.nsec,time_tx2.nsec,time_nsec.nsec);
+			// ROS_INFO("time_nsec %d" ,time_nsec.nsec);
+
 		}
 		tmotor_info_msgs.header.stamp = ros::Time::now();
 		Tmotor_Info.publish(tmotor_info_msgs);
+			// time_tx2=ros::Time::now();
+			// time_nsec.nsec = time_tx2.nsec - time_tx1.nsec;
+			// ROS_INFO("time1 sec %d;time2 sec %d time1 nsec %d;time2 nsec %d \ntime_nsec %d" ,time_tx1.sec,time_tx2.sec,time_tx1.nsec,time_tx2.nsec,time_nsec.nsec);
+			// ROS_INFO("time_nsec %d" ,time_nsec.nsec);
 		//标记时间戳并发布msg
 	}
 }
@@ -296,10 +365,22 @@ int main(int argc, char **argv)
 	n.param("pos_zero_temp",pos_zero_temp,0.0);
 	n.param("K_S",K_S,0.0);
 	n.param("D_S",D_S,0.0);
+	n.param("vel_factor",vel_factor,0.0);	
     n.param("P_pit", P_pit, 0.1);
     n.param("D_pit", D_pit, 0.0);
+	n.param("I_pit", I_pit, 0.0);
+
     n.param("P_rol", P_rol, 0.1);
     n.param("D_rol", D_rol, 0.0);
+	n.param("I_rol", I_rol, 0.0);	
+
+	n.param("roll_ref", roll_ref , 0.0);	
+	n.param("pitch_ref", pitch_ref , 0.0);
+
+    n.param("P_pos", P_pos, 0.1);
+    n.param("D_pos", D_pos, 0.0);
+
+    n.param("tmotor_torque", tmotor_torque, 0.0);
 	ROS_INFO("--------------");
 	ROS_INFO("K_S: %.2f, D_S: %.2f",K_S,D_S);
     ROS_INFO("P_pit: %.2f, D_pit: %.2f, P_rol: %.2f, D_rol: %.2f", P_pit, D_pit, P_rol, D_rol);
@@ -341,14 +422,14 @@ int main(int argc, char **argv)
 	}
 	//设置对应tmotor的id
 
-	struct can_frame frame;
+	struct can_frame frame1;
 	for (int id = 1; id < 5; id++)
 	{
 		if(InitZero == false){
-			canCheck(frame, s, id);
+			canCheck(frame1, s, id);
 		}
 		else if(InitZero == true){
-			canCheckZeroSet(frame, s, id);
+			canCheckZeroSet(frame1, s, id);
 			ROS_INFO("Zero point is SET !!!!!");
 		}
 	}
@@ -358,6 +439,7 @@ int main(int argc, char **argv)
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	std::thread canTx(txThread, s);
+	// std::this_thread::sleep_for(std::chrono::milliseconds(25));
 	std::thread canRx(rxThread, s);
 	//开启收报/发报线程
 

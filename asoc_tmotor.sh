@@ -5,7 +5,8 @@ echo "1234" | sudo ip link set down can2
 echo "1234" | sudo ip link set can2 up type can bitrate 1000000  
 
 source /home/roma/asoc-roma/devel/setup.bash
-roslaunch tmotor_leg tmotor_IMU.launch 
+# roslaunch tmotor_leg tmotor_IMU.launch 
+roslaunch tmotor_leg tmotor_vel_pos.launch 
 # roslaunch tmotor_leg tmotor_controller_xbox.launch
 
 # {

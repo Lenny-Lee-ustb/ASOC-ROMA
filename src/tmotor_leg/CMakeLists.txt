@@ -85,3 +85,8 @@ add_executable(tmotor_imu
 src/tmotor_imu.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_imu ${catkin_LIBRARIES})
+
+add_executable(tmotor_vel_pos
+src/tmotor_vel_pos.cpp
+src/include/tmotor_common.hpp)
+target_link_libraries(tmotor_vel_pos ${catkin_LIBRARIES})
