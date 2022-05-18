@@ -4,6 +4,7 @@
 // case 2 : vel_des works, the posture is refered to IMU
 // run this cpp by launch file!
 
+//提交测试
 ros::Publisher Tmotor_Info;
 ros::Subscriber Imu_sub, Joy_sub;
 
