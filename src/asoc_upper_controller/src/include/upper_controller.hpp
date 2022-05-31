@@ -1,6 +1,7 @@
 #include "nav_msgs/Path.h"
 #include "ros/ros.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
 #include <iostream>
 #include <nav_msgs/Odometry.h>

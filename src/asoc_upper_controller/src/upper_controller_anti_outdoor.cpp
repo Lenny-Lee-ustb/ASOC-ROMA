@@ -103,7 +103,7 @@ void callback(const asoc_upper_controller::controller_Config &config, const uint
 void UpperController::controlLoopCB(const ros::TimerEvent &) {
   double tic=ros::Time::now().nsec;
   double toc =0.0;
-  geometry_msgs::Pose carPose = odom.pose.pose;
+  geometry_msgs::Pose carPose = odom.pose.pose;//真实值
   geometry_msgs::Twist carVel = odom.twist.twist;
   geometry_msgs::Pose LateralPose = getTrackPose(carPose);
   geometry_msgs::Pose ForwardPose = getTrackForwardPose(carPose,forward_dist);
@@ -118,7 +118,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
-  imuPose.data.resize(3);
+  imuPose.data.resize(3);//不依赖imu的存在
   susp_cmd.polygon.points.resize(4);
 
   if (goal_received) {
@@ -189,7 +189,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           cmd_vel.angular.z=w;
 
           if(goal_dist<=1){
-            cmd_vel.linear.x=goal_dist*cmd_vel.linear.x;
+            cmd_vel.linear.x=goal_dist*cmd_vel.linear.x;//匀减速
             cmd_vel.linear.y=goal_dist*cmd_vel.linear.y;
             cmd_vel.angular.z=goal_dist*cmd_vel.angular.z;
           }

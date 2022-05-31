@@ -295,7 +295,7 @@ geometry_msgs::Pose UpperController::getTrackPose(const geometry_msgs::Pose &car
 {
   clock_t startTime, endTime;
   double carPose_yaw = getYawFromPose(carPose);
-  double min_dist = 10;
+  double min_dist = 10;//todo 米
   double min_i;
 
   geometry_msgs::PointStamped forwardPt;
@@ -321,7 +321,7 @@ geometry_msgs::Pose UpperController::getTrackPose(const geometry_msgs::Pose &car
           min_dist = dist;
           min_i = i;
           forwardPt.point = odom_path_wayPt;
-          forwardPose = odom_path_pose.pose;
+          forwardPose = odom_path_pose.pose;//最近点的位姿
         }
       }
       catch (tf::TransformException &ex)
@@ -384,14 +384,14 @@ geometry_msgs::Pose UpperController::getTrackForwardPose(const geometry_msgs::Po
       geometry_msgs::PoseStamped odom_path_pose;
       geometry_msgs::PoseStamped odom_forward_path_pose;
 
-      if (i + forward_pts < map_path.poses.size())
-      {
-        map_forward_path_pose = map_path.poses[i + forward_pts];
-      }
-      else
-      {
-        map_forward_path_pose = map_path.poses[map_path.poses.size() - 1];
-      }
+      // if (i + forward_pts < map_path.poses.size())
+      // {
+      //   map_forward_path_pose = map_path.poses[i + forward_pts];
+      // }
+      // else
+      // {
+      //   map_forward_path_pose = map_path.poses[map_path.poses.size() - 1];
+      // }
 
       try
       {
@@ -404,6 +404,16 @@ geometry_msgs::Pose UpperController::getTrackForwardPose(const geometry_msgs::Po
         {
           min_dist = dist;
           min_i = i;
+        //todo
+          if (i + forward_pts < map_path.poses.size())
+          {
+            map_forward_path_pose = map_path.poses[i + forward_pts];
+          }
+          else
+          {
+            map_forward_path_pose = map_path.poses[map_path.poses.size() - 1];
+          }
+
           tf_listener.transformPose("odom", ros::Time(0), map_forward_path_pose, "map", odom_forward_path_pose);
           forwardPose = odom_forward_path_pose.pose;
           forwardPt.point = forwardPose.position;
