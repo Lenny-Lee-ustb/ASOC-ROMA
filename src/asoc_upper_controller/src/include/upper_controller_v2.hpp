@@ -25,7 +25,7 @@
 class UpperController {
 public:
     UpperController();
-    void initMarker();
+    void initMarker();//rviz可视化初始点和轨迹
     bool isForwardWayPt(const geometry_msgs::Point &wayPt,
                                                   const geometry_msgs::Pose &carPose);
     double getRollFromPose(const geometry_msgs::Pose &carPose);
@@ -33,6 +33,7 @@ public:
     double getYawFromPose(const geometry_msgs::Pose &carPose);
     double getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt);
     double getCar2GoalDist();
+    double getCar2StartDist();
     double GetLateralDir(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPose);
     double isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose);
     double getEta(const geometry_msgs::Pose &carPose);
@@ -60,7 +61,7 @@ private:
 
   bool foundForwardPt,goal_received, goal_reached;
 
-  void odomCB(const nav_msgs::Odometry::ConstPtr &odomMsg);
+  void odomCB(const nav_msgs::Odometry::ConstPtr &odomMsg);//回调函数：接收视觉里程计数据
   void pathCB(const nav_msgs::Path::ConstPtr &pathMsg);
   void goalCB(const geometry_msgs::PoseStamped::ConstPtr &goalMsg);
   void goalReachingCB(const ros::TimerEvent &);
@@ -179,7 +180,7 @@ double UpperController::getYawFromPose(const geometry_msgs::Pose &carPose) {
   return yaw;
 }
 
-
+//获取横向误差
 double UpperController::getLateralDist(const geometry_msgs::Pose &carPose,const geometry_msgs::Pose &ForwardPt){
 
   double car2pt_x = ForwardPt.position.x - carPose.position.x;
@@ -189,7 +190,7 @@ double UpperController::getLateralDist(const geometry_msgs::Pose &carPose,const 
   return dist;
 }
 
-
+//小车到目标点的距离
 double UpperController::getCar2GoalDist() {
   geometry_msgs::Point car_pose = odom.pose.pose.position;
   double car2goal_x = odom_goal_pos.x - car_pose.x;
@@ -200,6 +201,13 @@ double UpperController::getCar2GoalDist() {
   return dist2goal;
 }
 
+//小车到起始点的距离
+double UpperController::getCar2StartDist()
+{
+  geometry_msgs::Point car_pose = odom.pose.pose.position;
+  double dist2start = sqrt(car_pose.x * car_pose.x + car_pose.y * car_pose.y);
+  return dist2start;
+}
 
 void UpperController::goalReachingCB(const ros::TimerEvent &) {
 
@@ -269,10 +277,12 @@ double UpperController::GetLateralDir(const geometry_msgs::Pose &carPose,const g
   }
   }
 
+
+//获取路径中最近路点的位置和姿态
 geometry_msgs::Pose UpperController::getTrackPose(const geometry_msgs::Pose &carPose){
 clock_t startTime,endTime;
 double carPose_yaw = getYawFromPose(carPose);
-double min_dist = 10;
+double min_dist = 10;//单位是m
 double min_i;
 
 geometry_msgs::PointStamped forwardPt;
@@ -338,7 +348,7 @@ geometry_msgs::Pose UpperController::getTrackForwardPose(const geometry_msgs::Po
 double carPose_yaw = getYawFromPose(carPose);
 double min_dist = 10;
 double min_i=0;
-int forward_pts = 100 * forward_dist;
+int forward_pts = 100 * forward_dist;//1米100个路点
 
 geometry_msgs::PointStamped forwardPt;
 geometry_msgs::Point odom_car2WayPtVec;

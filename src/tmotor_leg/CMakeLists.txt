@@ -90,3 +90,8 @@ add_executable(tmotor_vel_pos
 src/tmotor_vel_pos.cpp
 src/include/tmotor_common.hpp)
 target_link_libraries(tmotor_vel_pos ${catkin_LIBRARIES})
+
+add_executable(tmotor_vel_pos3
+src/tmotor_vel_pos3.cpp
+src/include/tmotor_common2.hpp)
+target_link_libraries(tmotor_vel_pos3 ${catkin_LIBRARIES})

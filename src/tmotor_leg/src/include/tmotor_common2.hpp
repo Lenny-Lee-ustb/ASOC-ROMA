@@ -21,10 +21,10 @@
 //参考AK80-9电机手册
 #define P_MIN -12.5f //-12.5f —— 12.5f rad，电机位置
 #define P_MAX 12.5f
-#define V_MIN -76.0f //-30.0f——30.0f rad/s，电机速度
-#define V_MAX 76.0f
-#define T_MIN -12.0f //-18.0f——18.0f N*m，电机扭矩
-#define T_MAX 12.0f
+#define V_MIN -50.0f //-30.0f——30.0f rad/s，电机速度
+#define V_MAX 50.0f
+#define T_MIN -18.0f //-18.0f——18.0f N*m，电机扭矩
+#define T_MAX 18.0f
 
 #define KP_MIN 0.0f //position control index
 #define KP_MAX 500.0f
@@ -121,7 +121,7 @@ void canCheck(can_frame &frame, int s, int id)
 	nbytes = write(s, &frame, sizeof(struct can_frame));
     //enter Tmotor control mode
 	std::this_thread::sleep_for(std::chrono::milliseconds(20));
-	ROS_INFO("Wrote %d bytes", nbytes);
+ROS_INFO("Wrote %d bytes", nbytes);
 	
 	if (nbytes == -1)
 	{

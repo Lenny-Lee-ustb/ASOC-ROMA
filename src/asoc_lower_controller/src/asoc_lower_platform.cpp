@@ -7,8 +7,10 @@ float frame_vn_max = 30;
 float frame_w_max = 300; // 100 = 320 degree/s
 
 float power, forward_s;
+float priority, priority_last;
 float power_last;
 int on_off = 1;
+int flag_prio = 1;
 
 int judge_forward=0;          //high[1],high[2] angle 1
 int judge_backward=0;         //high[3],high[4]   angle 0
@@ -88,7 +90,7 @@ void encoder_angle_sum_callback(std_msgs::Float32MultiArray MultiAngleSumMsg){
 void Tmotor_angle_callback(geometry_msgs::PolygonStamped MultiTmotorAngle){
 	for(int i = 0; i < 4; i++){
 			linkTheta[i] = (15.52 * MultiTmotorAngle.polygon.points[i].x + 73 ) * PI / 180;
-			D[i] = 0.178 + 0.17 * sin(linkTheta[i]);
+			D[i] = 0.178 + 0.18 * sin(linkTheta[i]);
 		}
 }
 
@@ -102,19 +104,29 @@ void buttonCallback(const sensor_msgs::Joy::ConstPtr& joy)
     stick_right = -joy->axes[3];
 	stick_yaw = joy->axes[0];
 
-    power = joy -> buttons[8];
+    // power = joy -> buttons[8];
+	power = joy -> buttons[2];
 	forward_s = joy->buttons[5];
     if(power>power_last){
         on_off = -on_off;
     }
     power_last = power;  
 
-	// frame_vt = 30*stick_forward + 19 * forward_s;
-	// frame_vn = 30*stick_right;
-	frame_vt = 30*(cos(PI/4.0) * stick_forward+ sin(PI/4.0) * stick_right)+ 5 * forward_s;
-	frame_vn = 30*(-sin(PI/4.0) * stick_forward+ cos(PI/4.0) * stick_right)- 5 * forward_s;
+	priority = joy -> buttons[3];
+    if(priority>priority_last){
+        flag_prio = -flag_prio;
+    }
+    priority_last = priority;  
+
+	if (flag_prio > 0) {
+		frame_vt = 30*stick_forward + 5 * forward_s;
+		frame_vn = 30*stick_right;
+		// frame_vt = 30*(cos(PI/4.0) * stick_forward+ sin(PI/4.0) * stick_right)+ 5 * forward_s;
+		// frame_vn = 30*(-sin(PI/4.0) * stick_forward+ cos(PI/4.0) * stick_right)- 5 * forward_s;
 	
-	frame_w =  -60*stick_yaw;
+		frame_w =  -60*stick_yaw;
+	}
+	
 }
 
 
@@ -122,6 +134,7 @@ void upper_controller_callback(geometry_msgs::Twist cmd_vel){
 	frame_vt = fmin(fmax(cmd_vel.linear.x, -frame_vt_max), frame_vt_max);
 	frame_vn = fmin(fmax(cmd_vel.linear.y, -frame_vn_max), frame_vn_max);
 	frame_w = fmin(fmax(cmd_vel.angular.z, -frame_w_max), frame_w_max);
+	
 }
 
 
@@ -384,7 +397,8 @@ void rxThread_high(int s)
             ROS_INFO("target_V_L[%.2f, %.2f, %.2f, %.2f]\r",motor_low[0].targetVelocity,motor_low[1].targetVelocity,motor_low[2].targetVelocity,motor_low[3].targetVelocity);
 			ROS_INFO("target_V_H[%.2f, %.2f, %.2f, %.2f]\r",motor_high[0].targetVelocity,motor_high[1].targetVelocity,motor_high[2].targetVelocity,motor_high[3].targetVelocity);
 			ROS_INFO("Roll      [%.2f, %.2f, %.2f, %.2f]\r",RollMsg_low.polygon.points[0].x, RollMsg_low.polygon.points[1].x, RollMsg_high.polygon.points[0].x, RollMsg_high.polygon.points[1].x);
-
+			ROS_INFO("on_off         [%d]\r", on_off);
+			ROS_INFO("flag_priority  [%d]\r", flag_prio);
 			std::cout << "----------------\n";
 		}
 		std::this_thread::sleep_for(std::chrono::nanoseconds(10000));

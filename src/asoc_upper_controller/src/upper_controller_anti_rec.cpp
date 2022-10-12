@@ -1,4 +1,6 @@
-#include "include/upper_controller.hpp"
+// #include "include/upper_controller.hpp"
+#include "include/upper_controller_v2.hpp"
+
 
 double last_d_theta = 0;
 double last_lateral_dist = 0;
@@ -134,8 +136,8 @@ void callback(const asoc_upper_controller::controller_Config &config, const uint
 void UpperController::controlLoopCB(const ros::TimerEvent &)
 {
 
-  geometry_msgs::Pose carPose = odom.pose.pose;
-  geometry_msgs::Twist carVel = odom.twist.twist;
+  geometry_msgs::Pose carPose = odom.pose.pose;//从视觉里程计获得的位置和姿态
+  geometry_msgs::Twist carVel = odom.twist.twist;//从视觉里程计获得的线速度和角速度
   geometry_msgs::Pose LateralPose = getTrackPose(carPose);
   geometry_msgs::Pose ForwardPose = getTrackForwardPose(carPose, forward_dist);
   geometry_msgs::Pose ForwardPose2 = getTrackForwardPose(carPose, forward_dist2);
@@ -143,8 +145,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
   double LateralDir = GetLateralDir(carPose, LateralPose);
   double rot_rad = rot_angle / 180.0 * PI;
   double vt, vn, w, v_sum;
-  lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);
-  double goal_dist = getCar2GoalDist();
+  lateral_dist = LateralDir * getLateralDist(carPose, LateralPose);//获取横向误差，带方向
+  double goal_dist = getCar2GoalDist();//小车到目标的距离
+  double start_dist = getCar2StartDist();//小车到起点的距离
   cmd_vel.linear.x = 0;
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
@@ -152,23 +155,25 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
 
   if (goal_received)
   {
-    double thetar = getYawFromPose(carPose);       // ego yaw
-    double theta = getYawFromPose(ForwardPose);    // yaw on path
+    double thetar = getYawFromPose(carPose);       // ego yaw，小车真实的yaw角
+    double theta = getYawFromPose(ForwardPose);    // yaw on path，小车前瞻点的yaw角
     double theta_2 = getYawFromPose(ForwardPose2); // yaw on path
     double theta_3 = getYawFromPose(ForwardPose3);
-    double roll = getRollFromPose(carPose);   // ego roll
-    double pitch = getPitchFromPose(carPose); // ego pitch
+    double roll = getRollFromPose(carPose);   // ego roll，小车真实的roll角
+    double pitch = getPitchFromPose(carPose); // ego pitch，小车真实的pitch角
     double rollForward = getRollFromPose(ForwardPose);
     double pitchForward = getPitchFromPose(ForwardPose);
 
     double dist_x = ForwardPose.position.x - carPose.position.x;
     double dist_y = ForwardPose.position.y - carPose.position.y;
 
-    double d_theta = theta - thetar;
-    //double d_theta = - thetar;
+    // double d_theta = theta - thetar;
+    double d_theta = - thetar;
     double d_roll = rollForward - roll;
     double d_pitch = pitchForward - pitch;
-    double slow_factor = 1.0 - slow_ff * fabs(pow((d_theta) / 3.14, 1));
+    // double slow_factor = 1.0 - slow_ff * fabs(pow((d_theta) / 3.14, 1));
+    // double slow_factor = 1.0- slow_ff  * fabs(pow( (theta_2 - theta_3) /3.14,1));
+    double slow_factor = 1.0;
     double const_vt = slow_factor * para_vel * cos(theta);
     double const_vn = -slow_factor * para_vel * sin(theta);
     double vari_vt = P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist);
@@ -180,8 +185,11 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
       {
         // PID control
         w = -(P_Yaw * d_theta + D_Yaw * (d_theta - last_d_theta));
-        vt = slow_factor * P_Long;
-        vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
+        vt =  const_vt + vari_vt * cos(theta+PI*0.5);
+        vn =  const_vn - vari_vn * sin(theta+PI*0.5);
+        v_sum = sqrt(vt * vt + vn * vn);
+        // vt = slow_factor * P_Long;
+        // vn = -(P_Lateral * lateral_dist + D_Lateral * (lateral_dist - last_lateral_dist));
 
         last_speed = baseSpeed - carVel.linear.x;
         last_d_theta = d_theta;
@@ -213,12 +221,18 @@ void UpperController::controlLoopCB(const ros::TimerEvent &)
         cmd_vel.linear.y = fmin(fmax(cmd_vel.linear.y, -100.0), 100.0);
         cmd_vel.angular.z = w;
 
-        if (goal_dist <= 1)
-        {
+
+        if (start_dist <= 1) {
+          cmd_vel.linear.x = 2 + start_dist * cmd_vel.linear.x;
+          cmd_vel.linear.y = start_dist * cmd_vel.linear.y;
+          cmd_vel.angular.z = start_dist * cmd_vel.angular.z;
+        }
+        else if (goal_dist <= 1) {
           cmd_vel.linear.x = goal_dist * cmd_vel.linear.x;
           cmd_vel.linear.y = goal_dist * cmd_vel.linear.y;
           cmd_vel.angular.z = goal_dist * cmd_vel.angular.z;
         }
+
 
         ROS_INFO("----------");
         ROS_INFO("Roll:%.2f, Pitch:%.2f, Yaw:%.2f", roll, pitch, thetar);

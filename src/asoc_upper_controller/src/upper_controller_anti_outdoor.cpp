@@ -12,6 +12,7 @@ double P_Lateral, I_Lateral, D_Lateral,forward_dist,forward_dist2,forward_dist3;
 double P_Long, I_Long, D_Long,para_vel;
 double Kp, Kd;
 double zero_pos,slow_ff,roll_rot_factor,roll_lat_factor,velocity_factor,P_pit,D_pit,P_rol,D_rol;
+double v_total;
 
 UpperController::UpperController() {
   // Private parameters handler
@@ -40,7 +41,7 @@ UpperController::UpperController() {
   odom_sub = n_.subscribe("/GPS_odom", 1, &UpperController::odomCB, this);
   path_sub = n_.subscribe("/fix_path", 1, &UpperController::pathCB, this);
   goal_sub = n_.subscribe("/move_base_simple/goal", 1, &UpperController::goalCB, this);
-  imu_sub = n_.subscribe("/imu_rpy0", 1, &UpperController::imuCB, this);
+  imu_sub = n_.subscribe("/imu_rpy1", 1, &UpperController::imuCB, this);
 
   marker_pub = n_.advertise<visualization_msgs::Marker>("/car_path", 10);
   pub_ = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
@@ -119,6 +120,8 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
   cmd_vel.linear.y = 0;
   cmd_vel.angular.z = 0;
   imuPose.data.resize(3);//不依赖imu的存在
+  // imuPose.polygon.points.resize(3);//todo
+
   susp_cmd.polygon.points.resize(4);
 
   if (goal_received) {
@@ -194,6 +197,9 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
             cmd_vel.angular.z=goal_dist*cmd_vel.angular.z;
           }
 
+          v_total = sqrt( pow(odom.twist.twist.linear.x, 2) + pow(odom.twist.twist.linear.y, 2));
+          
+
           ROS_INFO("----------");
           ROS_INFO("d_Roll:%.3f, d_Pitch:%.3f, Yaw:%.2f",d_roll,d_pitch,thetar);
           ROS_INFO("Dtarget[0]:%.2f, Dtarget[1]:%.2f, Dtarget[2]:%.2f, Dtarget[3]:%.2f", susp_cmd.polygon.points[0].x, susp_cmd.polygon.points[1].x, susp_cmd.polygon.points[2].x, susp_cmd.polygon.points[3].x);
@@ -201,6 +207,7 @@ void UpperController::controlLoopCB(const ros::TimerEvent &) {
           // ROS_INFO("pos:(%.2f,%.2f)",ForwardPose.position.x,ForwardPose.position.y);
           ROS_INFO("lateral_dist:%.2f, long_vel:%.2f",lateral_dist,carVel.linear.x);
           ROS_INFO("para_vel:%.2f, Vyaw:%.2f, Vt:%.2f, Vn:%.2f, V_sum:%.2f",para_vel, w,vt,vn,v_sum);
+          ROS_INFO("v_total is %.2f", v_total);
         }
     }
     susp_cmd.header.stamp=ros::Time::now();

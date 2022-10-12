@@ -1,7 +1,17 @@
 # ASOC-ROMA
 
+#### 操作流程
+1. 小车上电
+2. 下位机
+   1. 物理初始化-固定轮组与车体的位置
+   2. 
+
+
+
+
 #### 介绍
 ASOC robot path tracking project
+
 
 #### 软件架构
 - 各package的内容：

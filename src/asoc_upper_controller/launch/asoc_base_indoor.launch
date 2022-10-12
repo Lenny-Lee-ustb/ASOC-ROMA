@@ -2,7 +2,8 @@
 <launch>
     <!--Load fixed path !!  -->
     <node pkg="path_load" type="path_load.py" name="path_loader" >
-        <param name="file_path" value="$(find path_load)/src/data_curve.csv" />
+        <!-- <param name="file_path" value="$(find path_load)/src/data_curve.csv" /> -->
+        <param name="file_path" value="$(find path_load)/src/square_nocurve.csv" />
         <param name="pub_hz" value="1" />
     </node>
 
@@ -19,5 +20,13 @@
 
     <!-- Load Camera !! -->
     <include file="$(find realsense2_camera)/launch/rs_t265.launch"/>
+
+    <param name = "ID" type="string" value ="1"/>    
+    <arg name="node_name" default="imu_1"></arg>
+    <node pkg="wt931" type="IMU_pub.py" name="$(arg node_name)" clear_params="true" output="screen" >
+        <param name = "serialport_name" type="string" value = "/dev/IMU"/> 
+        <param name = "baudrate" type="int" value = "921600"/>
+    </node>
+
 
 </launch>

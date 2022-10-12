@@ -2,11 +2,11 @@
 <launch>
     <!-- spawn Upper controller  !! -->
     <node pkg="asoc_upper_controller" type="upper_controller_anti_outdoor" name="upper_controller" clear_params="true" output="screen">
-        <param name = "controller_freq" type="double" value = "100.0"/>
-        <param name = "goalRadius" type="double" value = "0.3"/>
+        <param name = "controller_freq" type="double" value = "40.0"/>
+        <param name = "goalRadius" type="double" value = "0.2"/>
         <param name = "goal_pose_err" type="double" value = "1.0"/>
 
-        <param name = "para_vel" type="double" value = "20.0"/>
+        <param name = "para_vel" type="double" value = "10.0"/>
         <param name = "rot_angle" type="double" value = "0.0"/>
 
         <param name = "P_Yaw" type="double" value = "20.0"/>
@@ -17,6 +17,11 @@
         <param name = "forward_dist2" type="double" value = "0.2"/>
         <param name = "forward_dist3" type="double" value = "0.4"/>
 
+        <!-- para_vel = 10; dist1 = 0.15; dist2 = 0.15; dist3 = 0.35; -->
+        <!-- para_vel = 15; dist1 = 0.2; dist2 = 0.2; dist3 = 0.4; -->
+        <!-- para_vel = 20; dist1 = 0.3; dist2 = 0.3; dist3 = 0.5; -->
+
+
 
         <param name = "zero_pos" type="double" value = "1.2"/>
         <param name = "P_pit" type="double" value = "0.0"/>
@@ -24,7 +29,7 @@
         <param name = "P_rol" type="double" value = "0.0"/>
         <param name = "D_rol" type="double" value = "0.0"/>
         
-        <param name = "slow_ff" type="double" value = "0.5"/>
+        <param name = "slow_ff" type="double" value = "0.4"/>
     </node>
 </launch>
 

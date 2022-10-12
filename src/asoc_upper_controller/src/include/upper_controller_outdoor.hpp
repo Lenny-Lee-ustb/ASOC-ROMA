@@ -20,6 +20,7 @@
 #include <geometry_msgs/Point32.h>
 
 #define PI 3.14159265358979
+// double v_total;
 
 /********************/
 /* CLASS DEFINITION */
@@ -36,6 +37,7 @@ public:
   double getYawFromPose(const geometry_msgs::Pose &carPose);
   double getLateralDist(const geometry_msgs::Pose &carPose, const geometry_msgs::Pose &ForwardPt);
   double getCar2GoalDist();
+  // double getCar2StartDist();
   double GetLateralDir(const geometry_msgs::Pose &carPose, const geometry_msgs::Pose &ForwardPose);
   double isRightorLeft(const geometry_msgs::Point &wayPt, const geometry_msgs::Pose &carPose);
   double getEta(const geometry_msgs::Pose &carPose);
@@ -55,7 +57,9 @@ private:
   geometry_msgs::PolygonStamped susp_cmd;
   nav_msgs::Odometry odom;
   nav_msgs::Path map_path;
+  // geometry_msgs::PolygonStamped imuPose;//todo
   std_msgs::Float32MultiArray imuPose;
+
 
   double controller_freq, baseSpeed;
   double goalRadius, goal_pose_err;
@@ -116,6 +120,8 @@ void UpperController::initMarker()
 void UpperController::odomCB(const nav_msgs::Odometry::ConstPtr &odomMsg)
 {
   odom = *odomMsg;
+  // v_total = sqrt( pow(odom.twist.twist.linear.x, 2) + pow(odom.twist.twist.linear.y, 2));
+  // ROS_INFO("v_total is %.2f", v_total);
 }
 
 void UpperController::pathCB(const nav_msgs::Path::ConstPtr &pathMsg)
@@ -124,6 +130,7 @@ void UpperController::pathCB(const nav_msgs::Path::ConstPtr &pathMsg)
 }
 
 void UpperController::imuCB(const std_msgs::Float32MultiArray::ConstPtr &sensorMsg)
+// void UpperController::imuCB(const geometry_msgs::PolygonStamped::ConstPtr &sensorMsg)//todo
 {
   imuPose = *sensorMsg;
 }
@@ -215,6 +222,13 @@ double UpperController::getCar2GoalDist()
 
   return dist2goal;
 }
+
+// double UpperController::getCar2StartDist()
+// {
+//   geometry_msgs::Point car_pose = odom.pose.pose.position;
+//   double dist2start = sqrt(car_pose.x * car_pose.x + car_pose.y * car_pose.y);
+//   return dist2start;
+// }
 
 void UpperController::goalReachingCB(const ros::TimerEvent &)
 {
